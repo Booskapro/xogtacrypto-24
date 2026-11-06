@@ -53,12 +53,12 @@
 
   // Soo qaad xogta /api/fed (Vercel). Haddii la waayo -> null (boggu wuxuu isticmaalaa xog kayd ah)
   let cache = null;
-  function load() {
-    if (cache) return cache;
+  function load(force) {
+    if (cache && !force) return cache;
     if (location.protocol === "file:") return (cache = Promise.resolve(null));
     const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
     const timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
-    cache = fetch("/api/fed", { signal: ctrl ? ctrl.signal : undefined })
+    cache = fetch("/api/fed", { cache: "no-cache", signal: ctrl ? ctrl.signal : undefined })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) { return j && j.target && j.target.current ? j : null; })
       .catch(function () { return null; })

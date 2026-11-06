@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wararka | Xogta Crypto 24/7</title>
-  <meta name="description" content="Wararka FED-ka iyo suuqyada oo la xaqiijiyay, af-Soomaali.">
+  <title>Wararka FED – toos ah | Xogta Crypto 24/7</title>
+  <meta name="description" content="Wararka FED-ka iyo xogta dhaqaalaha oo toos ah: bayaannada Federal Reserve, go'aannada FOMC, CPI, shaqooyinka iyo fursadaha go'aanka xiga.">
   <meta name="theme-color" content="#080B10">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234C9AFF'/%3E%3Cpolyline points='7 20 13 14 17 18 25 10' fill='none' stroke='%23080B10' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,20 +16,63 @@
 </head>
 <body>
 <header data-header="wararka"></header>
+
 <main class="wrap">
   <section class="section">
-    <span class="eyebrow">Tallaabada 3 · DHAWAAN</span>
-    <h1 class="h1">Wararka</h1>
-    <p class="lead">AI-gu wuxuu soo ururin doonaa wararka FED-ka iyo suuqyada, wuu hubin doonaa, kadibna af-Soomaali ku soo koobi doonaa. War kasta ilihiisa ayaa la socon doona.</p>
-  </section>
-  <section class="section">
-    <div class="card soon">
-      <h2 class="h3">Waxa qaybtan ku jiri doona</h2>
-      <ul class="soon-list"><li>War kasta wuxuu ka imanayaa ilaha rasmiga ah: Federal Reserve, BLS, BEA iyo Treasury</li><li>Calaamadda <b>“La xaqiijiyay”</b> iyo link-ga isha</li><li>Kala shaandhayn: FED, shaqo, sicir-barar, bonds, crypto, dahab</li><li>Ogeysiis Telegram ah marka war muhiim ah soo baxo</li></ul>
-      <p style="margin:16px 0 0"><a class="btn" href="index.html">Ku noqo bogga hore</a></p>
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">WARARKA · TOOS AH</span>
+        <h1 class="h1">Wararka FED-ka iyo xogta dhaqaalaha</h1>
+        <p class="lead">War kasta wuxuu si toos ah uga yimaadaa ilaha rasmiga ah, waxaana la cusbooneysiiyaa daqiiqad kasta. Isha ayaa la socota mid kasta.</p>
+      </div>
+      <span class="status live"><span class="dot"></span><span id="agent-updated">Xiriirinaya…</span></span>
     </div>
   </section>
+
+  <div class="split">
+    <div style="min-width:0;display:flex;flex-direction:column;gap:16px">
+      <section class="card">
+        <h2 class="h3">AI Agent · soo koobid af-Soomaali ah</h2>
+        <div id="agent-feed"><p class="muted">Xogta waa la soo qaadayaa…</p></div>
+      </section>
+
+      <section class="card">
+        <div class="section-head" style="margin-bottom:4px">
+          <h2 class="h3" style="margin:0">Federal Reserve · bayaannada rasmiga ah</h2>
+          <div class="chips" id="news-filter" role="group" aria-label="Kala shaandhee wararka">
+            <button type="button" data-cat="all" aria-pressed="true">Dhammaan</button>
+            <button type="button" data-cat="monetary" aria-pressed="false">Siyaasadda lacagta</button>
+            <button type="button" data-cat="press" aria-pressed="false">Bayaannada</button>
+            <button type="button" data-cat="speech" aria-pressed="false">Hadallada</button>
+          </div>
+        </div>
+        <p class="small muted" style="margin:0">Cinwaannadu waa Ingiriis, sida ay Federal Reserve u daabacday. Soo koobidda af-Soomaaliga ee AI-ga ayaa dhawaan ku soo biiraysa.</p>
+        <div id="news-list"><p class="muted">Wararka waa la soo qaadayaa…</p></div>
+      </section>
+    </div>
+
+    <aside style="min-width:0;display:flex;flex-direction:column;gap:16px">
+      <section class="card">
+        <h2 class="h3">Filashada · go'aanka xiga</h2>
+        <div id="gauge" style="display:flex;flex-direction:column;align-items:center;gap:2px;margin:6px 0 14px"></div>
+        <div id="odds"><p class="muted">Fursadaha waa la soo qaadayaa…</p></div>
+      </section>
+      <section class="card">
+        <h2 class="h3">Sida wararka loo hubiyo</h2>
+        <ol class="soon-list" style="margin-top:0">
+          <li>Wararka waxay ka yimaadaan kaliya ilaha rasmiga ah: Federal Reserve, BLS iyo FRED.</li>
+          <li>Tirooyinka waxaa si toos ah looga soo qaadaa isha, lagama koobiyeeyo gacan.</li>
+          <li>Go'aanka FOMC waxaa laga akhriyaa bayaanka rasmiga ah isla daqiiqadda la daabaco.</li>
+          <li>War kasta wuxuu leeyahay link isha asalka ah, si aad adigu u hubiso.</li>
+        </ol>
+      </section>
+    </aside>
+  </div>
 </main>
+
 <footer data-footer></footer>
+<script src="data/fed.js"></script>
+<script src="js/fed-core.js"></script>
+<script src="js/live.js"></script>
 </body>
 </html>
