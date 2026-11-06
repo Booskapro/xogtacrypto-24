@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Taariikhda FED | Xogta Crypto 24/7</title>
-  <meta name="description" content="Taariikhda go'aannada FED-ka sannad kasta iyo bil kasta, 1954 ilaa maanta.">
+  <title>Taariikhda FED – sannad kasta iyo bil kasta | Xogta Crypto 24/7</title>
+  <meta name="description" content="Taariikhda go'aannada FED-ka: dooro sannad (1954 ilaa maanta), arag bil kasta: kor u qaadis, dhimis ama hayn, iyo sicir-bararka iyo shaqo la'aanta.">
   <meta name="theme-color" content="#080B10">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234C9AFF'/%3E%3Cpolyline points='7 20 13 14 17 18 25 10' fill='none' stroke='%23080B10' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,20 +16,73 @@
 </head>
 <body>
 <header data-header="taariikhda"></header>
+
 <main class="wrap">
   <section class="section">
-    <span class="eyebrow">Tallaabada 2 · DHAWAAN</span>
-    <h1 class="h1">Taariikhda FED</h1>
-    <p class="lead">Sannadaha oo safan. Qofku wuu taabtaa sannad, kadibna bil, wuxuuna arkaa go'aanka FED-ka: kor u qaadis, dhimis ama hayn.</p>
+    <span class="eyebrow">TAARIIKHDA FED</span>
+    <h1 class="h1">Taabo sannad, arag bil kasta: FED-ku ma kor u qaaday, ma dhimay, mise wuu hayay?</h1>
+    <p class="lead">Xogta dulsaarka, sicir-bararka, shaqo la'aanta iyo shaqooyinka laga bilaabo 1954 ilaa maanta. Waxay si toos ah uga imanaysaa FRED (Federal Reserve Bank of St. Louis).</p>
   </section>
-  <section class="section">
-    <div class="card soon">
-      <h2 class="h3">Waxa qaybtan ku jiri doona</h2>
-      <ul class="soon-list"><li>Sannad kasta laga bilaabo 1954 ilaa maanta</li><li>Bil kasta: shirka FOMC, go'aanka, dulsaarka, CPI iyo shaqo la'aanta</li><li>Chart sannad kasta iyo soo koobid fudud oo af-Soomaali ah</li><li>Xogta waxay ka imanaysaa Federal Reserve, FRED iyo BLS</li></ul>
-      <p style="margin:16px 0 0"><a class="btn" href="index.html">Ku noqo bogga hore</a></p>
-    </div>
-  </section>
+
+  <div id="loading" class="card" style="margin-top:8px">Xogta taariikhda waa la soo qaadayaa…</div>
+
+  <div id="app" hidden>
+    <section class="section" style="padding-top:8px">
+      <div class="section-head" style="align-items:center">
+        <div class="chips" id="decades" role="group" aria-label="Kala shaandhee tobanaanka sano"></div>
+        <div class="legend">
+          <span><i style="background:var(--hawk)"></i>Kor u qaadis</span>
+          <span><i style="background:var(--dove)"></i>Dhimis</span>
+          <span><i style="background:var(--line-2)"></i>Isbeddel ma jirin</span>
+        </div>
+      </div>
+      <div class="card"><div class="years" id="years"></div></div>
+      <p class="note">Ka hor 1994, FED-ku go'aannadiisa si rasmi ah uma shaacin jirin. Ka hor 1982, xogta waxay muujinaysaa dulsaarka suuqa (effective rate), maxaa yeelay ma jiro diiwaan dulsaar hadaf ah (target).</p>
+    </section>
+
+    <section class="section" id="year-detail">
+      <div class="card" style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:14px">
+          <div>
+            <span class="eyebrow" style="color:var(--muted)">SANNADKA LA DOORTAY</span>
+            <h2 class="h2" id="yd-title" style="font-size:2rem">—</h2>
+          </div>
+          <div class="stats" id="yd-stats"></div>
+        </div>
+
+        <div class="months" id="yd-months"></div>
+
+        <div class="summary" id="md-summary" aria-live="polite"></div>
+
+        <div>
+          <div class="legend" style="margin-bottom:8px">
+            <span><i style="background:var(--accent)"></i>Dulsaarka FED (effective)</span>
+            <span><i style="background:var(--hawk)"></i>Sicir-barar (CPI, sannadle)</span>
+            <span><i style="background:var(--up)"></i>Shaqo la'aan</span>
+          </div>
+          <div class="chart-box" id="yd-chart"></div>
+        </div>
+
+        <div class="table-scroll">
+          <table class="data" id="yd-table">
+            <thead><tr><th>Bisha</th><th>Go'aanka FED</th><th class="r">Dulsaar (effective)</th><th class="r">CPI sannadle</th><th class="r">Shaqo la'aan</th><th class="r">Shaqooyin (NFP)</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="note" style="margin:0">Isha: FRED — <a href="https://fred.stlouisfed.org/series/DFEDTARU" rel="noopener">DFEDTARU/L</a>, <a href="https://fred.stlouisfed.org/series/DFEDTAR" rel="noopener">DFEDTAR</a>, <a href="https://fred.stlouisfed.org/series/FEDFUNDS" rel="noopener">FEDFUNDS</a>, <a href="https://fred.stlouisfed.org/series/CPIAUCNS" rel="noopener">CPIAUCNS</a>, <a href="https://fred.stlouisfed.org/series/UNRATE" rel="noopener">UNRATE</a>, <a href="https://fred.stlouisfed.org/series/PAYEMS" rel="noopener">PAYEMS</a>. <span id="updated"></span></p>
+      </div>
+    </section>
+  </div>
+
+  <div id="offline" class="card soon" hidden>
+    <h2 class="h3">Xogta taariikhda lama heli karo hadda</h2>
+    <p class="muted" style="margin:0">Qaybtani waxay ka shaqaysaa website-ka internet-ka ku jira (Vercel), maxaa yeelay xogta waxaa laga soo qaadaa FRED. Haddii aad furtay fayl kombiyuutarkaaga ku jira, fur link-ga website-ka. Haddii kale, isku day mar kale dhawr daqiiqo kadib.</p>
+  </div>
 </main>
+
 <footer data-footer></footer>
+<script src="data/fed.js"></script>
+<script src="js/fed-core.js"></script>
+<script src="js/taariikhda.js"></script>
 </body>
 </html>

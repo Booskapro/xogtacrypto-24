@@ -1,4 +1,4 @@
-# Xogta Crypto 24/7 · Tallaabada 1
+# Xogta Crypto 24/7 · Tallaabada 2
 
 Website-ka xogta FED-ka iyo crypto, af-Soomaali. Aasaasaha: **Booskapro**.
 
@@ -8,6 +8,12 @@ Website-ka xogta FED-ka iyo crypto, af-Soomaali. Aasaasaha: **Booskapro**.
 - **Ku saabsan:** Aasaasaha Booskapro iyo baraha bulshada
 - **Midabka website-ka:** 5 midab, Mugdi/Iftiin/Auto iyo cabbirka qoraalka. Doorashada qof kasta waa la xasuustaa
 - Bogagga **Wararka**, **Taariikhda FED** iyo **Bulshada** waa diyaar, waxaana la buuxin doonaa tallaabooyinka xiga
+
+## Waxa Tallaabada 2 ku daray
+- **Xogta FED oo toos ah:** `api/fed.js` waa server yar oo Vercel ku shaqaysiiyo. Wuxuu xogta ka soo qaadaa FRED (bilaash, key la'aan), waxaana la cusbooneysiiyaa 15-kii daqiiqo
+- **Bogga hore:** dulsaarka hadda, go'aannada (kii hore, kii u dambeeyay iyo kan xiga) iyo xogtii u dambeysay (CPI, shaqo la'aan, NFP, 10Y, 2Y), dhammaantood si toos ah isu cusbooneysiiya
+- **Taariikhda FED:** sannadaha 1954 ilaa maanta → taabo sannad → bilaha (kor u qaadis, dhimis, hayn) → soo koobid, chart iyo shax. Link toos ah ayaa sannad kasta loo diri karaa: `/taariikhda#2010` ama `/taariikhda#2022-06`
+- `data/fed.js`: jadwalka shirarka FOMC (2022–2027) iyo xogta soo socota. **Sannad kasta, ku dar shirarka cusub** ee FED-ku daabaco
 
 ## Faylasha
 | Fayl / gal | Shaqadiisa |
@@ -20,7 +26,10 @@ Website-ka xogta FED-ka iyo crypto, af-Soomaali. Aasaasaha: **Booskapro**.
 | `js/config.js` | **Macluumaadkaaga**: magaca, sawirka, baraha bulshada, email |
 | `js/layout.js` | Header, footer iyo beddelka midabka |
 | `js/home.js` | Xogta FED iyo crypto live |
-| `data/fed.js` | Xogta FED-ka (Tallaabada 2 kadib si toos ah ayay isu cusbooneysiin doontaa) |
+| `js/fed-core.js` | Qalabka xogta FED |
+| `js/taariikhda.js` | Bogga Taariikhda FED |
+| `api/fed.js` | Server-ka xogta FED (FRED) |
+| `data/fed.js` | Jadwalka shirarka FOMC iyo xogta soo socota |
 | `vercel.json` | Habaynta Vercel |
 
 ## Sida aad ugu darto baraha bulshada
@@ -43,7 +52,7 @@ Link-ga madhan si toos ah ayuu u qarsoomayaa.
 Mar kasta oo aad fayl ku beddesho GitHub, Vercel si toos ah ayuu website-ka u cusbooneysiinayaa.
 
 ## Ilaha xogta (dhammaan bilaash)
-Binance · CoinGecko · Alternative.me · Federal Reserve · BLS
+Binance · CoinGecko · Alternative.me · FRED (Federal Reserve Bank of St. Louis) · Federal Reserve · BLS
 
 ---
 Tani ma aha talo maaliyadeed.

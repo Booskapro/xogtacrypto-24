@@ -246,3 +246,45 @@ table.data { width: 100%; border-collapse: collapse; }
 .footer-grid a { display: block; color: var(--text-2); text-decoration: none; padding: 4px 0; }
 .footer-grid a:hover { color: var(--text); }
 .footer-bottom { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 18px 0 28px; margin-top: 24px; border-top: 1px solid var(--line); font-size: .82rem; color: var(--muted); }
+
+/* ---------- Taariikhda FED ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { padding: 9px 13px; min-height: 40px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--card); color: var(--text-2); font: 600 .87rem Inter, sans-serif; cursor: pointer; }
+.chips button[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.years { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.year { text-align: left; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 10px; padding: 10px 12px; min-height: 64px; display: flex; flex-direction: column; gap: 2px; cursor: pointer; font: inherit; }
+.year b { font-size: 1.05rem; }
+.year span { font-size: .78rem; font-weight: 600; color: var(--muted); }
+.year.hike { background: var(--hawk-bg); border-color: var(--hawk-line); }
+.year.hike span { color: var(--hawk-soft); }
+.year.cut { background: var(--dove-bg); border-color: var(--dove-line); }
+.year.cut span { color: var(--dove); }
+.year.mixed span { color: var(--text-2); }
+.year[aria-pressed="true"] { outline: 3px solid var(--accent); outline-offset: 1px; }
+.year:hover { border-color: var(--accent); }
+.stats { display: flex; flex-wrap: wrap; gap: 22px; }
+.stats div { display: flex; flex-direction: column; }
+.stats span { font-size: .85rem; color: var(--muted); }
+.stats b { font-size: 1.2rem; }
+.months { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.month { text-align: left; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; font: inherit; min-height: 120px; }
+.month b { font-size: 1rem; }
+.month .m-sub { font-size: .78rem; color: var(--muted); }
+.month .m-val { font-size: .87rem; font-weight: 600; margin-top: auto; }
+.month.hike { border-color: var(--hawk-line); }
+.month.cut { border-color: var(--dove-line); }
+.month.empty { background: var(--card-2); border-style: dashed; color: var(--muted); }
+.month[aria-pressed="true"] { outline: 3px solid var(--accent); outline-offset: 1px; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: .85rem; color: var(--text-2); }
+.legend i { display: inline-block; width: 12px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.chart-box { width: 100%; overflow: hidden; }
+.chart-box svg { display: block; width: 100%; height: auto; }
+.summary { background: var(--card-2); border-radius: 12px; padding: 16px 18px; }
+.summary p { margin: 6px 0 0; color: var(--text-2); max-width: 900px; }
+@media (max-width: 640px) {
+  .years { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .year { padding: 8px 10px; min-height: 56px; }
+  .months { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .chips button { white-space: nowrap; }
+}

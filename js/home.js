@@ -14,59 +14,98 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
   // =========================================================
-  // A. FED
+  // A. FED — xogta tooska ah (/api/fed ← FRED) + jadwalka (data/fed.js)
   // =========================================================
-  const ACTION = {
-    hike: { text: "▲ Kor u qaadis", cls: "hawk" },
-    cut:  { text: "▼ Dhimis",       cls: "dove" },
-    hold: { text: "● Hayn",         cls: "dove" }
-  };
+  const F = window.FedCore;
 
-  function renderFed() {
-    const F = window.FED_DATA;
-    if (!F) return;
-    $("fed-range").textContent = F.current_range;
+  function decisionBox(id, meeting, outcome, labelPrefix) {
+    const box = $(id);
+    const a = F.ACTION[outcome.action];
+    box.querySelector(".when").textContent = labelPrefix + " · " + F.fmtDate(meeting.date);
+    const what = box.querySelector(".what");
+    const chg = outcome.event ? F.fmtChange(outcome.event) : "";
+    what.textContent = a.text + (chg ? " " + chg : "");
+    what.className = "what " + a.cls;
+    const parts = [];
+    if (outcome.event) parts.push(F.fmtRange(outcome.event.from) + " → " + F.fmtRange(outcome.event.to));
+    else parts.push(F.fmtRange(outcome.to));
+    if (meeting.vote) parts.push("cod " + meeting.vote);
+    box.querySelector(".detail").textContent = parts.join(" · ");
+  }
 
-    function fill(id, dec) {
-      const box = $(id);
-      const a = ACTION[dec.action];
-      const d = new Date(dec.date + "T12:00:00");
-      box.querySelector(".when").textContent = box.querySelector(".when").textContent + " · " + fmtDate(d);
+  function latestRow(name, value, detail, source, url) {
+    return '<div class="card-2" style="display:flex;justify-content:space-between;gap:12px;align-items:center">' +
+      '<div><div style="font-weight:600">' + esc(name) + '</div><div class="small muted">' + esc(detail) + "</div></div>" +
+      '<div style="text-align:right"><div class="kpi-value" style="font-size:1.4rem">' + esc(value) + "</div>" +
+      '<a class="small" href="' + esc(url) + '" rel="noopener">' + esc(source) + "</a></div></div>";
+  }
+
+  function renderUpcoming() {
+    const now = Date.now();
+    const cal = window.FED_CAL;
+    const items = cal.upcoming.slice();
+    const nextMeeting = cal.meetings.find(function (m) { return new Date(m.time).getTime() > now; });
+    if (nextMeeting) items.push({ name: "Go'aanka FOMC" + (nextMeeting.sep ? " + Dot Plot" : ""), time: nextMeeting.time, impact: "Aad u sare" });
+    const up = items.filter(function (x) { return new Date(x.time).getTime() > now; })
+      .sort(function (a, b) { return new Date(a.time) - new Date(b.time); }).slice(0, 4);
+    $("upcoming").innerHTML = up.length ? up.map(function (x) {
+      return '<div class="card-2" style="display:flex;justify-content:space-between;gap:12px;align-items:center">' +
+        '<div><div style="font-weight:600">' + esc(x.name) + '</div><div class="small muted">' + F.fmtDateTime(new Date(x.time)) + "</div></div>" +
+        '<span class="chip hawk">' + esc(x.impact) + "</span></div>";
+    }).join("") : '<p class="muted">Jadwalka cusub waa la cusbooneysiinayaa.</p>';
+  }
+
+  function renderNext() {
+    const now = Date.now();
+    const next = window.FED_CAL.meetings.find(function (m) { return new Date(m.time).getTime() > now; });
+    if (!next) { $("next-label").textContent = "Jadwalka waa la cusbooneysiinayaa"; return; }
+    const t = new Date(next.time);
+    const d = F.dateObj(next.date);
+    const startDay = new Date(d.getTime() - 864e5);
+    $("next-label").textContent = (startDay.getMonth() === d.getMonth() ? startDay.getDate() + "–" + d.getDate() + " " + F.MONTHS[d.getMonth()] : F.fmtDate(startDay.toISOString().slice(0, 10)) + " – " + d.getDate() + " " + F.MONTHS[d.getMonth()]) + " " + d.getFullYear() + (next.sep ? " · Dot Plot" : "");
+    $("next-time").textContent = "Go'aanka: " + F.fmtDateTime(t) + " (saacaddaada)";
+    startCountdown(t);
+  }
+
+  function renderFedLive(api) {
+    const cal = window.FED_CAL;
+    const now = Date.now();
+    const past = cal.meetings.filter(function (m) { return new Date(m.time).getTime() <= now; });
+    const ev = api.target.events;
+    $("fed-range").textContent = F.fmtRange(api.target.current);
+    if (past.length >= 2) {
+      decisionBox("dec-prev", past[past.length - 2], F.meetingOutcome(ev, past[past.length - 2]), "Kii hore");
+      decisionBox("dec-last", past[past.length - 1], F.meetingOutcome(ev, past[past.length - 1]), "Kii u dambeeyay");
+    }
+    const L = api.latest;
+    const rows = [];
+    function fred(id) { return "https://fred.stlouisfed.org/series/" + id; }
+    function sign(n) { return (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toLocaleString("en-US"); }
+    if (L.cpi) rows.push(latestRow("Sicir-bararka (CPI) · " + F.monthName(L.cpi.month, true), L.cpi.value.toFixed(1) + "%", "Sannadle · bishii hore: " + (L.cpi.prev != null ? L.cpi.prev.toFixed(1) + "%" : "—"), "FRED · BLS", fred("CPIAUCNS")));
+    if (L.un) rows.push(latestRow("Shaqo la'aanta · " + F.monthName(L.un.month, true), L.un.value.toFixed(1) + "%", "Bishii hore: " + (L.un.prev != null ? L.un.prev.toFixed(1) + "%" : "—"), "FRED · BLS", fred("UNRATE")));
+    if (L.nfp) rows.push(latestRow("Shaqooyinka (NFP) · " + F.monthName(L.nfp.month, true), sign(L.nfp.value) + "K", "Bishii hore: " + (L.nfp.prev != null ? sign(L.nfp.prev) + "K" : "—"), "FRED · BLS", fred("PAYEMS")));
+    if (L.dgs10) rows.push(latestRow("US 10Y Bond · " + F.fmtDate(L.dgs10.date), L.dgs10.value.toFixed(2) + "%", L.dgs10.prev != null ? "Maalintii hore: " + L.dgs10.prev.toFixed(2) + "%" : "Dulsaarka bond-ka 10 sano", "FRED · Treasury", fred("DGS10")));
+    if (L.dgs2) rows.push(latestRow("US 2Y Bond · " + F.fmtDate(L.dgs2.date), L.dgs2.value.toFixed(2) + "%", L.dgs2.prev != null ? "Maalintii hore: " + L.dgs2.prev.toFixed(2) + "%" : "Rajada dulsaarka FED", "FRED · Treasury", fred("DGS2")));
+    $("latest-data").innerHTML = rows.join("") || '<p class="muted">Xogta lama heli karo hadda.</p>';
+    const t = new Date(api.updated);
+    $("fed-updated").textContent = "Xogta FED-ka: toos ah · la soo qaaday " + F.pad(t.getHours()) + ":" + F.pad(t.getMinutes()) + " · Isha: FRED (Federal Reserve Bank of St. Louis), BLS, Treasury";
+  }
+
+  function renderFedFallback() {
+    const fb = window.FED_CAL.fallback;
+    $("fed-range").textContent = fb.current_range;
+    function fill(id, dec, label) {
+      const box = $(id), a = F.ACTION[dec.action];
+      box.querySelector(".when").textContent = label + " · " + F.fmtDate(dec.date);
       const what = box.querySelector(".what");
       what.textContent = a.text + (dec.change ? " " + dec.change : "");
       what.className = "what " + a.cls;
-      const parts = [];
-      if (dec.from) parts.push(dec.from + " → " + dec.to); else parts.push(dec.to);
-      if (dec.vote) parts.push("cod " + dec.vote);
-      if (dec.note) parts.push(dec.note);
-      box.querySelector(".detail").textContent = parts.join(" · ");
+      box.querySelector(".detail").textContent = dec.from ? dec.from + " → " + dec.to : dec.to;
     }
-    fill("dec-prev", F.previous);
-    fill("dec-last", F.last);
-
-    const next = new Date(F.next.decision_time);
-    $("next-label").textContent = F.next.label + (F.next.sep ? " · Dot Plot" : "");
-    $("next-time").textContent = "Go'aanka: " + fmtDateTime(next) + " (saacaddaada)";
-    startCountdown(next);
-
-    $("latest-data").innerHTML = F.latest_data.map(function (x) {
-      return '<div class="card-2" style="display:flex;justify-content:space-between;gap:12px;align-items:center">' +
-        '<div><div style="font-weight:600">' + esc(x.name) + '</div><div class="small muted">' + esc(x.detail) + "</div></div>" +
-        '<div style="text-align:right"><div class="kpi-value" style="font-size:1.4rem">' + esc(x.value) + "</div>" +
-        '<a class="small" href="' + esc(x.url) + '" rel="noopener">' + esc(x.source) + "</a></div></div>";
-    }).join("");
-
-    // Kaliya dhacdooyinka aan weli dhicin ayaa la muujinayaa — xog duug ah lama muujiyo
-    const now = Date.now();
-    const up = F.upcoming.filter(function (x) { return new Date(x.time).getTime() > now; });
-    $("upcoming").innerHTML = up.length ? up.map(function (x) {
-      const t = new Date(x.time);
-      return '<div class="card-2" style="display:flex;justify-content:space-between;gap:12px;align-items:center">' +
-        '<div><div style="font-weight:600">' + esc(x.name) + '</div><div class="small muted">' + fmtDateTime(t) + "</div></div>" +
-        '<span class="chip hawk">' + esc(x.impact) + "</span></div>";
-    }).join("") : '<p class="muted">Xogta dhacdooyinka cusub waa la cusbooneysiinayaa.</p>';
-
-    $("fed-updated").textContent = "Xogta FED-ka waxaa la hubiyay: " + fmtDate(new Date(F.updated + "T12:00:00")) + " · Isha: Federal Reserve, BLS";
+    fill("dec-prev", fb.previous, "Kii hore");
+    fill("dec-last", fb.last, "Kii u dambeeyay");
+    $("latest-data").innerHTML = fb.latest.map(function (x) { return latestRow(x.name, x.value, x.detail, x.source, x.url); }).join("");
+    $("fed-updated").textContent = "Xog kayd ah oo la hubiyay " + F.fmtDate(fb.checked) + ". Xogta tooska ahi waxay shaqaysaa marka website-ka internet-ka la geliyo.";
   }
 
   function startCountdown(target) {
@@ -75,6 +114,7 @@
       let ms = target.getTime() - Date.now();
       if (ms <= 0) {
         el.innerHTML = '<span class="muted">Go\'aanka waa la shaaciyay. Xogta waa la cusbooneysiinayaa…</span>';
+        setTimeout(function () { location.reload(); }, 15 * 60 * 1000);
         return;
       }
       const d = Math.floor(ms / 864e5); ms -= d * 864e5;
@@ -89,6 +129,15 @@
       setTimeout(tick, 1000);
     }
     tick();
+  }
+
+  function renderFed() {
+    renderNext();
+    renderUpcoming();
+    $("fed-updated").textContent = "Xogta FED-ka waa la soo qaadayaa…";
+    F.load().then(function (api) {
+      if (api) renderFedLive(api); else renderFedFallback();
+    });
   }
 
   // =========================================================
