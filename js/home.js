@@ -45,7 +45,7 @@
     const cal = window.FED_CAL;
     const items = cal.upcoming.slice();
     const nextMeeting = cal.meetings.find(function (m) { return new Date(m.time).getTime() > now; });
-    if (nextMeeting) items.push({ name: "Go'aanka FOMC" + (nextMeeting.sep ? " + Dot Plot" : ""), time: nextMeeting.time, impact: "Aad u sare" });
+    if (nextMeeting) items.push({ name: "Go'aanka FED (FOMC)" + (nextMeeting.sep ? " + saadaasha xubnaha" : ""), time: nextMeeting.time, impact: "Aad u sare" });
     const up = items.filter(function (x) { return new Date(x.time).getTime() > now; })
       .sort(function (a, b) { return new Date(a.time) - new Date(b.time); }).slice(0, 4);
     $("upcoming").innerHTML = up.length ? up.map(function (x) {
@@ -62,7 +62,7 @@
     const t = new Date(next.time);
     const d = F.dateObj(next.date);
     const startDay = new Date(d.getTime() - 864e5);
-    $("next-label").textContent = (startDay.getMonth() === d.getMonth() ? startDay.getDate() + "–" + d.getDate() + " " + F.MONTHS[d.getMonth()] : F.fmtDate(startDay.toISOString().slice(0, 10)) + " – " + d.getDate() + " " + F.MONTHS[d.getMonth()]) + " " + d.getFullYear() + (next.sep ? " · Dot Plot" : "");
+    $("next-label").textContent = (startDay.getMonth() === d.getMonth() ? startDay.getDate() + "–" + d.getDate() + " " + F.MONTHS[d.getMonth()] : F.fmtDate(startDay.toISOString().slice(0, 10)) + " – " + d.getDate() + " " + F.MONTHS[d.getMonth()]) + " " + d.getFullYear() + (next.sep ? " · saadaasha xubnaha" : "");
     $("next-time").textContent = "Go'aanka: " + F.fmtDateTime(t) + " (saacaddaada)";
     startCountdown(t);
   }
@@ -84,8 +84,8 @@
     if (L.cpi) rows.push(latestRow("Sicir-bararka (CPI) · " + F.monthName(L.cpi.month, true), L.cpi.value.toFixed(1) + "%", "Sannadle · bishii hore: " + (L.cpi.prev != null ? L.cpi.prev.toFixed(1) + "%" : "—"), "FRED · BLS", fred("CPIAUCNS")));
     if (L.un) rows.push(latestRow("Shaqo la'aanta · " + F.monthName(L.un.month, true), L.un.value.toFixed(1) + "%", "Bishii hore: " + (L.un.prev != null ? L.un.prev.toFixed(1) + "%" : "—"), "FRED · BLS", fred("UNRATE")));
     if (L.nfp) rows.push(latestRow("Shaqooyinka (NFP) · " + F.monthName(L.nfp.month, true), sign(L.nfp.value) + "K", "Bishii hore: " + (L.nfp.prev != null ? sign(L.nfp.prev) + "K" : "—"), "FRED · BLS", fred("PAYEMS")));
-    if (L.dgs10) rows.push(latestRow("US 10Y Bond · " + F.fmtDate(L.dgs10.date), L.dgs10.value.toFixed(2) + "%", L.dgs10.prev != null ? "Maalintii hore: " + L.dgs10.prev.toFixed(2) + "%" : "Dulsaarka bond-ka 10 sano", "FRED · Treasury", fred("DGS10")));
-    if (L.dgs2) rows.push(latestRow("US 2Y Bond · " + F.fmtDate(L.dgs2.date), L.dgs2.value.toFixed(2) + "%", L.dgs2.prev != null ? "Maalintii hore: " + L.dgs2.prev.toFixed(2) + "%" : "Rajada dulsaarka FED", "FRED · Treasury", fred("DGS2")));
+    if (L.dgs10) rows.push(latestRow("Bond-ka 10 sano · " + F.fmtDate(L.dgs10.date), L.dgs10.value.toFixed(2) + "%", L.dgs10.prev != null ? "Maalintii hore: " + L.dgs10.prev.toFixed(2) + "%" : "Dulsaarka bond-ka 10 sano", "FRED · Treasury", fred("DGS10")));
+    if (L.dgs2) rows.push(latestRow("Bond-ka 2 sano · " + F.fmtDate(L.dgs2.date), L.dgs2.value.toFixed(2) + "%", L.dgs2.prev != null ? "Maalintii hore: " + L.dgs2.prev.toFixed(2) + "%" : "Rajada dulsaarka FED", "FRED · Treasury", fred("DGS2")));
     $("latest-data").innerHTML = rows.join("") || '<p class="muted">Xogta lama heli karo hadda.</p>';
     const t = new Date(api.updated);
     $("fed-updated").textContent = "Xogta FED-ka: toos ah · la soo qaaday " + F.pad(t.getHours()) + ":" + F.pad(t.getMinutes()) + " · Isha: FRED (Federal Reserve Bank of St. Louis), BLS, Treasury";
@@ -312,7 +312,7 @@
       s.high = parseFloat(d.h); s.low = parseFloat(d.l); s.vol = parseFloat(d.q);
       lastMsg = Date.now();
       if (usingFallback) stopFallback();
-      setStatus("live", "LIVE");
+      setStatus("live", "TOOS");
       queue(coin.sym);
     };
     ws.onclose = function () { onWsFail(); };

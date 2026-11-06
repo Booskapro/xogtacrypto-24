@@ -9,7 +9,6 @@
     { href: "wararka.html",     key: "wararka",    label: "Wararka" },
     { href: "fahanka-fed.html", key: "fahanka",    label: "Fahanka FED" },
     { href: "taariikhda.html",  key: "taariikhda", label: "Taariikhda FED" },
-    { href: "bulshada.html",    key: "bulshada",   label: "Bulshada" },
     { href: "ku-saabsan.html",  key: "ku-saabsan", label: "Ku saabsan" }
   ];
 
@@ -143,7 +142,7 @@
           '<div><div class="brand-name">Xogta Crypto <span class="accent">24/7</span></div>' +
             '<p class="muted small">Xogta FED-ka, crypto iyo suuqyada caalamka oo af-Soomaali ah. Aasaasaha: ' + s.founder.name + ".</p></div>" +
           '<div><b>Xogta</b><a href="index.html">Maanta</a><a href="wararka.html">Wararka</a><a href="taariikhda.html">Taariikhda FED</a></div>' +
-          '<div><b>Waxbarasho</b><a href="fahanka-fed.html">Fahanka FED</a><a href="bulshada.html">Bulshada</a></div>' +
+          '<div><b>Waxbarasho</b><a href="fahanka-fed.html">Fahanka FED</a></div>' +
           '<div><b>Shirkadda</b><a href="ku-saabsan.html">Ku saabsan</a>' + socials +
             (s.email ? '<span class="small muted" style="display:block;padding:4px 0">' + s.email + "</span>" : "") + "</div>" +
         "</div>" +

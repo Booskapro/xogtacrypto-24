@@ -111,6 +111,7 @@ async function buildPayload() {
     DFEDTARU: fetchSeries("DFEDTARU"),
     FEDFUNDS: fetchSeries("FEDFUNDS"),
     CPIAUCNS: fetchSeries("CPIAUCNS", "1953-01-01"),
+    CPILFENS: fetchSeries("CPILFENS", "1956-01-01"),
     UNRATE: fetchSeries("UNRATE"),
     PAYEMS: fetchSeries("PAYEMS", "1953-12-01"),
     DGS10: fetchSeries("DGS10", isoDaysAgo(30)),
@@ -130,6 +131,7 @@ async function buildPayload() {
   // 2) Xogta bil kasta (1954 → maanta)
   const ff = toMonthMap(S.FEDFUNDS);
   const cpi = toMonthMap(S.CPIAUCNS);
+  const core = toMonthMap(S.CPILFENS);
   const un = toMonthMap(S.UNRATE);
   const pay = toMonthMap(S.PAYEMS);
   const monthly = {};
@@ -139,6 +141,8 @@ async function buildPayload() {
     if (ff.has(k)) row.ff = r2(ff.get(k));
     const prevYear = cpi.get(shiftMonth(k, -12));
     if (cpi.has(k) && prevYear) row.cpi = r1((cpi.get(k) / prevYear - 1) * 100);
+    const corePrev = core.get(shiftMonth(k, -12));
+    if (core.has(k) && corePrev) row.core = r1((core.get(k) / corePrev - 1) * 100);
     if (un.has(k)) row.un = un.get(k);
     const prevPay = pay.get(shiftMonth(k, -1));
     if (pay.has(k) && prevPay !== undefined) row.nfp = Math.round(pay.get(k) - prevPay); // kun (thousands)
@@ -160,6 +164,7 @@ async function buildPayload() {
     monthly,
     latest: {
       cpi: latestOf("cpi"),
+      core: latestOf("core"),
       un: latestOf("un"),
       nfp: latestOf("nfp"),
       ff: latestOf("ff"),

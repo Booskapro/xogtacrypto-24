@@ -14,7 +14,7 @@ Website-ka xogta FED-ka iyo crypto, af-Soomaali. Aasaasaha: **Booskapro**.
   - **Federal Reserve RSS:** bayaannada, siyaasadda lacagta iyo hadallada
   - **Bayaanka FOMC:** go'aanka dulsaarka waxaa laga akhriyaa bayaanka rasmiga ah isla daqiiqadda la daabaco (FRED wuxuu qaataa 1 maalin)
   - **Kalshi:** fursadaha go'aanka FED ee xiga (suuq saadaal oo sharci ah)
-- **AI Agent (bogga hore + Wararka):** qoraallo af-Soomaali ah oo si toos ah u soo baxa marka xog cusub timaado: go'aanka FOMC, fursadaha, CPI, shaqada iyo bonds-ka. Tirooyinka oo dhan waxay ka yimaadaan isha, agent-kuna kaliya qoraalka ayuu diyaariyaa
+- **Warbixinta tooska ah (bogga hore + Wararka):** qoraallo af-Soomaali ah oo si toos ah u soo baxa marka xog cusub timaado: go'aanka FOMC, fursadaha, CPI, shaqada iyo bonds-ka. Tirooyinka oo dhan waxay ka yimaadaan isha, agent-kuna kaliya qoraalka ayuu diyaariyaa
 - **Filashada:** cabbirka Adag/Jilicsan iyo fursadaha go'aanka xiga
 - **Wararka:** bayaannada Federal Reserve oo la kala shaandhayn karo
 - Boggu wuxuu is cusbooneysiiyaa daqiiqad kasta, adigoon refresh samayn
@@ -31,7 +31,7 @@ Website-ka xogta FED-ka iyo crypto, af-Soomaali. Aasaasaha: **Booskapro**.
 | `index.html` | Bogga hore |
 | `fahanka-fed.html` | Koorsada FED |
 | `ku-saabsan.html` | Ku saabsan + Aasaasaha |
-| `wararka.html`, `taariikhda.html`, `bulshada.html` | Bogag soo socda |
+| `wararka.html`, `taariikhda.html` | Wararka iyo Taariikhda FED |
 | `css/style.css` | Naqshadda iyo midabada |
 | `js/config.js` | **Macluumaadkaaga**: magaca, sawirka, baraha bulshada, email |
 | `js/layout.js` | Header, footer iyo beddelka midabka |
