@@ -9,6 +9,13 @@ Website-ka xogta FED-ka iyo crypto, af-Soomaali. Aasaasaha: **Booskapro**.
 - **Midabka website-ka:** 5 midab, Mugdi/Iftiin/Auto iyo cabbirka qoraalka. Doorashada qof kasta waa la xasuustaa
 - Bogagga **Wararka**, **Taariikhda FED** iyo **Bulshada** waa diyaar, waxaana la buuxin doonaa tallaabooyinka xiga
 
+## Suuqyada 24/7 (cusub)
+- **Bitcoin, Ethereum:** Binance (ilbiriqsi kasta)
+- **Dahab, lacag (silver), shidaal (WTI), S&P 500, Nasdaq 100, dollar:** Hyperliquid, suuq 24/7 ah oo raaca qiimaha caalamiga ah. Bilaash, key la'aan, live (WebSocket)
+- **Bond-ka 10 sano:** FRED (maalin kasta)
+- `api/markets.js` (qiimaha, 15s cache) iyo `api/spark.js` (chart 7 maalmood, 10 daqiiqo cache)
+- Waqtiyada oo dhan waxaa lagu muujiyaa saacadda qofka (Muqdisho, London, Minneapolis…)
+
 ## Waxa Tallaabada 3 ku daray
 - **`api/live.js`**: xogta degdegga ah, daqiiqad kasta
   - **Federal Reserve RSS:** bayaannada, siyaasadda lacagta iyo hadallada
@@ -40,6 +47,7 @@ Website-ka xogta FED-ka iyo crypto, af-Soomaali. Aasaasaha: **Booskapro**.
 | `js/taariikhda.js` | Bogga Taariikhda FED |
 | `api/fed.js` | Server-ka xogta FED (FRED) |
 | `api/live.js` | Server-ka xogta live (Fed RSS, FOMC, Kalshi) |
+| `api/markets.js`, `api/spark.js` | Suuqyada (Hyperliquid) |
 | `js/live.js` | AI Agent, Filashada iyo Wararka |
 | `data/fed.js` | Jadwalka shirarka FOMC iyo xogta soo socota |
 | `vercel.json` | Habaynta Vercel |
@@ -64,7 +72,7 @@ Link-ga madhan si toos ah ayuu u qarsoomayaa.
 Mar kasta oo aad fayl ku beddesho GitHub, Vercel si toos ah ayuu website-ka u cusbooneysiinayaa.
 
 ## Ilaha xogta (dhammaan bilaash)
-Binance · CoinGecko · Alternative.me · FRED (Federal Reserve Bank of St. Louis) · Federal Reserve · BLS · Kalshi
+Binance · CoinGecko · Alternative.me · FRED (Federal Reserve Bank of St. Louis) · Federal Reserve · BLS · Kalshi · Hyperliquid
 
 ---
 Tani ma aha talo maaliyadeed.

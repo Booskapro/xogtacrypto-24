@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Xogta Crypto 24/7 – Xogta FED-ka iyo crypto oo toos ah, af-Soomaali</title>
+  <meta name="title-en" content="Xogta Crypto 24/7 – Live Fed data, crypto and markets">
   <meta name="description" content="Xogta FED-ka, go'aannada dulsaarka iyo qiimaha crypto oo toos ah (live), af-Soomaali. 24 saac maalintii.">
   <meta property="og:title" content="Xogta Crypto 24/7">
   <meta property="og:description" content="Xogta FED-ka iyo crypto oo toos ah, af-Soomaali.">
@@ -25,33 +26,33 @@
   <section class="section" id="fed">
     <div class="section-head">
       <div>
-        <span class="eyebrow">FED-KA MAANTA</span>
-        <h1 class="h1">Go'aannada FED-ka: kii hore, kii u dambeeyay iyo kan xiga</h1>
-        <p class="lead">Dulsaarka FED-ka hadda: <b id="fed-range">—</b></p>
+        <span class="eyebrow" data-en="THE FED TODAY">FED-KA MAANTA</span>
+        <h1 class="h1" data-en="Fed decisions: previous, latest and next">Go'aannada FED-ka: kii hore, kii u dambeeyay iyo kan xiga</h1>
+        <p class="lead" data-en="Current Fed rate: &lt;b id=&quot;fed-range&quot;&gt;—&lt;/b&gt;">Dulsaarka FED-ka hadda: <b id="fed-range">—</b></p>
       </div>
-      <a href="taariikhda.html" class="small">Arag taariikhda oo dhan →</a>
+      <a href="taariikhda.html" class="small" data-en="See the full history →">Arag taariikhda oo dhan →</a>
     </div>
 
     <div class="grid" style="--min: 260px">
-      <div class="decision" id="dec-prev"><span class="when">Kii hore</span><span class="what">—</span><span class="detail"></span></div>
-      <div class="decision" id="dec-last"><span class="when">Kii u dambeeyay</span><span class="what">—</span><span class="detail"></span></div>
+      <div class="decision" id="dec-prev"><span class="when" data-en="Previous">Kii hore</span><span class="what">—</span><span class="detail"></span></div>
+      <div class="decision" id="dec-last"><span class="when" data-en="Latest">Kii u dambeeyay</span><span class="what">—</span><span class="detail"></span></div>
       <div class="decision next" id="dec-next">
-        <span class="when">Kan xiga</span>
+        <span class="when" data-en="Next">Kan xiga</span>
         <span class="what" id="next-label">—</span>
         <span class="detail" id="next-time"></span>
-        <div class="countdown" id="countdown" aria-label="Waqtiga ka hadhay go'aanka"></div>
+        <div class="countdown" id="countdown" aria-label="Waqtiga ka hadhay go'aanka" data-en-label="Time left until the decision"></div>
       </div>
     </div>
 
     <div class="grid" style="--min: 300px; margin-top: 14px">
       <div class="card">
-        <h2 class="h3">Xogtii u dambeysay</h2>
+        <h2 class="h3" data-en="Latest data">Xogtii u dambeysay</h2>
         <div id="latest-data" style="display:flex;flex-direction:column;gap:10px"></div>
       </div>
       <div class="card">
-        <h2 class="h3">Xogta soo socota</h2>
+        <h2 class="h3" data-en="Upcoming data">Xogta soo socota</h2>
         <div id="upcoming" style="display:flex;flex-direction:column;gap:10px"></div>
-        <p class="note">Waqtiyada waxaa lagu muujiyaa saacadda meesha aad joogto.</p>
+        <p class="note" id="tz-note" data-en="Times are shown in your local time.">Waqtiyada waxaa lagu muujiyaa saacadda meesha aad joogto.</p>
       </div>
     </div>
     <p class="note" id="fed-updated"></p>
@@ -64,18 +65,18 @@
         <div class="section-head" style="margin-bottom:6px">
           <h2 class="h2" style="display:flex;align-items:center;gap:10px">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="12" rx="3"/><line x1="12" y1="3" x2="12" y2="7"/><circle cx="9" cy="13" r="1.2"/><circle cx="15" cy="13" r="1.2"/></svg>
-            Warbixinta tooska ah
+            <span data-en="Live briefing">Warbixinta tooska ah</span>
           </h2>
-          <span class="status live" style="font-size:.8rem"><span class="dot"></span><span id="agent-updated">Xiriirinaya…</span></span>
+          <span class="status live" style="font-size:.8rem"><span class="dot"></span><span id="agent-updated" data-en="Connecting…">Xiriirinaya…</span></span>
         </div>
-        <p class="small muted" style="margin:0 0 6px">Marka FED-ka, xafiiska shaqada (BLS) ama suuqyadu xog cusub soo saaraan, halkan ayay si toos ah ugu soo baxaysaa, af-Soomaali, ilaheeda oo la socda.</p>
-        <div id="agent-feed"><p class="muted">Xogta waa la soo qaadayaa…</p></div>
+        <p class="small muted" style="margin:0 0 6px" data-en="When the Fed, the Bureau of Labor Statistics (BLS) or the markets release new data, it appears here automatically, with its sources.">Marka FED-ka, xafiiska shaqada (BLS) ama suuqyadu xog cusub soo saaraan, halkan ayay si toos ah ugu soo baxaysaa, af-Soomaali, ilaheeda oo la socda.</p>
+        <div id="agent-feed"><p class="muted" data-en="Loading data…">Xogta waa la soo qaadayaa…</p></div>
       </div>
       <div class="card" style="min-width:0">
-        <h2 class="h2" style="margin-bottom:4px">Filashada</h2>
-        <p class="small muted" style="margin:0 0 6px">Suuqu muxuu filayaa in FED-ku sameeyo shirka xiga?</p>
+        <h2 class="h2" style="margin-bottom:4px" data-en="Expectations">Filashada</h2>
+        <p class="small muted" style="margin:0 0 6px" data-en="What does the market expect the Fed to do at the next meeting?">Suuqu muxuu filayaa in FED-ku sameeyo shirka xiga?</p>
         <div id="gauge" style="display:flex;flex-direction:column;align-items:center;gap:2px;margin:6px 0 14px"></div>
-        <div id="odds"><p class="muted">Fursadaha waa la soo qaadayaa…</p></div>
+        <div id="odds"><p class="muted" data-en="Loading odds…">Fursadaha waa la soo qaadayaa…</p></div>
       </div>
     </div>
   </section>
@@ -84,17 +85,17 @@
   <section class="section" id="crypto">
     <div class="section-head">
       <div>
-        <span class="eyebrow">SUUQA CRYPTO · 24/7</span>
-        <h2 class="h2">Qiimayaasha oo isu beddela ilbiriqsi kasta</h2>
+        <span class="eyebrow" data-en="MARKETS · 24/7">SUUQYADA · 24/7</span>
+        <h2 class="h2" data-en="Crypto, gold, oil, stocks and the dollar, live">Crypto, dahab, shidaal, saamiyo iyo dollar, oo toos ah</h2>
       </div>
-      <div class="muted small">La cusbooneysiiyay: <b class="mono" id="clock" style="color:var(--text)">—</b></div>
+      <div class="muted small" data-en="Updated: &lt;b class=&quot;mono&quot; id=&quot;clock&quot; style=&quot;color:var(--text)&quot;&gt;—&lt;/b&gt;">La cusbooneysiiyay: <b class="mono" id="clock" style="color:var(--text)">—</b></div>
     </div>
 
     <div class="grid" style="--min: 220px">
-      <div class="card kpi"><span class="kpi-label">Qiimaha guud ee suuqa</span><span class="kpi-value" id="g-mcap">—</span><span class="kpi-sub" id="g-mcap-chg">—</span></div>
-      <div class="card kpi"><span class="kpi-label">Saamiga Bitcoin ee suuqa</span><span class="kpi-value" id="g-btcdom">—</span><span class="kpi-sub" id="g-ethdom">—</span></div>
-      <div class="card kpi"><span class="kpi-label">Dareenka suuqa (cabsi ama hunguri)</span><span class="kpi-value" id="fng-value">—</span><span class="kpi-sub" id="fng-label">—</span><div class="fng-bar" aria-hidden="true"><div class="fng-pin" id="fng-pin"></div></div></div>
-      <div class="card kpi"><span class="kpi-label">Bitcoin · hadda</span><span class="kpi-value" id="hero-btc">—</span><span class="kpi-sub" id="hero-btc-chg">—</span></div>
+      <div class="card kpi"><span class="kpi-label" data-en="Total crypto market cap">Qiimaha guud ee suuqa</span><span class="kpi-value" id="g-mcap">—</span><span class="kpi-sub" id="g-mcap-chg">—</span></div>
+      <div class="card kpi"><span class="kpi-label" data-en="Bitcoin dominance">Saamiga Bitcoin ee suuqa</span><span class="kpi-value" id="g-btcdom">—</span><span class="kpi-sub" id="g-ethdom">—</span></div>
+      <div class="card kpi"><span class="kpi-label" data-en="Market sentiment (fear or greed)">Dareenka suuqa (cabsi ama hunguri)</span><span class="kpi-value" id="fng-value">—</span><span class="kpi-sub" id="fng-label">—</span><div class="fng-bar" aria-hidden="true"><div class="fng-pin" id="fng-pin"></div></div></div>
+      <div class="card kpi"><span class="kpi-label" data-en="Bitcoin · now">Bitcoin · hadda</span><span class="kpi-value" id="hero-btc">—</span><span class="kpi-sub" id="hero-btc-chg">—</span></div>
     </div>
 
     <div class="card table-card" style="margin-top:14px">
@@ -102,32 +103,28 @@
         <table class="data">
           <thead>
             <tr>
-              <th class="hide-xs">#</th>
-              <th>Coin</th>
-              <th class="r">Qiimaha</th>
-              <th class="r">24 saac</th>
-              <th class="r hide-sm">Ugu sarreeya / hooseeya 24s</th>
-              <th class="r hide-sm">Mugga ganacsiga 24s</th>
-              <th class="r hide-sm">Qiimaha guud</th>
-              <th class="r hide-xs">7 maalmood</th>
+              <th data-en="Market">Suuqa</th>
+              <th class="r" data-en="Price">Qiimaha</th>
+              <th class="r" data-en="24h">24 saac</th>
+              <th class="r hide-xs" data-en="7 days">7 maalmood</th>
+              <th class="r hide-sm" data-en="Source">Isha</th>
             </tr>
           </thead>
           <tbody id="coins-body"></tbody>
         </table>
       </div>
     </div>
-    <p class="note">Isha: Binance (live) · CoinGecko (market cap, 7 maalmood) · Alternative.me (dareenka suuqa)</p>
+    <p class="note" data-en="Bitcoin and Ethereum: Binance (every second). Gold, silver, oil, S&amp;P 500, Nasdaq and the dollar: Hyperliquid, a 24/7 market that tracks global prices (small differences are possible). On weekends, when official markets are closed, prices come from 24/7 trading. Bond: FRED (daily). Market cap and Bitcoin dominance: CoinGecko · sentiment: Alternative.me.">Bitcoin iyo Ethereum: Binance (ilbiriqsi kasta). Dahab, lacag, shidaal, S&amp;P 500, Nasdaq iyo dollar: Hyperliquid, suuq 24/7 ah oo raaca qiimaha caalamiga ah (farqi yar ayaa jiri kara). Fasaxa toddobaadka, marka suuqyada rasmiga ahi xiran yihiin, qiimuhu wuxuu ka yimaadaa ganacsiga 24/7. Bond-ka: FRED (maalin kasta). Qiimaha guud iyo saamiga Bitcoin: CoinGecko · dareenka suuqa: Alternative.me.</p>
     <p class="note" id="data-note" hidden></p>
   </section>
 
   <!-- 3. DHAWAAN -->
   <section class="section">
     <div class="card soon">
-      <span class="eyebrow">DHAWAAN</span>
-      <h2 class="h3">Waxa ku soo biiraya</h2>
+      <span class="eyebrow" data-en="COMING SOON">DHAWAAN</span>
+      <h2 class="h3" data-en="What&#x27;s coming">Waxa ku soo biiraya</h2>
       <ul class="soon-list">
-        <li><b>Saamiyada iyo dollar-ka:</b> S&amp;P 500, Nasdaq iyo DXY</li>
-        <li><b>Ogeysiisyo Telegram ah:</b> marka xog muhiim ah soo baxdo</li>
+        <li data-en="&lt;b&gt;Telegram alerts:&lt;/b&gt; when important data is released"><b>Ogeysiisyo Telegram ah:</b> marka xog muhiim ah soo baxdo</li>
       </ul>
     </div>
   </section>

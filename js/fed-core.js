@@ -4,9 +4,14 @@
 (function () {
   "use strict";
 
-  const MONTHS = ["Jan", "Feb", "Mar", "Abr", "May", "Jun", "Lul", "Og", "Seb", "Okt", "Nof", "Dis"];
-  const MONTHS_LONG = ["Janaayo", "Febraayo", "Maarso", "Abriil", "Maajo", "Juun", "Luulyo", "Ogosto", "Sebtember", "Oktoobar", "Nofembar", "Desember"];
-  const DAYS = ["Axad", "Isniin", "Talaado", "Arbaco", "Khamiis", "Jimco", "Sabti"];
+  const EN = window.I18N && window.I18N.lang === "en";
+  const T = function (so, en) { return EN ? en : so; };
+  const MONTHS = EN ? ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    : ["Jan", "Feb", "Mar", "Abr", "May", "Jun", "Lul", "Og", "Seb", "Okt", "Nof", "Dis"];
+  const MONTHS_LONG = EN ? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    : ["Janaayo", "Febraayo", "Maarso", "Abriil", "Maajo", "Juun", "Luulyo", "Ogosto", "Sebtember", "Oktoobar", "Nofembar", "Desember"];
+  const DAYS = EN ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    : ["Axad", "Isniin", "Talaado", "Arbaco", "Khamiis", "Jimco", "Sabti"];
 
   function pad(n) { return String(n).padStart(2, "0"); }
   function num(v, d) { return Number(v).toFixed(d == null ? 2 : d); }
@@ -46,9 +51,9 @@
   }
 
   const ACTION = {
-    hike: { text: "▲ Kor u qaadis", cls: "hawk", short: "▲ Kor" },
-    cut: { text: "▼ Dhimis", cls: "dove", short: "▼ Dhimis" },
-    hold: { text: "● Hayn", cls: "dove", short: "● Hayn" }
+    hike: { text: T("▲ Kor u qaadis", "▲ Hike"), cls: "hawk", short: T("▲ Kor", "▲ Hike") },
+    cut: { text: T("▼ Dhimis", "▼ Cut"), cls: "dove", short: T("▼ Dhimis", "▼ Cut") },
+    hold: { text: T("● Hayn", "● Hold"), cls: "dove", short: T("● Hayn", "● Hold") }
   };
 
   // Soo qaad xogta /api/fed (Vercel). Haddii la waayo -> null (boggu wuxuu isticmaalaa xog kayd ah)
@@ -71,7 +76,7 @@
   }
 
   window.FedCore = {
-    MONTHS, MONTHS_LONG, DAYS, pad, num, fmtRange, fmtChange, fmtDate, fmtDateTime, monthName,
+    MONTHS, MONTHS_LONG, DAYS, EN, T, pad, num, fmtRange, fmtChange, fmtDate, fmtDateTime, monthName,
     dateObj, targetAt, meetingOutcome, ACTION, load, esc
   };
 })();

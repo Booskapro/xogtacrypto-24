@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Taariikhda FED – sannad kasta iyo bil kasta | Xogta Crypto 24/7</title>
+  <meta name="title-en" content="Fed History – Xogta Crypto 24/7">
   <meta name="description" content="Taariikhda go'aannada FED-ka: dooro sannad (1954 ilaa maanta), arag bil kasta: kor u qaadis, dhimis ama hayn, iyo sicir-bararka iyo shaqo la'aanta.">
   <meta name="theme-color" content="#080B10">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234C9AFF'/%3E%3Cpolyline points='7 20 13 14 17 18 25 10' fill='none' stroke='%23080B10' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
@@ -19,32 +20,32 @@
 
 <main class="wrap">
   <section class="section">
-    <span class="eyebrow">TAARIIKHDA FED</span>
-    <h1 class="h1">Taabo sannad, arag bil kasta: FED-ku ma kor u qaaday, ma dhimay, mise wuu hayay?</h1>
-    <p class="lead">Xogta dulsaarka, sicir-bararka, shaqo la'aanta iyo shaqooyinka laga bilaabo 1954 ilaa maanta. Waxay si toos ah uga imanaysaa FRED (Federal Reserve Bank of St. Louis).</p>
+    <span class="eyebrow" data-en="FED HISTORY">TAARIIKHDA FED</span>
+    <h1 class="h1" data-en="Tap a year, see every month: did the Fed hike, cut or hold?">Taabo sannad, arag bil kasta: FED-ku ma kor u qaaday, ma dhimay, mise wuu hayay?</h1>
+    <p class="lead" data-en="Interest rates, inflation, unemployment and jobs from 1954 to today, pulled live from FRED (Federal Reserve Bank of St. Louis).">Xogta dulsaarka, sicir-bararka, shaqo la'aanta iyo shaqooyinka laga bilaabo 1954 ilaa maanta. Waxay si toos ah uga imanaysaa FRED (Federal Reserve Bank of St. Louis).</p>
   </section>
 
-  <div id="loading" class="card" style="margin-top:8px">Xogta taariikhda waa la soo qaadayaa…</div>
+  <div id="loading" class="card" style="margin-top:8px" data-en="Loading history…">Xogta taariikhda waa la soo qaadayaa…</div>
 
   <div id="app" hidden>
     <section class="section" style="padding-top:8px">
       <div class="section-head" style="align-items:center">
-        <div class="chips" id="decades" role="group" aria-label="Kala shaandhee tobanaanka sano"></div>
+        <div class="chips" id="decades" role="group" aria-label="Kala shaandhee tobanaanka sano" data-en-label="Filter by decade"></div>
         <div class="legend">
-          <span><i style="background:var(--hawk)"></i>Kor u qaadis</span>
-          <span><i style="background:var(--dove)"></i>Dhimis</span>
-          <span><i style="background:var(--line-2)"></i>Isbeddel ma jirin</span>
+          <span data-en="&lt;i style=&quot;background:var(--hawk)&quot;&gt;&lt;/i&gt;Hike"><i style="background:var(--hawk)"></i>Kor u qaadis</span>
+          <span data-en="&lt;i style=&quot;background:var(--dove)&quot;&gt;&lt;/i&gt;Cut"><i style="background:var(--dove)"></i>Dhimis</span>
+          <span data-en="&lt;i style=&quot;background:var(--line-2)&quot;&gt;&lt;/i&gt;No change"><i style="background:var(--line-2)"></i>Isbeddel ma jirin</span>
         </div>
       </div>
       <div class="card"><div class="years" id="years"></div></div>
-      <p class="note">Ka hor 1994, FED-ku go'aannadiisa si rasmi ah uma shaacin jirin. Ka hor 1982, xogta waxay muujinaysaa dulsaarka suuqa (effective rate), maxaa yeelay ma jiro diiwaan dulsaar hadaf ah (target).</p>
+      <p class="note" data-en="Before 1994, the Fed did not officially announce its decisions. Before 1982, the data shows the market rate (effective rate), because there is no record of a target rate.">Ka hor 1994, FED-ku go'aannadiisa si rasmi ah uma shaacin jirin. Ka hor 1982, xogta waxay muujinaysaa dulsaarka suuqa (effective rate), maxaa yeelay ma jiro diiwaan dulsaar hadaf ah (target).</p>
     </section>
 
     <section class="section" id="year-detail">
       <div class="card" style="display:flex;flex-direction:column;gap:18px">
         <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:14px">
           <div>
-            <span class="eyebrow" style="color:var(--muted)">SANNADKA LA DOORTAY</span>
+            <span class="eyebrow" style="color:var(--muted)" data-en="SELECTED YEAR">SANNADKA LA DOORTAY</span>
             <h2 class="h2" id="yd-title" style="font-size:2rem">—</h2>
           </div>
           <div class="stats" id="yd-stats"></div>
@@ -56,27 +57,27 @@
 
         <div>
           <div class="legend" style="margin-bottom:8px">
-            <span><i style="background:var(--accent)"></i>Dulsaarka FED (effective)</span>
-            <span><i style="background:var(--hawk)"></i>Sicir-barar (CPI, sannadle)</span>
-            <span><i style="background:var(--up)"></i>Shaqo la'aan</span>
+            <span data-en="&lt;i style=&quot;background:var(--accent)&quot;&gt;&lt;/i&gt;Fed rate (effective)"><i style="background:var(--accent)"></i>Dulsaarka FED (effective)</span>
+            <span data-en="&lt;i style=&quot;background:var(--hawk)&quot;&gt;&lt;/i&gt;Inflation (CPI, year-over-year)"><i style="background:var(--hawk)"></i>Sicir-barar (CPI, sannadle)</span>
+            <span data-en="&lt;i style=&quot;background:var(--up)&quot;&gt;&lt;/i&gt;Unemployment"><i style="background:var(--up)"></i>Shaqo la'aan</span>
           </div>
           <div class="chart-box" id="yd-chart"></div>
         </div>
 
         <div class="table-scroll">
           <table class="data" id="yd-table">
-            <thead><tr><th>Bisha</th><th>Go'aanka FED</th><th class="r">Dulsaar (effective)</th><th class="r">CPI sannadle</th><th class="r">Shaqo la'aan</th><th class="r">Shaqooyin (NFP)</th></tr></thead>
+            <thead><tr><th data-en="Month">Bisha</th><th data-en="Fed decision">Go'aanka FED</th><th class="r" data-en="Rate (effective)">Dulsaar (effective)</th><th class="r" data-en="CPI YoY">CPI sannadle</th><th class="r" data-en="Unemployment">Shaqo la'aan</th><th class="r" data-en="Jobs (NFP)">Shaqooyin (NFP)</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
-        <p class="note" style="margin:0">Isha: FRED — <a href="https://fred.stlouisfed.org/series/DFEDTARU" rel="noopener">DFEDTARU/L</a>, <a href="https://fred.stlouisfed.org/series/DFEDTAR" rel="noopener">DFEDTAR</a>, <a href="https://fred.stlouisfed.org/series/FEDFUNDS" rel="noopener">FEDFUNDS</a>, <a href="https://fred.stlouisfed.org/series/CPIAUCNS" rel="noopener">CPIAUCNS</a>, <a href="https://fred.stlouisfed.org/series/UNRATE" rel="noopener">UNRATE</a>, <a href="https://fred.stlouisfed.org/series/PAYEMS" rel="noopener">PAYEMS</a>. <span id="updated"></span></p>
+        <p class="note" style="margin:0"><span data-en="Source:">Isha:</span> FRED — <a href="https://fred.stlouisfed.org/series/DFEDTARU" rel="noopener">DFEDTARU/L</a>, <a href="https://fred.stlouisfed.org/series/DFEDTAR" rel="noopener">DFEDTAR</a>, <a href="https://fred.stlouisfed.org/series/FEDFUNDS" rel="noopener">FEDFUNDS</a>, <a href="https://fred.stlouisfed.org/series/CPIAUCNS" rel="noopener">CPIAUCNS</a>, <a href="https://fred.stlouisfed.org/series/UNRATE" rel="noopener">UNRATE</a>, <a href="https://fred.stlouisfed.org/series/PAYEMS" rel="noopener">PAYEMS</a>. <span id="updated"></span></p>
       </div>
     </section>
   </div>
 
   <div id="offline" class="card soon" hidden>
-    <h2 class="h3">Xogta taariikhda lama heli karo hadda</h2>
-    <p class="muted" style="margin:0">Qaybtani waxay ka shaqaysaa website-ka internet-ka ku jira (Vercel), maxaa yeelay xogta waxaa laga soo qaadaa FRED. Haddii aad furtay fayl kombiyuutarkaaga ku jira, fur link-ga website-ka. Haddii kale, isku day mar kale dhawr daqiiqo kadib.</p>
+    <h2 class="h3" data-en="History data is not available right now">Xogta taariikhda lama heli karo hadda</h2>
+    <p class="muted" style="margin:0" data-en="This section works on the live website (Vercel), because the data is fetched from FRED. If you opened a file on your computer, open the website link instead. Otherwise, try again in a few minutes.">Qaybtani waxay ka shaqaysaa website-ka internet-ka ku jira (Vercel), maxaa yeelay xogta waxaa laga soo qaadaa FRED. Haddii aad furtay fayl kombiyuutarkaaga ku jira, fur link-ga website-ka. Haddii kale, isku day mar kale dhawr daqiiqo kadib.</p>
   </div>
 </main>
 

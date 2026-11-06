@@ -5,11 +5,11 @@
   "use strict";
 
   const NAV = [
-    { href: "index.html",       key: "maanta",     label: "Maanta" },
-    { href: "wararka.html",     key: "wararka",    label: "Wararka" },
-    { href: "fahanka-fed.html", key: "fahanka",    label: "Fahanka FED" },
-    { href: "taariikhda.html",  key: "taariikhda", label: "Taariikhda FED" },
-    { href: "ku-saabsan.html",  key: "ku-saabsan", label: "Ku saabsan" }
+    { href: "index.html",       key: "maanta",     label: "Maanta",         en: "Today" },
+    { href: "wararka.html",     key: "wararka",    label: "Wararka",        en: "News" },
+    { href: "fahanka-fed.html", key: "fahanka",    label: "Fahanka FED",    en: "Learn the Fed" },
+    { href: "taariikhda.html",  key: "taariikhda", label: "Taariikhda FED", en: "Fed History" },
+    { href: "ku-saabsan.html",  key: "ku-saabsan", label: "Ku saabsan",     en: "About" }
   ];
 
   const ACCENTS = [
@@ -27,6 +27,15 @@
   function save(key, value) {
     try { localStorage.setItem(key, value); } catch (e) {}
   }
+
+  // ---------- Luqadda (Soomaali / English) ----------
+  const LANG = load("xc-lang", "so") === "en" ? "en" : "so";
+  window.I18N = {
+    lang: LANG,
+    tx: function (so, en) { return LANG === "en" ? en : so; }
+  };
+  document.documentElement.setAttribute("lang", LANG);
+  document.documentElement.setAttribute("data-lang", LANG);
 
   function applyTheme() {
     const root = document.documentElement;
@@ -52,18 +61,22 @@
 
   function buildHeader(active, showStatus) {
     const links = NAV.map(function (n) {
-      return '<a href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + n.label + "</a>";
+      return '<a href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + (LANG === "en" ? n.en : n.label) + "</a>";
     }).join("");
     return (
       '<div class="wrap header-row" style="position:relative">' +
-        '<a href="index.html" class="brand" aria-label="' + window.SITE.name + ' – bogga hore">' +
+        '<a href="index.html" class="brand" aria-label="' + window.SITE.name + '">' +
           '<span class="brand-mark">' + icon.logo + '</span>' +
           '<span class="brand-name">Xogta Crypto <span class="accent">24/7</span></span>' +
         "</a>" +
         '<nav class="main-nav" aria-label="Menu-ga">' + links + "</nav>" +
         '<div class="header-tools">' +
-          (showStatus ? '<div class="status" id="status" role="status" aria-live="polite"><span class="dot"></span><span id="status-text">Xiriirinaya…</span></div>' : "") +
-          '<button type="button" class="icon-btn" id="theme-btn" aria-label="Beddel midabka website-ka" aria-expanded="false" aria-controls="theme-panel">' + icon.palette + "</button>" +
+          (showStatus ? '<div class="status" id="status" role="status" aria-live="polite"><span class="dot"></span><span id="status-text">' + (LANG === "en" ? "Connecting…" : "Xiriirinaya…") + "</span></div>" : "") +
+          '<div class="lang-switch" role="group" aria-label="Luqadda / Language">' +
+            '<button type="button" data-lang-set="so" aria-pressed="' + (LANG === "so") + '">SO</button>' +
+            '<button type="button" data-lang-set="en" aria-pressed="' + (LANG === "en") + '">EN</button>' +
+          "</div>" +
+          '<button type="button" class="icon-btn" id="theme-btn" aria-label="' + (LANG === "en" ? "Change website colours" : "Beddel midabka website-ka") + '" aria-expanded="false" aria-controls="theme-panel">' + icon.palette + "</button>" +
         "</div>" +
         buildPanel() +
       "</div>" +
@@ -75,19 +88,20 @@
     const sw = ACCENTS.map(function (a) {
       return '<button type="button" class="swatch" data-accent="' + a.value + '" aria-label="' + a.name + '" style="background:' + a.value + '"></button>';
     }).join("");
+    const T = window.I18N.tx;
     return (
       '<div class="theme-panel" id="theme-panel" hidden>' +
-        "<h2>Midabka website-ka</h2>" +
-        '<div><div class="label">Midabka muhiimka ah</div><div class="swatches">' + sw + "</div></div>" +
-        '<div><div class="label">Asalka</div><div class="seg">' +
-          '<button type="button" data-mode="dark">Mugdi</button>' +
-          '<button type="button" data-mode="light">Iftiin</button>' +
+        "<h2>" + T("Midabka website-ka", "Website colours") + "</h2>" +
+        '<div><div class="label">' + T("Midabka muhiimka ah", "Accent colour") + '</div><div class="swatches">' + sw + "</div></div>" +
+        '<div><div class="label">' + T("Asalka", "Background") + '</div><div class="seg">' +
+          '<button type="button" data-mode="dark">' + T("Mugdi", "Dark") + "</button>" +
+          '<button type="button" data-mode="light">' + T("Iftiin", "Light") + "</button>" +
           '<button type="button" data-mode="auto">Auto</button>' +
         "</div></div>" +
-        '<div><div class="label">Cabbirka qoraalka</div><div class="seg">' +
-          '<button type="button" data-size="s" style="font-size:.8rem">A yar</button>' +
+        '<div><div class="label">' + T("Cabbirka qoraalka", "Text size") + '</div><div class="seg">' +
+          '<button type="button" data-size="s" style="font-size:.8rem">' + T("A yar", "Small") + "</button>" +
           '<button type="button" data-size="m">A</button>' +
-          '<button type="button" data-size="l" style="font-size:1.05rem">A weyn</button>' +
+          '<button type="button" data-size="l" style="font-size:1.05rem">' + T("A weyn", "Large") + "</button>" +
         "</div></div>" +
       "</div>"
     );
@@ -136,28 +150,43 @@
     const socials = Object.keys(socialNames).filter(function (k) { return s.social[k]; }).map(function (k) {
       return '<a href="' + s.social[k] + '" rel="noopener">' + socialNames[k] + "</a>";
     }).join("");
+    const T = window.I18N.tx;
     return (
       '<div class="wrap">' +
         '<div class="footer-grid">' +
           '<div><div class="brand-name">Xogta Crypto <span class="accent">24/7</span></div>' +
-            '<p class="muted small">Xogta FED-ka, crypto iyo suuqyada caalamka oo af-Soomaali ah. Aasaasaha: ' + s.founder.name + ".</p></div>" +
-          '<div><b>Xogta</b><a href="index.html">Maanta</a><a href="wararka.html">Wararka</a><a href="taariikhda.html">Taariikhda FED</a></div>' +
-          '<div><b>Waxbarasho</b><a href="fahanka-fed.html">Fahanka FED</a></div>' +
-          '<div><b>Shirkadda</b><a href="ku-saabsan.html">Ku saabsan</a>' + socials +
+            '<p class="muted small">' + T("Xogta FED-ka, crypto iyo suuqyada caalamka oo af-Soomaali ah. Aasaasaha: ", "Fed data, crypto and global markets in Somali and English. Founder: ") + s.founder.name + ".</p></div>" +
+          "<div><b>" + T("Xogta", "Data") + '</b><a href="index.html">' + T("Maanta", "Today") + '</a><a href="wararka.html">' + T("Wararka", "News") + '</a><a href="taariikhda.html">' + T("Taariikhda FED", "Fed History") + "</a></div>" +
+          "<div><b>" + T("Waxbarasho", "Learn") + '</b><a href="fahanka-fed.html">' + T("Fahanka FED", "Learn the Fed") + "</a></div>" +
+          "<div><b>" + T("Shirkadda", "Company") + '</b><a href="ku-saabsan.html">' + T("Ku saabsan", "About") + "</a>" + socials +
             (s.email ? '<span class="small muted" style="display:block;padding:4px 0">' + s.email + "</span>" : "") + "</div>" +
         "</div>" +
-        '<div class="footer-bottom"><span>Tani ma aha talo maaliyadeed. Crypto waa khatar sare; go\'aankaaga adiga ayaa mas\'uul ka ah.</span>' +
+        '<div class="footer-bottom"><span>' + T("Tani ma aha talo maaliyadeed. Crypto waa khatar sare; go\'aankaaga adiga ayaa mas\'uul ka ah.", "This is not financial advice. Crypto is high risk; you are responsible for your own decisions.") + "</span>" +
           "<span>© " + new Date().getFullYear() + " " + s.name + "</span></div>" +
       "</div>"
     );
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+    if (LANG === "en") {
+      const t = document.querySelector('meta[name="title-en"]');
+      if (t) document.title = t.content;
+      // Qoraalka bogga: <el data-en="English">Soomaali</el>
+      document.querySelectorAll("[data-en]").forEach(function (el) { el.innerHTML = el.getAttribute("data-en"); });
+      document.querySelectorAll("[data-en-label]").forEach(function (el) { el.setAttribute("aria-label", el.getAttribute("data-en-label")); });
+    }
     const header = document.querySelector("[data-header]");
     if (header) {
       header.className = "site-header";
       header.innerHTML = buildHeader(header.dataset.header, header.hasAttribute("data-live"));
       wirePanel();
+      header.querySelectorAll("[data-lang-set]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          if (b.dataset.langSet === LANG) return;
+          save("xc-lang", b.dataset.langSet);
+          location.reload();
+        });
+      });
     }
     const footer = document.querySelector("[data-footer]");
     if (footer) {

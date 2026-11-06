@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Wararka FED – toos ah | Xogta Crypto 24/7</title>
+  <meta name="title-en" content="News – Xogta Crypto 24/7">
   <meta name="description" content="Wararka FED-ka iyo xogta dhaqaalaha oo toos ah: bayaannada Federal Reserve, go'aannada FOMC, CPI, shaqooyinka iyo fursadaha go'aanka xiga.">
   <meta name="theme-color" content="#080B10">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234C9AFF'/%3E%3Cpolyline points='7 20 13 14 17 18 25 10' fill='none' stroke='%23080B10' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
@@ -21,49 +22,49 @@
   <section class="section">
     <div class="section-head">
       <div>
-        <span class="eyebrow">WARARKA · TOOS AH</span>
-        <h1 class="h1">Wararka FED-ka iyo xogta dhaqaalaha</h1>
-        <p class="lead">War kasta wuxuu si toos ah uga yimaadaa ilaha rasmiga ah, waxaana la cusbooneysiiyaa daqiiqad kasta. Isha ayaa la socota mid kasta.</p>
+        <span class="eyebrow" data-en="NEWS · LIVE">WARARKA · TOOS AH</span>
+        <h1 class="h1" data-en="Fed news and economic data">Wararka FED-ka iyo xogta dhaqaalaha</h1>
+        <p class="lead" data-en="Every item comes straight from official sources and is refreshed every minute. Each one links to its source.">War kasta wuxuu si toos ah uga yimaadaa ilaha rasmiga ah, waxaana la cusbooneysiiyaa daqiiqad kasta. Isha ayaa la socota mid kasta.</p>
       </div>
-      <span class="status live"><span class="dot"></span><span id="agent-updated">Xiriirinaya…</span></span>
+      <span class="status live"><span class="dot"></span><span id="agent-updated" data-en="Connecting…">Xiriirinaya…</span></span>
     </div>
   </section>
 
   <div class="split">
     <div style="min-width:0;display:flex;flex-direction:column;gap:16px">
       <section class="card">
-        <h2 class="h3">Warbixinta tooska ah</h2>
-        <div id="agent-feed"><p class="muted">Xogta waa la soo qaadayaa…</p></div>
+        <h2 class="h3" data-en="Live briefing">Warbixinta tooska ah</h2>
+        <div id="agent-feed"><p class="muted" data-en="Loading data…">Xogta waa la soo qaadayaa…</p></div>
       </section>
 
       <section class="card">
         <div class="section-head" style="margin-bottom:4px">
-          <h2 class="h3" style="margin:0">Federal Reserve · bayaannada rasmiga ah</h2>
-          <div class="chips" id="news-filter" role="group" aria-label="Kala shaandhee wararka">
-            <button type="button" data-cat="all" aria-pressed="true">Dhammaan</button>
-            <button type="button" data-cat="monetary" aria-pressed="false">Siyaasadda lacagta</button>
-            <button type="button" data-cat="press" aria-pressed="false">Bayaannada</button>
-            <button type="button" data-cat="speech" aria-pressed="false">Hadallada</button>
+          <h2 class="h3" style="margin:0" data-en="Federal Reserve · official releases">Federal Reserve · bayaannada rasmiga ah</h2>
+          <div class="chips" id="news-filter" role="group" aria-label="Kala shaandhee wararka" data-en-label="Filter news">
+            <button type="button" data-cat="all" aria-pressed="true" data-en="All">Dhammaan</button>
+            <button type="button" data-cat="monetary" aria-pressed="false" data-en="Monetary policy">Siyaasadda lacagta</button>
+            <button type="button" data-cat="press" aria-pressed="false" data-en="Press releases">Bayaannada</button>
+            <button type="button" data-cat="speech" aria-pressed="false" data-en="Speeches">Hadallada</button>
           </div>
         </div>
-        <p class="small muted" style="margin:0">War kasta wuxuu leeyahay sharraxaad af-Soomaali ah. Cinwaanka asalka ah ee Ingiriisiga iyo link-ga isha ayaa hoos ku qoran.</p>
-        <div id="news-list"><p class="muted">Wararka waa la soo qaadayaa…</p></div>
+        <p class="small muted" style="margin:0" data-en="Each item has a short explanation and a link to the official source.">War kasta wuxuu leeyahay sharraxaad af-Soomaali ah. Cinwaanka asalka ah ee Ingiriisiga iyo link-ga isha ayaa hoos ku qoran.</p>
+        <div id="news-list"><p class="muted" data-en="Loading news…">Wararka waa la soo qaadayaa…</p></div>
       </section>
     </div>
 
     <aside style="min-width:0;display:flex;flex-direction:column;gap:16px">
       <section class="card">
-        <h2 class="h3">Filashada · go'aanka xiga</h2>
+        <h2 class="h3" data-en="Expectations · next decision">Filashada · go'aanka xiga</h2>
         <div id="gauge" style="display:flex;flex-direction:column;align-items:center;gap:2px;margin:6px 0 14px"></div>
-        <div id="odds"><p class="muted">Fursadaha waa la soo qaadayaa…</p></div>
+        <div id="odds"><p class="muted" data-en="Loading odds…">Fursadaha waa la soo qaadayaa…</p></div>
       </section>
       <section class="card">
-        <h2 class="h3">Sida wararka loo hubiyo</h2>
+        <h2 class="h3" data-en="How the news is verified">Sida wararka loo hubiyo</h2>
         <ol class="soon-list" style="margin-top:0">
-          <li>Wararka waxay ka yimaadaan kaliya ilaha rasmiga ah: Federal Reserve, BLS iyo FRED.</li>
-          <li>Tirooyinka waxaa si toos ah looga soo qaadaa isha, lagama koobiyeeyo gacan.</li>
-          <li>Go'aanka FOMC waxaa laga akhriyaa bayaanka rasmiga ah isla daqiiqadda la daabaco.</li>
-          <li>War kasta wuxuu leeyahay link isha asalka ah, si aad adigu u hubiso.</li>
+          <li data-en="News comes only from official sources: the Federal Reserve, BLS and FRED.">Wararka waxay ka yimaadaan kaliya ilaha rasmiga ah: Federal Reserve, BLS iyo FRED.</li>
+          <li data-en="Numbers are pulled directly from the source, never copied by hand.">Tirooyinka waxaa si toos ah looga soo qaadaa isha, lagama koobiyeeyo gacan.</li>
+          <li data-en="The FOMC decision is read from the official statement the minute it is published.">Go'aanka FOMC waxaa laga akhriyaa bayaanka rasmiga ah isla daqiiqadda la daabaco.</li>
+          <li data-en="Every item links to the original source so you can check it yourself.">War kasta wuxuu leeyahay link isha asalka ah, si aad adigu u hubiso.</li>
         </ol>
       </section>
     </aside>

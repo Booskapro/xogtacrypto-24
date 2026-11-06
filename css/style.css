@@ -308,3 +308,10 @@ table.data { width: 100%; border-collapse: collapse; }
 .news-item { padding: 16px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
 .news-item:last-child { border-bottom: 0; }
 .news-title { margin: 0; font-size: 1.08rem; line-height: 1.35; }
+
+/* ---------- Luqadda ---------- */
+html[data-lang="en"] .so { display: none !important; }
+html:not([data-lang="en"]) .en { display: none !important; }
+.lang-switch { display: flex; border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; }
+.lang-switch button { min-width: 44px; min-height: 42px; padding: 0 10px; border: 0; background: transparent; color: var(--muted); font: 700 .85rem Inter, sans-serif; cursor: pointer; }
+.lang-switch button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }

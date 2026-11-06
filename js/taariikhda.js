@@ -7,6 +7,7 @@
   const F = window.FedCore;
   const $ = function (id) { return document.getElementById(id); };
   const esc = F.esc;
+  const TX = window.I18N.tx;
 
   let API = null, EVENTS = [], MONTHLY = {}, MEETINGS = [];
   let selYear = null, selMonth = null, decade = "all";
@@ -14,7 +15,7 @@
   // ---------- Xisaabinta sannad kasta ----------
   function eventsIn(prefix) { return EVENTS.filter(function (e) { return e.dd.indexOf(prefix) === 0; }); }
   // Taariikhda la muujiyo: maalinta go'aanka (haddii shirku jadwalka ku jiro), haddii kale maalinta uu dhaqan galay
-  function evDate(e) { return F.fmtDate(e.dd) + (!e.matched && e.dd >= "2009" ? " (dhaqan galka)" : ""); }
+  function evDate(e) { return F.fmtDate(e.dd) + (!e.matched && e.dd >= "2009" ? TX(" (dhaqan galka)", " (effective)") : ""); }
   function meetingsIn(prefix) { return MEETINGS.filter(function (m) { return m.date.indexOf(prefix) === 0; }); }
 
   function yearInfo(y) {
@@ -29,12 +30,12 @@
   function tileLabel(info) {
     if (info.y < 1982) {
       const ff = info.months.map(function (k) { return MONTHLY[k].ff; }).filter(function (v) { return v != null; });
-      return ff.length ? "Dulsaar: " + ff[0].toFixed(1) + "% → " + ff[ff.length - 1].toFixed(1) + "%" : "—";
+      return ff.length ? TX("Dulsaar: ", "Rate: ") + ff[0].toFixed(1) + "% → " + ff[ff.length - 1].toFixed(1) + "%" : "—";
     }
     if (info.hikes && info.cuts) return "▲" + info.hikes + " ▼" + info.cuts;
-    if (info.hikes) return "▲ " + info.hikes + " kor";
-    if (info.cuts) return "▼ " + info.cuts + " dhimis";
-    return "— isbeddel ma jirin";
+    if (info.hikes) return "▲ " + info.hikes + TX(" kor", info.hikes > 1 ? " hikes" : " hike");
+    if (info.cuts) return "▼ " + info.cuts + TX(" dhimis", info.cuts > 1 ? " cuts" : " cut");
+    return TX("— isbeddel ma jirin", "— no change");
   }
   function tileClass(info) {
     if (info.y < 1982) return "";
@@ -46,8 +47,8 @@
 
   // ---------- Sannadaha ----------
   function renderDecades(minY, maxY) {
-    const list = [{ key: "all", label: "Dhammaan" }];
-    for (let d = Math.floor(maxY / 10) * 10; d >= Math.floor(minY / 10) * 10; d -= 10) list.push({ key: String(d), label: d + "-yadii" });
+    const list = [{ key: "all", label: TX("Dhammaan", "All") }];
+    for (let d = Math.floor(maxY / 10) * 10; d >= Math.floor(minY / 10) * 10; d -= 10) list.push({ key: String(d), label: d + TX("-yadii", "s") });
     $("decades").innerHTML = list.map(function (d) {
       return '<button type="button" data-decade="' + d.key + '" aria-pressed="' + (d.key === decade) + '">' + d.label + "</button>";
     }).join("");
@@ -95,12 +96,12 @@
 
   function stateText(st) {
     if (st.kind === "hike" || st.kind === "cut" || st.kind === "mixed") {
-      return st.evs.map(function (e) { const c = F.fmtChange(e); return (e.kind === "hike" ? "▲ Kor" : "▼ Dhimis") + (c ? " " + c : ""); }).join(" · ");
+      return st.evs.map(function (e) { const c = F.fmtChange(e); return (e.kind === "hike" ? TX("▲ Kor", "▲ Hike") : TX("▼ Dhimis", "▼ Cut")) + (c ? " " + c : ""); }).join(" · ");
     }
-    if (st.kind === "hold") return "● Hayn";
-    if (st.kind === "future") return "Shir soo socda";
-    if (st.kind === "none") return "Isbeddel ma jirin";
-    return "Weli ma imaan";
+    if (st.kind === "hold") return TX("● Hayn", "● Hold");
+    if (st.kind === "future") return TX("Shir soo socda", "Upcoming meeting");
+    if (st.kind === "none") return TX("Isbeddel ma jirin", "No change");
+    return TX("Weli ma imaan", "Not yet");
   }
 
   function monthValue(y, m) {
@@ -120,7 +121,7 @@
       const cls = st.kind === "hike" ? "hike" : st.kind === "cut" ? "cut" : st.kind === "empty" ? "empty" : "";
       let sub = "";
       if (st.evs.length) sub = st.evs.map(function (e) { return F.fmtDate(e.dd).replace(" " + y, ""); }).join(", ");
-      else if (st.mts.length) sub = "Shir: " + F.fmtDate(st.mts[0].date).replace(" " + y, "");
+      else if (st.mts.length) sub = TX("Shir: ", "Meeting: ") + F.fmtDate(st.mts[0].date).replace(" " + y, "");
       const color = st.kind === "hike" ? "var(--hawk)" : st.kind === "cut" ? "var(--dove)" : st.kind === "hold" ? "var(--dove)" : "var(--muted)";
       html += '<button type="button" class="month ' + cls + '" data-month="' + m + '" aria-pressed="' + (m === selMonth) + '"' + (st.kind === "empty" ? " disabled" : "") + ">" +
         "<b>" + F.MONTHS[m - 1] + "</b>" +
@@ -143,27 +144,27 @@
     if (st.evs.length) {
       st.evs.forEach(function (e) {
         const c = F.fmtChange(e);
-        parts.push(evDate(e) + ": FED-ku dulsaarka " + (e.kind === "hike" ? "kor ayuu u qaaday" : "wuu dhimay") +
+        parts.push(evDate(e) + TX(": FED-ku dulsaarka " + (e.kind === "hike" ? "kor ayuu u qaaday" : "wuu dhimay"), ": the Fed " + (e.kind === "hike" ? "raised" : "cut") + " rates") +
           (c ? " (" + c + ")" : "") + ", " + F.fmtRange(e.from) + " → " + F.fmtRange(e.to) + ".");
       });
     } else if (st.kind === "hold") {
       const mt = st.mts[0];
-      parts.push(F.fmtDate(mt.date) + ": FED-ku wuxuu shir yeeshay, dulsaarkana wuu hayay (" + F.fmtRange(F.targetAt(EVENTS, mt.date)) + ")" + (mt.vote ? ", cod " + mt.vote : "") + ".");
+      parts.push(F.fmtDate(mt.date) + TX(": FED-ku wuxuu shir yeeshay, dulsaarkana wuu hayay (", ": the Fed met and held rates (") + F.fmtRange(F.targetAt(EVENTS, mt.date)) + ")" + (mt.vote ? TX(", cod ", ", vote ") + mt.vote : "") + ".");
     } else if (st.kind === "future") {
-      parts.push("Shirka FOMC wuxuu dhici doonaa " + F.fmtDate(st.mts[0].date) + ". Go'aanka halkan ayuu si toos ah ugu soo bixi doonaa.");
+      parts.push(TX("Shirka FOMC wuxuu dhici doonaa ", "The FOMC meeting will take place on ") + F.fmtDate(st.mts[0].date) + TX(". Go'aanka halkan ayuu si toos ah ugu soo bixi doonaa.", ". The decision will appear here automatically."));
     } else if (st.kind === "none") {
-      parts.push("Dulsaarka FED isma beddelin bishan.");
+      parts.push(TX("Dulsaarka FED isma beddelin bishan.", "The Fed rate did not change this month."));
     }
     const r = st.row || {};
     const facts = [];
-    if (r.cpi != null) facts.push("sicir-bararka (CPI) sannadle: <b>" + r.cpi.toFixed(1) + "%</b>");
-    if (r.un != null) facts.push("shaqo la'aanta: <b>" + r.un.toFixed(1) + "%</b>");
-    if (r.nfp != null) facts.push("shaqooyinka: <b>" + (r.nfp >= 0 ? "+" : "−") + Math.abs(r.nfp).toLocaleString("en-US") + " kun</b>");
-    if (r.ff != null) facts.push("dulsaarka dhabta ah (effective): <b>" + r.ff.toFixed(2) + "%</b>");
+    if (r.cpi != null) facts.push(TX("sicir-bararka (CPI) sannadle: ", "inflation (CPI) year-over-year: ") + "<b>" + r.cpi.toFixed(1) + "%</b>");
+    if (r.un != null) facts.push(TX("shaqo la'aanta: ", "unemployment: ") + "<b>" + r.un.toFixed(1) + "%</b>");
+    if (r.nfp != null) facts.push(TX("shaqooyinka: ", "jobs: ") + "<b>" + (r.nfp >= 0 ? "+" : "−") + Math.abs(r.nfp).toLocaleString("en-US") + TX(" kun", "K") + "</b>");
+    if (r.ff != null) facts.push(TX("dulsaarka dhabta ah (effective): ", "effective rate: ") + "<b>" + r.ff.toFixed(2) + "%</b>");
     let html = "<b>" + esc(name) + "</b>" + parts.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("");
-    if (facts.length) html += "<p>Xogta bishan: " + facts.join(" · ") + ".</p>";
-    if (y < 1994) html += '<p class="small">Fiiro gaar ah: ka hor 1994, FED-ku go\'aannadiisa si rasmi ah uma shaacin jirin.</p>';
-    if (!parts.length && !facts.length) html += "<p>Xogta bishan weli ma soo bixin.</p>";
+    if (facts.length) html += "<p>" + TX("Xogta bishan: ", "This month's data: ") + facts.join(" · ") + ".</p>";
+    if (y < 1994) html += '<p class="small">' + TX("Fiiro gaar ah: ka hor 1994, FED-ku go'aannadiisa si rasmi ah uma shaacin jirin.", "Note: before 1994, the Fed did not officially announce its decisions.") + "</p>";
+    if (!parts.length && !facts.length) html += "<p>" + TX("Xogta bishan weli ma soo bixin.", "This month's data has not been released yet.") + "</p>";
     $("md-summary").innerHTML = html;
   }
 
@@ -186,7 +187,7 @@
     const step = max - min > 12 ? 4 : max - min > 6 ? 2 : 1;
     const X = function (i) { return L + i * (W - L - R) / 11; };
     const Y = function (v) { return T + (max - v) * (H - T - B) / (max - min); };
-    let svg = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Chart ' + y + ': dulsaarka FED, sicir-bararka iyo shaqo la\'aanta">';
+    let svg = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Chart ' + y + '">';
     if (selMonth) svg += '<rect x="' + (X(selMonth - 1) - 26) + '" y="' + T + '" width="52" height="' + (H - T - B) + '" rx="6" fill="var(--accent)" opacity="0.10"></rect>';
     for (let v = Math.ceil(min / step) * step; v <= max; v += step) {
       svg += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--line)"></line>' +
@@ -248,14 +249,14 @@
       const ff = info.months.map(function (k) { return MONTHLY[k].ff; }).filter(function (v) { return v != null; });
       if (ff.length) { start = ff[0].toFixed(2) + "% (eff.)"; end = ff[ff.length - 1].toFixed(2) + "% (eff.)"; }
     }
-    const items = [["Bilowgii sannadka", start], ["Dhammaadka" + (y === new Date().getFullYear() ? " (hadda)" : ""), end]];
-    if (y >= 1982) { items.push(["Kor u qaadis", String(info.hikes)]); items.push(["Dhimis", String(info.cuts)]); }
+    const items = [[TX("Bilowgii sannadka", "Start of year"), start], [TX("Dhammaadka", "End of year") + (y === new Date().getFullYear() ? TX(" (hadda)", " (now)") : ""), end]];
+    if (y >= 1982) { items.push([TX("Kor u qaadis", "Hikes"), String(info.hikes)]); items.push([TX("Dhimis", "Cuts"), String(info.cuts)]); }
     const mts = meetingsIn(String(y));
-    if (mts.length) items.push(["Shirarka FOMC", String(mts.length)]);
+    if (mts.length) items.push([TX("Shirarka FOMC", "FOMC meetings"), String(mts.length)]);
     $("yd-stats").innerHTML = items.map(function (it) { return "<div><span>" + esc(it[0]) + "</span><b>" + esc(it[1]) + "</b></div>"; }).join("");
     const title = y >= 1982
-      ? y + " · " + (info.hikes || info.cuts ? [info.hikes ? info.hikes + " kor u qaadis" : "", info.cuts ? info.cuts + " dhimis" : ""].filter(Boolean).join(", ") : "isbeddel ma jirin")
-      : y + " · dulsaarka suuqa";
+      ? y + " · " + (info.hikes || info.cuts ? [info.hikes ? info.hikes + TX(" kor u qaadis", info.hikes > 1 ? " hikes" : " hike") : "", info.cuts ? info.cuts + TX(" dhimis", info.cuts > 1 ? " cuts" : " cut") : ""].filter(Boolean).join(", ") : TX("isbeddel ma jirin", "no change"))
+      : y + TX(" · dulsaarka suuqa", " · market rate");
     $("yd-title").textContent = title;
   }
 
@@ -318,7 +319,7 @@
       const maxY = Math.max(Number(keys[keys.length - 1].slice(0, 4)), new Date().getFullYear());
       $("app").hidden = false;
       const t = new Date(api.updated);
-      $("updated").textContent = "La soo qaaday: " + F.fmtDate(t.toISOString().slice(0, 10)) + " " + F.pad(t.getHours()) + ":" + F.pad(t.getMinutes()) + ".";
+      $("updated").textContent = TX("La soo qaaday: ", "Fetched: ") + F.fmtDate(t.toISOString().slice(0, 10)) + " " + F.pad(t.getHours()) + ":" + F.pad(t.getMinutes()) + ".";
       const h = fromHash(minY, maxY);
       selYear = h ? h.y : maxY;
       // Taleefanka: marka hore muuji tobanaanka sannadka la doortay si liisku u gaabto

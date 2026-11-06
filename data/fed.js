@@ -255,18 +255,24 @@ window.FED_CAL = {
  "upcoming": [
   {
    "name": "Sicir-bararka (CPI) · Oktoobar",
+   "name_en": "Inflation (CPI) · October",
    "time": "2026-11-10T08:30:00-05:00",
-   "impact": "Sare"
+   "impact": "Sare",
+   "impact_en": "High"
   },
   {
    "name": "Shaqooyinka (NFP) · Nofembar",
+   "name_en": "Jobs report (NFP) · November",
    "time": "2026-12-04T08:30:00-05:00",
-   "impact": "Sare"
+   "impact": "Sare",
+   "impact_en": "High"
   },
   {
    "name": "Sicir-bararka (CPI) · Nofembar",
+   "name_en": "Inflation (CPI) · November",
    "time": "2026-12-10T08:30:00-05:00",
-   "impact": "Sare"
+   "impact": "Sare",
+   "impact_en": "High"
   }
  ],
  "fallback": {
@@ -287,22 +293,28 @@ window.FED_CAL = {
   "latest": [
    {
     "name": "Shaqooyinka (NFP) · Oktoobar",
+    "name_en": "Jobs report (NFP) · October",
     "value": "+165K",
     "detail": "Kii hore: +60K",
+    "detail_en": "Previous: +60K",
     "source": "BLS",
     "url": "https://www.bls.gov/news.release/empsit.nr0.htm"
    },
    {
     "name": "Shaqo la'aanta · Oktoobar",
+    "name_en": "Unemployment · October",
     "value": "4.1%",
     "detail": "Kii hore: 4.2%",
+    "detail_en": "Previous: 4.2%",
     "source": "BLS",
     "url": "https://www.bls.gov/news.release/empsit.nr0.htm"
    },
    {
     "name": "Sicir-bararka (CPI) · Sebtember",
+    "name_en": "Inflation (CPI) · September",
     "value": "3.7%",
     "detail": "Kii hore: 3.4%",
+    "detail_en": "Previous: 3.4%",
     "source": "BLS",
     "url": "https://www.bls.gov/cpi/"
    }
