@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ku saabsan | Xogta Crypto 24/7</title>
+  <meta name="description" content="Ku saabsan Xogta Crypto 24/7 iyo aasaasaha Booskapro.">
+  <meta name="theme-color" content="#080B10">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234C9AFF'/%3E%3Cpolyline points='7 20 13 14 17 18 25 10' fill='none' stroke='%23080B10' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/config.js"></script>
+  <script src="js/layout.js"></script>
+</head>
+<body>
+<header data-header="ku-saabsan"></header>
+<main class="wrap">
+  <section class="section">
+    <span class="eyebrow">HADAFKAYAGA</span>
+    <h1 class="h1">Xogta FED-ka iyo suuqyada, af-Soomaali, 24 saac maalintii</h1>
+    <p class="lead">Xogta Crypto 24/7 waxaa loo sameeyay in ganacsatada Soomaaliyeed ay helaan xog sax ah, waqtigeeda ku timaada, oo si fudud loo fahmi karo. Sidaas ayay go'aan wanaagsan ku gaari karaan.</p>
+  </section>
+
+  <section class="section">
+    <div class="card founder">
+      <div class="founder-photo" id="founder-photo">B</div>
+      <div class="founder-body">
+        <span class="eyebrow">AASAASAHA</span>
+        <h2 class="founder-name" id="founder-name">—</h2>
+        <p class="muted" id="founder-role"></p>
+        <p id="founder-bio"></p>
+        <div class="socials" id="socials"></div>
+        <p class="small muted" id="contact"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="grid values" style="--min: 230px">
+      <div class="card"><span class="num">01</span><b style="display:block;font-size:1.1rem;margin-top:4px">Xog sax ah</b><p>Tiro kasta waxay ka timaadaa il rasmi ah, ilaheedana waa la muujiyaa.</p></div>
+      <div class="card"><span class="num">02</span><b style="display:block;font-size:1.1rem;margin-top:4px">Waqti dhab ah</b><p>Xogtu way isu beddeshaa isla markiiba. Xog duug ah lama muujiyo.</p></div>
+      <div class="card"><span class="num">03</span><b style="display:block;font-size:1.1rem;margin-top:4px">Af-Soomaali fudud</b><p>Erayada adag waa la sharxaa si qof walba u fahmo.</p></div>
+      <div class="card"><span class="num">04</span><b style="display:block;font-size:1.1rem;margin-top:4px">Daahfurnaan</b><p>Waxaan bixinaa xog iyo waxbarasho, talo maaliyadeed ma aha.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="card table-card">
+      <div style="padding:18px 20px 0"><h2 class="h3">Halka xogtu ka timaado</h2></div>
+      <div class="table-scroll">
+        <table class="data">
+          <thead><tr><th>Xogta</th><th>Isha</th><th>Cusbooneysiinta</th></tr></thead>
+          <tbody>
+            <tr><td><b>Qiimaha crypto</b></td><td>Binance · CoinGecko</td><td class="up">Toos ah · ilbiriqsiyo</td></tr>
+            <tr><td><b>Fear &amp; Greed</b></td><td>Alternative.me</td><td class="up">Maalin kasta</td></tr>
+            <tr><td><b>Go'aannada FED</b></td><td>Federal Reserve</td><td class="up">Isla marka la shaaciyo</td></tr>
+            <tr><td><b>CPI · NFP · shaqo la'aan</b></td><td>BLS · BEA</td><td class="up">Isla marka la soo daayo</td></tr>
+            <tr><td><b>Dulsaarka &amp; bonds</b></td><td>FRED · US Treasury</td><td class="up">Maalin kasta</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+<footer data-footer></footer>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var s = window.SITE, f = s.founder;
+  document.getElementById("founder-name").textContent = f.name;
+  document.getElementById("founder-role").textContent = f.role + " · " + s.name;
+  document.getElementById("founder-bio").textContent = f.bio;
+  var ph = document.getElementById("founder-photo");
+  if (f.photo) { ph.textContent = ""; var img = document.createElement("img"); img.src = f.photo; img.alt = f.name; ph.appendChild(img); }
+  else { ph.textContent = f.name.charAt(0); }
+  var names = { x: "X / Twitter", telegram: "Telegram", youtube: "YouTube", tiktok: "TikTok", facebook: "Facebook", instagram: "Instagram" };
+  var box = document.getElementById("socials");
+  Object.keys(names).forEach(function (k) {
+    if (!s.social[k]) return;
+    var a = document.createElement("a");
+    a.className = "btn ghost"; a.href = s.social[k]; a.rel = "noopener"; a.textContent = names[k];
+    box.appendChild(a);
+  });
+  if (s.email) document.getElementById("contact").textContent = "Nala soo xiriir: " + s.email;
+});
+</script>
+</body>
+</html>

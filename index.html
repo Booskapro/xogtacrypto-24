@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Xogta Crypto 24/7 – Xogta FED-ka iyo crypto oo toos ah, af-Soomaali</title>
+  <meta name="description" content="Xogta FED-ka, go'aannada dulsaarka iyo qiimaha crypto oo toos ah (live), af-Soomaali. 24 saac maalintii.">
+  <meta property="og:title" content="Xogta Crypto 24/7">
+  <meta property="og:description" content="Xogta FED-ka iyo crypto oo toos ah, af-Soomaali.">
+  <meta name="theme-color" content="#080B10">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234C9AFF'/%3E%3Cpolyline points='7 20 13 14 17 18 25 10' fill='none' stroke='%23080B10' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/config.js"></script>
+  <script src="js/layout.js"></script>
+</head>
+<body>
+<header data-header="maanta" data-live></header>
+
+<main class="wrap">
+
+  <!-- 1. GO'AANNADA FED -->
+  <section class="section" id="fed">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">FED-KA MAANTA</span>
+        <h1 class="h1">Go'aannada FED-ka: kii hore, kii u dambeeyay iyo kan xiga</h1>
+        <p class="lead">Dulsaarka FED-ka hadda: <b id="fed-range">—</b></p>
+      </div>
+      <a href="taariikhda.html" class="small">Arag taariikhda oo dhan →</a>
+    </div>
+
+    <div class="grid" style="--min: 260px">
+      <div class="decision" id="dec-prev"><span class="when">Kii hore</span><span class="what">—</span><span class="detail"></span></div>
+      <div class="decision" id="dec-last"><span class="when">Kii u dambeeyay</span><span class="what">—</span><span class="detail"></span></div>
+      <div class="decision next" id="dec-next">
+        <span class="when">Kan xiga</span>
+        <span class="what" id="next-label">—</span>
+        <span class="detail" id="next-time"></span>
+        <div class="countdown" id="countdown" aria-label="Waqtiga ka hadhay go'aanka"></div>
+      </div>
+    </div>
+
+    <div class="grid" style="--min: 300px; margin-top: 14px">
+      <div class="card">
+        <h2 class="h3">Xogtii u dambeysay</h2>
+        <div id="latest-data" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+      <div class="card">
+        <h2 class="h3">Xogta soo socota</h2>
+        <div id="upcoming" style="display:flex;flex-direction:column;gap:10px"></div>
+        <p class="note">Waqtiyada waxaa lagu muujiyaa saacadda meesha aad joogto.</p>
+      </div>
+    </div>
+    <p class="note" id="fed-updated"></p>
+  </section>
+
+  <!-- 2. SUUQA CRYPTO -->
+  <section class="section" id="crypto">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">SUUQA CRYPTO · 24/7</span>
+        <h2 class="h2">Qiimayaasha oo isu beddela ilbiriqsi kasta</h2>
+      </div>
+      <div class="muted small">La cusbooneysiiyay: <b class="mono" id="clock" style="color:var(--text)">—</b></div>
+    </div>
+
+    <div class="grid" style="--min: 220px">
+      <div class="card kpi"><span class="kpi-label">Qiimaha guud ee suuqa</span><span class="kpi-value" id="g-mcap">—</span><span class="kpi-sub" id="g-mcap-chg">—</span></div>
+      <div class="card kpi"><span class="kpi-label">BTC Dominance</span><span class="kpi-value" id="g-btcdom">—</span><span class="kpi-sub" id="g-ethdom">—</span></div>
+      <div class="card kpi"><span class="kpi-label">Fear &amp; Greed (dareenka suuqa)</span><span class="kpi-value" id="fng-value">—</span><span class="kpi-sub" id="fng-label">—</span><div class="fng-bar" aria-hidden="true"><div class="fng-pin" id="fng-pin"></div></div></div>
+      <div class="card kpi"><span class="kpi-label">Bitcoin · hadda</span><span class="kpi-value" id="hero-btc">—</span><span class="kpi-sub" id="hero-btc-chg">—</span></div>
+    </div>
+
+    <div class="card table-card" style="margin-top:14px">
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr>
+              <th class="hide-xs">#</th>
+              <th>Coin</th>
+              <th class="r">Qiimaha</th>
+              <th class="r">24 saac</th>
+              <th class="r hide-sm">Ugu sarreeya / hooseeya 24s</th>
+              <th class="r hide-sm">Volume 24s</th>
+              <th class="r hide-sm">Market cap</th>
+              <th class="r hide-xs">7 maalmood</th>
+            </tr>
+          </thead>
+          <tbody id="coins-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="note">Isha: Binance (live) · CoinGecko (market cap, 7 maalmood) · Alternative.me (Fear &amp; Greed)</p>
+    <p class="note" id="data-note" hidden></p>
+  </section>
+
+  <!-- 3. DHAWAAN -->
+  <section class="section">
+    <div class="card soon">
+      <span class="eyebrow">DHAWAAN</span>
+      <h2 class="h2">Waxa ku soo biiraya bogga hore</h2>
+      <ul class="soon-list">
+        <li><b>AI Agent:</b> marka xog cusub soo baxdo, isla markiiba wuu soo dhigaa, isagoo ilaha ku lifaaqaya</li>
+        <li><b>Dareenka FED:</b> cabbirka Adag (Hawkish) iyo Jilicsan (Dovish), iyo fursadaha go'aanka xiga</li>
+        <li><b>Bonds, dollar iyo saamiyada:</b> 10Y, 2Y, DXY, S&amp;P 500 iyo Nasdaq</li>
+        <li><b>Saadaasha bulshada:</b> codee waxa aad u malaynayso inuu FED-ku go'aamin doono</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer data-footer></footer>
+<script src="data/fed.js"></script>
+<script src="js/home.js"></script>
+</body>
+</html>
