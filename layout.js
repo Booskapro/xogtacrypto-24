@@ -278,7 +278,7 @@
         '<div class="ff-grid">' +
           '<div class="ff-brand">' +
             '<a class="ff-logo" href="index.html">' + logo + '<span class="ff-wm"><b>XOGTA</b><span>CRYPTO 24/7</span></span></a>' +
-            '<p class="ff-tag">' + T("Xogta FED-ka, crypto iyo suuqyada caalamka — af-Soomaali, 24/7.", "Fed data, crypto and global markets — in Somali, 24/7.") + "</p>" +
+            '<p class="ff-tag">' + T("Fed, crypto & suuqyada — af-Soomaali.", "Fed, crypto & markets — in Somali.") + "</p>" +
             '<div class="ff-social">' + socials + "</div>" +
           "</div>" +
           '<div class="ff-cols">' +

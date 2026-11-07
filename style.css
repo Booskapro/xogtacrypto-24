@@ -591,7 +591,7 @@ html:not([data-lang="en"]) .en { display: none !important; }
 .ff-wm { display: flex; flex-direction: column; line-height: 1.05; }
 .ff-wm b { font-size: 1.55rem; letter-spacing: .04em; }
 .ff-wm span { font-size: .78rem; letter-spacing: .28em; color: var(--accent); font-weight: 700; margin-top: 3px; }
-.ff-tag { font-weight: 600; color: var(--text-2); margin: 16px 0 18px; max-width: 34ch; }
+.ff-tag { font-weight: 600; color: var(--text-2); margin: 16px 0 18px; }
 .ff-social { display: flex; gap: 18px; flex-wrap: wrap; }
 .fs-ic { color: var(--text); opacity: .85; transition: opacity .15s, transform .15s; display: inline-flex; }
 .fs-ic:hover { opacity: 1; transform: translateY(-2px); color: var(--accent); }
@@ -611,3 +611,4 @@ html:not([data-lang="en"]) .en { display: none !important; }
 @media (max-width: 760px) {
   .to-top { right: 16px; bottom: auto; top: 24px; }
 }
+.ft[hidden], .ft-grid[hidden], .ft-next[hidden] { display: none !important; }
