@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kalandarka dhaqaalaha – CPI, NFP, PCE, FOMC | Xogta Crypto 24/7</title>
+  <meta name="title-en" content="Economic calendar – Xogta Crypto 24/7">
+  <meta name="description" content="Kalandarka dhaqaalaha Mareykanka: CPI, NFP, PCE, PPI, GDP, FOMC iyo xog kasta oo suuqa dhaqaajisa, taariikhaha rasmiga ah, saacaddaada, af-Soomaali.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Xogta Crypto 24/7">
+  <meta property="og:title" content="Kalandarka dhaqaalaha · Xogta Crypto 24/7">
+  <meta property="og:description" content="Kalandarka dhaqaalaha Mareykanka: CPI, NFP, PCE, PPI, GDP, FOMC iyo xog kasta oo suuqa dhaqaajisa, taariikhaha rasmiga ah, saacaddaada, af-Soomaali.">
+  <meta property="og:url" content="https://xogtacrypto.vercel.app/kalandarka">
+  <meta property="og:image" content="https://xogtacrypto.vercel.app/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kalandarka dhaqaalaha · Xogta Crypto 24/7">
+  <meta name="twitter:site" content="@xogtacrypto24">
+  <meta name="twitter:image" content="https://xogtacrypto.vercel.app/og-image.png">
+  <meta name="theme-color" content="#0B1220">
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
+  <script src="layout.js"></script>
+</head>
+<body>
+<header data-header="kalandarka"></header>
+
+<main class="wrap">
+  <section class="section kal-hero-sec">
+    <div class="kal-hero">
+      <div class="kh-left">
+        <span class="kh-eb" data-en="ECONOMIC CALENDAR · USA">KALANDARKA DHAQAALAHA · MAREYKANKA</span>
+        <h1 class="kh-title" data-en="Every release that moves the market, in one place.">Xog kasta oo suuqa dhaqaajisa, hal meel.</h1>
+        <p class="kh-lead" data-en="CPI, jobs, PCE, GDP, Fed decisions and more, with official dates from BLS, BEA, Census, the Federal Reserve and ISM, shown in your local time.">CPI, shaqooyinka, PCE, GDP, go'aannada FED iyo kuwo kale. Taariikhaha rasmiga ah ee BLS, BEA, Census, Federal Reserve iyo ISM, oo lagu muujiyay saacaddaada.</p>
+        <div class="kh-chips">
+          <a href="#cal-anchor" class="kh-chip on" data-en="See the calendar ↓">Arag kalandarka ↓</a>
+          <a href="https://t.me/Xogtacrypto24_7" target="_blank" rel="noopener" class="kh-chip" data-en="Telegram alerts">Ogeysiisyada Telegram</a>
+        </div>
+      </div>
+      <div class="kh-next">
+        <div class="kh-nl"><span class="kh-pulse"></span><span data-en="NEXT HIGH-IMPACT RELEASE">XOGTA XIGTA EE AAD U MUHIIMKA AH</span></div>
+        <span class="kh-kind" id="kh-kind"></span>
+        <h2 class="kh-name" id="kh-name">—</h2>
+        <p class="kh-when" id="kh-when"></p>
+        <div class="kh-cd" id="kh-cd"></div>
+        <a class="kh-src" id="kh-src" href="#" target="_blank" rel="noopener" hidden></a>
+      </div>
+    </div>
+
+    <div class="ks-row">
+      <div class="ks"><b class="fnum" id="ks-week">—</b><span data-en="releases in the next 7 days">xog · 7-da maalmood ee soo socda</span></div>
+      <div class="ks"><b class="fnum" id="ks-top">—</b><span data-en="●●● high-impact in 30 days">●●● aad u muhiim · 30 maalmood</span></div>
+      <div class="ks"><b class="fnum" id="ks-month">—</b><span data-en="releases in 30 days">xog · 30 maalmood</span></div>
+      <div class="ks"><b class="fnum" id="ks-fomc">—</b><span data-en="next Fed decision">go'aanka FED ee xiga</span></div>
+      <div class="ks"><b id="ks-tz">—</b><span data-en="times in your time zone">waqtiyada: saacaddaada</span></div>
+    </div>
+
+    <div class="kw-wrap">
+      <div class="kw-head"><b data-en="Next 7 days">7-da maalmood ee soo socda</b><span class="small muted" data-en="Tap a day to see its releases">Riix maalin si aad u aragto xogteeda</span></div>
+      <div class="kw" id="k-week"></div>
+    </div>
+  </section>
+
+  <section class="section" id="cal-anchor" style="padding-top:8px">
+    <div class="cal-card card" id="kalandarka" style="margin-top:0">
+      <div class="cal-top">
+        <div class="cal-sum" id="cal-sum"></div>
+        <button type="button" class="cal-ftoggle" id="cal-ftoggle" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg> <span data-en="Filter">Shaandhee</span> <b id="cal-fcount"></b></button>
+      </div>
+        <div class="cal-wrap">
+          <aside class="cal-side" id="cal-side">
+            <label class="cal-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" id="cal-q" placeholder="Raadi: CPI, NFP, PCE…" data-en-ph="Search: CPI, NFP, PCE…" autocomplete="off"></label>
+            <div class="cal-grp"><b data-en="When">Goorma</b>
+              <div class="cal-seg" id="cal-when">
+                <button type="button" data-w="week" data-en="7 days">7 maalin</button>
+                <button type="button" data-w="month" class="on" data-en="Month">Bil</button>
+                <button type="button" data-w="all" data-en="All">Dhammaan</button>
+              </div>
+            </div>
+            <div class="cal-grp"><b data-en="Market impact">Saameynta suuqa</b>
+              <label class="cal-chk"><input type="checkbox" data-lvl="3" checked><span class="cal-dots"><i class="on"></i><i class="on"></i><i class="on"></i></span><span data-en="Very high">Aad u sare</span><em id="cnt-l3"></em></label>
+              <label class="cal-chk"><input type="checkbox" data-lvl="2" checked><span class="cal-dots"><i class="on"></i><i class="on"></i><i></i></span><span data-en="High">Sare</span><em id="cnt-l2"></em></label>
+              <label class="cal-chk"><input type="checkbox" data-lvl="1" checked><span class="cal-dots"><i class="on"></i><i></i><i></i></span><span data-en="Medium">Dhexdhexaad</span><em id="cnt-l1"></em></label>
+            </div>
+            <div class="cal-grp"><b data-en="Category">Nooca xogta</b>
+              <label class="cal-chk"><input type="checkbox" data-kind="infl" checked><span class="cal-sw" style="background:#F2A93B"></span><span data-en="Inflation (CPI, PCE, PPI)">Sicir-barar (CPI, PCE, PPI)</span><em id="cnt-infl"></em></label>
+              <label class="cal-chk"><input type="checkbox" data-kind="jobs" checked><span class="cal-sw" style="background:#5B9DFF"></span><span data-en="Jobs (NFP, JOLTS, claims)">Shaqo (NFP, JOLTS, codsiyo)</span><em id="cnt-jobs"></em></label>
+              <label class="cal-chk"><input type="checkbox" data-kind="growth" checked><span class="cal-sw" style="background:#1FBF86"></span><span data-en="Growth (GDP, retail, ISM)">Koboc (GDP, tafaariiq, ISM)</span><em id="cnt-growth"></em></label>
+              <label class="cal-chk"><input type="checkbox" data-kind="fed" checked><span class="cal-sw" style="background:#D97706"></span><span data-en="Fed (FOMC, minutes, Beige Book)">FED (FOMC, minutes, Beige Book)</span><em id="cnt-fed"></em></label>
+            </div>
+            <button type="button" class="cal-reset" id="cal-reset" data-en="Reset filters">Dib u celi shaandhaynta</button>
+          </aside>
+          <div class="cal-main">
+            <div class="cal-list" id="fh-cal"></div>
+          </div>
+        </div>
+      </div>
+      <p class="small muted" style="margin:16px 0 0" data-en="Dates come from the official schedules of BLS, BEA, Census, the Federal Reserve, ISM, the University of Michigan and the U.S. Department of Labor. Agencies can change a date; always check the linked source.">Taariikhaha waxay ka yimaadeen jadwalka rasmiga ah ee BLS, BEA, Census, Federal Reserve, ISM, University of Michigan iyo Wasaaradda Shaqada Mareykanka. Hay'adaha ayaa beddeli kara taariikh; had iyo jeer eeg isha la xiriirisay.</p>
+    </div>
+  </section>
+</main>
+
+<footer data-footer></footer>
+<script src="fed-data.js"></script>
+<script src="fed-core.js"></script>
+<script src="kalandar.js"></script>
+</body>
+</html>

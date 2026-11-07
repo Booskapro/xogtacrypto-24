@@ -68,46 +68,8 @@
       <div class="fh-cards" id="fh-cards"></div>
 
       <div class="fh-tlw card">
-        <div class="fh-tlh"><h2 class="h3" data-en="Upcoming data">Xogta soo socota</h2><span class="small muted" id="fh-tz"></span></div>
+        <div class="fh-tlh"><h2 class="h3" data-en="Upcoming data">Xogta soo socota</h2><a class="fh-callink" href="kalandarka.html" data-en="Full economic calendar →">Kalandarka oo dhan →</a></div>
         <div class="fh-tl" id="fh-timeline"></div>
-      </div>
-
-      <div class="cal-card card" id="kalandarka">
-        <div class="cal-top">
-          <div>
-            <h2 class="h3" style="margin:0" data-en="Economic calendar">Kalandarka dhaqaalaha</h2>
-            <p class="small muted" style="margin:4px 0 0" data-en="Every release that moves the market · official dates (BLS, BEA, Census, Fed, ISM)">Xog kasta oo suuqa dhaqaajisa · taariikhaha rasmiga ah (BLS, BEA, Census, Fed, ISM)</p>
-          </div>
-          <button type="button" class="cal-ftoggle" id="cal-ftoggle" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg> <span data-en="Filter">Shaandhee</span> <b id="cal-fcount"></b></button>
-        </div>
-        <div class="cal-wrap">
-          <aside class="cal-side" id="cal-side">
-            <label class="cal-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" id="cal-q" placeholder="Raadi: CPI, NFP, PCE…" data-en-ph="Search: CPI, NFP, PCE…" autocomplete="off"></label>
-            <div class="cal-grp"><b data-en="When">Goorma</b>
-              <div class="cal-seg" id="cal-when">
-                <button type="button" data-w="week" data-en="Week">Toddobaad</button>
-                <button type="button" data-w="month" class="on" data-en="Month">Bil</button>
-                <button type="button" data-w="all" data-en="All">Dhammaan</button>
-              </div>
-            </div>
-            <div class="cal-grp"><b data-en="Market impact">Saameynta suuqa</b>
-              <label class="cal-chk"><input type="checkbox" data-lvl="3" checked><span class="cal-dots"><i class="on"></i><i class="on"></i><i class="on"></i></span><span data-en="Very high">Aad u sare</span><em id="cnt-l3"></em></label>
-              <label class="cal-chk"><input type="checkbox" data-lvl="2" checked><span class="cal-dots"><i class="on"></i><i class="on"></i><i></i></span><span data-en="High">Sare</span><em id="cnt-l2"></em></label>
-              <label class="cal-chk"><input type="checkbox" data-lvl="1" checked><span class="cal-dots"><i class="on"></i><i></i><i></i></span><span data-en="Medium">Dhexdhexaad</span><em id="cnt-l1"></em></label>
-            </div>
-            <div class="cal-grp"><b data-en="Category">Nooca xogta</b>
-              <label class="cal-chk"><input type="checkbox" data-kind="infl" checked><span class="cal-sw" style="background:#F2A93B"></span><span data-en="Inflation (CPI, PCE, PPI)">Sicir-barar (CPI, PCE, PPI)</span><em id="cnt-infl"></em></label>
-              <label class="cal-chk"><input type="checkbox" data-kind="jobs" checked><span class="cal-sw" style="background:#5B9DFF"></span><span data-en="Jobs (NFP, JOLTS, claims)">Shaqo (NFP, JOLTS, codsiyo)</span><em id="cnt-jobs"></em></label>
-              <label class="cal-chk"><input type="checkbox" data-kind="growth" checked><span class="cal-sw" style="background:#1FBF86"></span><span data-en="Growth (GDP, retail, ISM)">Koboc (GDP, tafaariiq, ISM)</span><em id="cnt-growth"></em></label>
-              <label class="cal-chk"><input type="checkbox" data-kind="fed" checked><span class="cal-sw" style="background:#D97706"></span><span data-en="Fed (FOMC, minutes, Beige Book)">FED (FOMC, minutes, Beige Book)</span><em id="cnt-fed"></em></label>
-            </div>
-            <button type="button" class="cal-reset" id="cal-reset" data-en="Reset filters">Dib u celi shaandhaynta</button>
-          </aside>
-          <div class="cal-main">
-            <div class="cal-sum small muted" id="cal-sum"></div>
-            <div class="cal-list" id="fh-cal"></div>
-          </div>
-        </div>
       </div>
 
     </div>
