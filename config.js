@@ -8,8 +8,8 @@ window.SITE = {
 
   founder: {
     name: "Booskapro",
-    role: "Aasaasaha & Horumariye",
-    role_en: "Founder & Developer",
+    role: "Founder & CEO",
+    role_en: "Founder & CEO",
     // Sawirkaaga: ku shub sawirka (tusaale "founder.jpg"), kadibna halkan ku qor magaciisa
     photo: "booskapro.jpg",
     handle: "@booskapro",
@@ -21,6 +21,10 @@ window.SITE = {
     quote: "Bulshada Soomaaliyeed waa inay xogta suuqa oo dhan hal meel ka helaan, af-Soomaali.",
     quote_en: "The Somali community should find all market data in one place, in their own language."
   },
+  // Kooxda Aasaaska — aasaasaha (kor) ayaa si toos ah u horreeya; halkan ku dar xubnaha kale
+  team: [
+    { name: "Diamondz", role: "Co-Founder", role_en: "Co-Founder", photo: "diamondz.jpg", handle: "@diamondzstylez", x: "https://x.com/diamondzstylez" }
+  ],
 
   // Baraha bulshada — ku qor link-gaaga buuxa (tusaale: "https://x.com/booskapro")
   social: {

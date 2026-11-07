@@ -886,3 +886,32 @@ body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiase
 .cal-res.flat { color: var(--text-2); background: var(--card); border: 1px solid var(--line); }
 .cal-row { grid-template-columns: 54px 1fr auto minmax(100px, auto); }
 @media (max-width: 760px) { .cal-row { grid-template-columns: 44px 1fr auto; } }
+
+/* ---------- Aasaasayaasha (kaarar sawir weyn) ---------- */
+.team { margin: 24px 0 72px; }
+.team-head { text-align: center; margin: 0 auto 40px; }
+.team-eb { display: inline-flex; align-items: center; gap: 14px; font-size: .76rem; font-weight: 700; letter-spacing: .32em; color: var(--muted); }
+.team-eb i { width: 44px; height: 1px; background: linear-gradient(90deg, transparent, var(--line-2)); }
+.team-eb i:last-child { background: linear-gradient(90deg, var(--line-2), transparent); }
+.team-title { margin: 14px 0 0; font-family: var(--font-display); font-size: clamp(2.6rem, 6.5vw, 4.4rem); font-weight: 800; letter-spacing: -.045em; line-height: 1; }
+.team-title em { font-style: normal; background: linear-gradient(100deg, var(--text) 0%, var(--text) 35%, #4C9AFF 70%, #22E39A 100%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: .08em; }
+.team-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 28px; }
+.pc { position: relative; display: block; width: 340px; height: 440px; border-radius: 28px; overflow: hidden; border: 1px solid var(--line-2); color: #fff; text-decoration: none;
+  box-shadow: 0 30px 60px -24px rgba(0,0,0,.55); transition: transform .25s, box-shadow .25s; background: #0B1220; }
+.pc:hover { transform: translateY(-6px); box-shadow: 0 40px 70px -24px rgba(0,0,0,.65); }
+.pc img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+.pc:hover img { transform: scale(1.04); }
+.pc::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,9,13,0) 38%, rgba(6,9,13,.82) 70%, #06090D 100%); }
+.pc-ini { position: absolute; inset: 0; display: grid; place-items: center; font: 800 7rem var(--font-display); color: #4C9AFF; }
+.pc-in { position: absolute; left: 26px; right: 26px; bottom: 24px; z-index: 2; }
+.pc-rl { display: inline-block; font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; padding: 6px 11px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(8px); }
+.pc.lead .pc-rl { background: linear-gradient(90deg, #F5D27A, #E9A23B); color: #1A1205; border: 0; }
+.pc-nm { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; letter-spacing: -.03em; margin: 12px 0 14px; color: #fff; }
+.pc-ds { color: #B8C3CF; font-size: .95rem; line-height: 1.5; margin: 0 0 16px; }
+.pc-x { display: inline-flex; align-items: center; gap: 9px; font-weight: 700; font-size: .9rem; color: #fff; }
+.pc-x i { width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #0B1220; display: grid; place-items: center; }
+@media (max-width: 760px) {
+  .team-head { margin-bottom: 28px; }
+  .team-grid { gap: 16px; }
+  .pc { width: 100%; max-width: 380px; height: 420px; }
+}

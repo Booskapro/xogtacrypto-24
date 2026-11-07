@@ -37,46 +37,35 @@
     <p class="lead" data-en="Fed decisions, economic data, crypto, gold, oil and stocks — live, in Somali and English.">Go'aannada FED-ka, xogta dhaqaalaha, crypto, dahab, shidaal iyo saamiyo — oo toos ah, af-Soomaali iyo English.</p>
   </section>
 
-  <section class="fcard" id="aasaasaha">
-    <div class="fcard-photo" id="founder-photo">B</div>
-    <div class="fcard-body">
-      <span class="fcard-lab" data-en="FOUNDER">AASAASAHA</span>
-      <h2 class="fcard-name" id="founder-name">—</h2>
-      <p class="fcard-role" id="founder-role"></p>
-      <blockquote class="fcard-quote" id="founder-quote"></blockquote>
-      <p class="fcard-text" id="founder-bio"></p>
-      <div class="fcard-btns" id="socials"></div>
+  <section class="team" id="aasaasaha">
+    <div class="team-head">
+      <span class="team-eb"><i></i><span data-en="THE TEAM">KOOXDA</span><i></i></span>
+      <h2 class="team-title" data-en="The &lt;em&gt;Founders&lt;/em&gt;"><em>Aasaasayaasha</em></h2>
     </div>
+    <div class="team-grid" id="team-grid"></div>
   </section>
 </main>
 <footer data-footer></footer>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   var s = window.SITE, f = s.founder, EN = window.I18N.lang === "en";
-  document.getElementById("founder-name").textContent = f.name;
-  document.getElementById("founder-role").textContent = (EN && f.role_en ? f.role_en : f.role) + " · " + s.name;
-  document.getElementById("founder-bio").textContent = EN && f.bio_en ? f.bio_en : f.bio;
-  var q = EN && f.quote_en ? f.quote_en : f.quote, qEl = document.getElementById("founder-quote");
-  if (q) qEl.textContent = q; else qEl.hidden = true;
-  var ph = document.getElementById("founder-photo");
-  if (f.photo) { ph.textContent = ""; var img = document.createElement("img"); img.src = f.photo; img.alt = f.name; ph.appendChild(img); ph.classList.add("has-img"); }
-  else { ph.textContent = f.name.charAt(0); }
-  var icons = { telegram: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.94 4.3 18.8 19.13c-.24 1.05-.86 1.31-1.74.82l-4.8-3.54-2.32 2.23c-.26.26-.47.47-.96.47l.34-4.88 8.88-8.02c.39-.34-.08-.53-.6-.19L6.62 12.93 1.9 11.45c-1.03-.32-1.05-1.03.21-1.52l18.47-7.12c.86-.31 1.61.2 1.33 1.49z"/></svg>', x: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' };
-  var names = { x: "X", telegram: "Telegram", youtube: "YouTube", tiktok: "TikTok", facebook: "Facebook", instagram: "Instagram" };
-  var box = document.getElementById("socials");
-  if (f.x) {
-    var fx = document.createElement("a"); fx.className = "fbtn"; fx.href = f.x; fx.rel = "noopener";
-    fx.innerHTML = icons.x + "<span></span>"; fx.querySelector("span").textContent = f.handle || "X"; box.appendChild(fx);
-  }
-  Object.keys(names).forEach(function (k) {
-    if (!s.social[k] || k === "x") return;
-    var a = document.createElement("a");
-    a.className = "fbtn"; a.href = s.social[k]; a.rel = "noopener";
-    a.innerHTML = (icons[k] || "") + "<span></span>";
-    a.querySelector("span").textContent = k === "x" && f.handle ? f.handle : k === "telegram" ? (EN ? "Telegram group" : "Kooxda Telegram") : names[k];
-    box.appendChild(a);
+  var xIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
+  var people = [{ name: f.name, role: f.role, role_en: f.role_en, photo: f.photo, handle: f.handle, x: f.x, desc: f.desc, desc_en: f.desc_en, lead: true }].concat(s.team || []);
+  var grid = document.getElementById("team-grid");
+  people.forEach(function (m) {
+    var card = document.createElement(m.x ? "a" : "article"); card.className = "pc" + (m.lead ? " lead" : "");
+    if (m.x) { card.href = m.x; card.target = "_blank"; card.rel = "noopener"; }
+    if (m.photo) { var img = document.createElement("img"); img.src = m.photo; img.alt = m.name; img.loading = "lazy"; card.appendChild(img); }
+    else { var ini = document.createElement("div"); ini.className = "pc-ini"; ini.textContent = m.name.charAt(0); card.appendChild(ini); }
+    var inn = document.createElement("div"); inn.className = "pc-in";
+    var rl = document.createElement("span"); rl.className = "pc-rl"; rl.textContent = EN && m.role_en ? m.role_en : m.role;
+    var nm = document.createElement("h3"); nm.className = "pc-nm"; nm.textContent = m.name;
+    inn.appendChild(rl); inn.appendChild(nm);
+    var d = EN && m.desc_en ? m.desc_en : m.desc;
+    if (d) { var ds = document.createElement("p"); ds.className = "pc-ds"; ds.textContent = d; inn.appendChild(ds); }
+    if (m.x) { var x = document.createElement("span"); x.className = "pc-x"; x.innerHTML = "<i>" + xIcon + "</i><span></span>"; x.querySelector("span").textContent = m.handle || "X"; inn.appendChild(x); }
+    card.appendChild(inn); grid.appendChild(card);
   });
-  if (s.email) { var e = document.createElement("a"); e.className = "fbtn"; e.href = "mailto:" + s.email; e.textContent = s.email; box.appendChild(e); }
 });
 </script>
 </body>
