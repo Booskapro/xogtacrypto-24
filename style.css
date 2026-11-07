@@ -900,7 +900,7 @@ body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiase
 .ab2-num { font-family: var(--font-display); font-size: clamp(2.6rem, 6vw, 4rem); font-weight: 500; letter-spacing: -.04em; line-height: 1; }
 .ab2-st { font-size: 1.05rem; line-height: 1.35; color: var(--text-2); }
 .ab2-ic { margin-left: auto; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; background: var(--card-2); color: #229ED9; box-shadow: 0 8px 20px -8px rgba(0,0,0,.35); flex: none; }
-.ab2-team { padding: 90px 0 80px; }
+.ab2-team { padding: 90px 0 80px; scroll-margin-top: 20px; }
 .ab2-tt { margin: 0 0 36px; font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 600; letter-spacing: -.045em; line-height: 1; }
 .ab2-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 18px; }
 .ex { min-width: 0; }
@@ -933,3 +933,4 @@ body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiase
 .ab2-teamlink em { display: block; font-style: normal; color: var(--muted); margin-top: 4px; }
 .ab2-teamlink i { font-style: normal; font-size: 1.6rem; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--card-2); flex: none; }
 @media (max-width: 760px) { .ab2-teamlink { padding: 20px; margin-bottom: 56px; } .ab2-teamlink b { font-size: 1.3rem; } .ab2-teamlink i { width: 44px; height: 44px; } }
+@media (min-width: 761px) { .mega-cols > .mm-follow { justify-self: end; min-width: 240px; } }
