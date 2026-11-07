@@ -66,10 +66,13 @@
       this.s += `<text x="${right ? (b.gx1 || b.x1) + 10 : (b.gx0 || b.x0) - 10}" y="${y + fs * 0.35}" fill="${th.mut}" font-size="${fs}" text-anchor="${right ? "start" : "end"}">${esc(fmt(v))}</text>`;
     });
   };
-  Plot.prototype.xLabels = function (sc, labels, maxN) {
-    const n = labels.length, step = Math.max(1, Math.ceil(n / maxN));
-    const th = this.th, fs = this.fs, y = this.b.y1 + fs * 1.8;
-    for (let i = 0; i < n; i += step) this.s += `<text x="${sc.x(i)}" y="${y}" fill="${th.mut}" font-size="${fs}" text-anchor="middle">${esc(labels[i])}</text>`;
+  // Axis-ka hoose: sanadaha oo keliya (2022, 2023 …), sida website-yada xirfadda leh
+  Plot.prototype.xLabels = function (sc, labels) {
+    const th = this.th, fs = this.fs, y = this.b.y1 + fs * 1.9, yr = (l) => { const mm = String(l).match(/'(\d{2})$/); return mm ? 2000 + +mm[1] : null; };
+    const ticks = []; let prev = yr(labels[0]);
+    labels.forEach((l, i) => { const v = yr(l); if (i > 0 && v !== prev && v != null) ticks.push([i, v]); prev = v; });
+    const step = Math.max(1, Math.ceil(ticks.length / 10));
+    ticks.forEach((t, k) => { if (k % step) return; const x = sc.x(t[0]); this.s += `<line x1="${x}" x2="${x}" y1="${this.b.y1}" y2="${this.b.y1 + 5}" stroke="${th.grid}" /><text x="${x}" y="${y}" fill="${th.mut}" font-size="${fs}" text-anchor="middle">${t[1]}</text>`; });
   };
   // Khad jilicsan (monotone cubic) — ma dhaafo qiimaha dhabta ah
   function smoothD(pts) {
@@ -745,19 +748,9 @@
     if (st.lw) { P.hid = new Set(st.lw.filter((x) => st.hidden.has(x.sp.name)).map((x) => x.col)); }
     m.draw(P, th); P.finish();
     s += `<g font-family="${F}">${P.s}</g>`;
-    // Fiiro gaar ah
-    if (m.note && st.ch.notePos !== "none") {
-      const nw = Math.max(...m.note.lines.map((l) => l.length)) * 7.6 + 36, nh = 44 + m.note.lines.length * 23;
-      const pos = st.ch.notePos || "tr";
-      const nx = pos[1] === "l" ? box.x0 + 16 : box.x1 - nw - 16, ny = pos[0] === "t" ? box.y0 + 4 : box.y1 - nh - 10;
-      s += `<rect x="${nx}" y="${ny}" width="${nw}" height="${nh}" rx="12" fill="${th.box}" stroke="${th.grid}" stroke-width="1.5" opacity=".96" />`;
-      s += `<text x="${nx + 16}" y="${ny + 28}" font-family="${F}" font-size="15.5" font-weight="700" fill="${th.ink}">${esc(m.note.t)}</text>`;
-      m.note.lines.forEach((l, k) => { s += `<text x="${nx + 16}" y="${ny + 52 + k * 23}" font-family="${F}" font-size="14.5" fill="${th.mut}">${esc(l)}</text>`; });
-    }
     // footer
-    const host = location.host || "xogtacrypto.vercel.app";
-    s += `<text x="44" y="${H - 34}" font-family="${F}" font-size="14.5" fill="${th.mut}">© ${new Date().getFullYear()} Xogta Crypto 24/7 · ${esc(T("Isha", "Source"))}: ${esc(m.source)} · ${esc(host)}</text>`;
-    s += `<image href="${logo}" x="${W - 44 - 290}" y="${H - 62}" width="38" height="38" /><text x="${W - 44}" y="${H - 34}" font-family="${FD}" font-size="25" font-weight="800" fill="${th.ink}" text-anchor="end">Xogta Crypto 24/7</text>`;
+    s += `<text x="44" y="${H - 34}" font-family="${F}" font-size="14.5" fill="${th.mut}">© ${new Date().getFullYear()} Xogta Crypto 24/7</text>`;
+    s += `<image href="${logo}" x="${W - 44 - 274}" y="${H - 62}" width="38" height="38" /><text x="${W - 44}" y="${H - 34}" font-family="${FD}" font-size="25" font-weight="800" fill="${th.ink}" text-anchor="end">Xogta Crypto 24/7</text>`;
     return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><style>${fonts}</style>${s}</svg>`;
   }
   async function exportPNG(id) {
