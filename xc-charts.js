@@ -58,7 +58,10 @@
   Plot.prototype.yAxis = function (sc, fmt, right) {
     const b = this.b, th = this.th, fs = this.fs;
     let tv;
-    if (sc.log) { tv = []; [1, 2, 5].forEach((m) => { for (let e = 0; e < 8; e++) { const v = m * Math.pow(10, e); if (v >= sc.mn && v <= sc.mx) tv.push(v); } }); tv.sort((p, q) => p - q); }
+    if (sc.log) {
+      tv = []; (sc.mx / sc.mn > 12 ? [1, 2, 5] : [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8]).forEach((m) => { for (let e = 0; e < 8; e++) { const v = m * Math.pow(10, e); if (v >= sc.mn && v <= sc.mx) tv.push(v); } }); tv.sort((p, q) => p - q);
+      if (tv.length > 6) { const keep = []; const st = (tv.length - 1) / 5; for (let k = 0; k < 6; k++) keep.push(tv[Math.round(k * st)]); tv = [...new Set(keep)]; }
+    }
     else tv = niceTicks(sc.mn, sc.mx, 5);
     tv.forEach((v) => {
       const y = sc.y(v);
@@ -67,12 +70,16 @@
     });
   };
   // Axis-ka hoose: sanadaha oo keliya (2022, 2023 …), sida website-yada xirfadda leh
+  // Axis-ka hoose: sanado (muddo dheer) ama bilo (sanad gudihiis)
   Plot.prototype.xLabels = function (sc, labels) {
-    const th = this.th, fs = this.fs, y = this.b.y1 + fs * 1.9, yr = (l) => { const mm = String(l).match(/'(\d{2})$/); return mm ? 2000 + +mm[1] : null; };
-    const ticks = []; let prev = yr(labels[0]);
-    labels.forEach((l, i) => { const v = yr(l); if (i > 0 && v !== prev && v != null) ticks.push([i, v]); prev = v; });
-    const step = Math.max(1, Math.ceil(ticks.length / 10));
-    ticks.forEach((t, k) => { if (k % step) return; const x = sc.x(t[0]); this.s += `<line x1="${x}" x2="${x}" y1="${this.b.y1}" y2="${this.b.y1 + 5}" stroke="${th.grid}" /><text x="${x}" y="${y}" fill="${th.mut}" font-size="${fs}" text-anchor="middle">${t[1]}</text>`; });
+    const th = this.th, fs = this.fs, y = this.b.y1 + fs * 1.9;
+    const parse = (l) => { const mm = String(l).match(/^(\S+)\s+'(\d{2})$/); return mm ? { m: mm[1], y: 2000 + +mm[2] } : null; };
+    const P0 = labels.map(parse), yt = [], mt = [];
+    for (let i = 1; i < P0.length; i++) { if (!P0[i] || !P0[i - 1]) continue; if (P0[i].y !== P0[i - 1].y) yt.push([i, String(P0[i].y)]); if (P0[i].m !== P0[i - 1].m) mt.push([i, P0[i].y !== P0[i - 1].y ? String(P0[i].y) : P0[i].m]); }
+    let ticks = yt.length >= 2 ? yt : mt;
+    if (ticks === mt) { const step = Math.max(1, Math.ceil(mt.length / 7)); ticks = mt.filter((t, k) => k % step === 0 || /^\d{4}$/.test(t[1])); }
+    else { const step = Math.max(1, Math.ceil(yt.length / 10)); ticks = yt.filter((t, k) => k % step === 0); }
+    ticks.forEach((t) => { const x = sc.x(t[0]); this.s += `<line x1="${x}" x2="${x}" y1="${this.b.y1}" y2="${this.b.y1 + 5}" stroke="${th.grid}" /><text x="${x}" y="${y}" fill="${th.mut}" font-size="${fs}" text-anchor="middle"${/^\d{4}$/.test(t[1]) ? ' font-weight="600"' : ""}>${esc(t[1])}</text>`; });
   };
   // Khad jilicsan (monotone cubic) — ma dhaafo qiimaha dhabta ah
   function smoothD(pts) {
@@ -226,7 +233,7 @@
         // toddobaadyo xiriir ah oo dhinac ka ah
         let run = 0; for (let i = n - 1; i >= 0 && a50[i] != null && (cl[i] >= a50[i]) === above; i--) run++;
         const vals = cl.concat(a50, a200).filter((v) => v != null);
-        const lo = Math.pow(10, Math.floor(Math.log10(Math.min(...vals)) * 4) / 4), hi = Math.pow(10, Math.ceil(Math.log10(Math.max(...vals)) * 4) / 4);
+        const lo = Math.min(...vals) * 0.9, hi = Math.max(...vals) * 1.08;
         const yr = (iso) => (EN ? MO[+iso.slice(5, 7) - 1] + " '" : MO[+iso.slice(5, 7) - 1] + " '") + iso.slice(2, 4);
         return {
           kicker: "Crypto",
@@ -475,7 +482,7 @@
         const ms = [...bm.keys()].sort().slice(-range), n = ms.length, btc = ms.map((m) => bm.get(m)), ff = fedSeries(ms);
         const es = easingStart(FED.target.events), ei = es ? ms.indexOf(es.date.slice(0, 7)) : -1;
         const L = btc[n - 1], since = ei >= 0 ? (L / btc[ei] - 1) * 100 : null;
-        const lo = Math.pow(10, Math.floor(Math.log10(Math.min(...btc)) * 4) / 4), hi = Math.pow(10, Math.ceil(Math.log10(Math.max(...btc)) * 4) / 4);
+        const lo = Math.min(...btc) * 0.9, hi = Math.max(...btc) * 1.08;
         return {
           kicker: "Crypto",
           title: since != null ? T(`Bitcoin ${pctTxt(since)} tan iyo markii FED-ku bilaabay dhimista (${ymShort(ms[ei])})`, `Bitcoin ${pctTxt(since)} since the Fed started cutting (${ymShort(ms[ei])})`) : T("Bitcoin iyo sicir-dulsaarka FED", "Bitcoin and the Fed funds rate"),
