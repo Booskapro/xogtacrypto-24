@@ -254,9 +254,18 @@ window.FED_CAL = {
  ],
  "upcoming": [
   {
+   "name": "Shaqooyinka (NFP) · Oktoobar",
+   "name_en": "Jobs report (NFP) · October",
+   "time": "2026-11-06T08:30:00-05:00",
+   "period": "2026-10",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
    "name": "Sicir-bararka (CPI) · Oktoobar",
    "name_en": "Inflation (CPI) · October",
    "time": "2026-11-10T08:30:00-05:00",
+   "period": "2026-10",
    "impact": "Sare",
    "impact_en": "High"
   },
@@ -264,6 +273,7 @@ window.FED_CAL = {
    "name": "Shaqooyinka (NFP) · Nofembar",
    "name_en": "Jobs report (NFP) · November",
    "time": "2026-12-04T08:30:00-05:00",
+   "period": "2026-11",
    "impact": "Sare",
    "impact_en": "High"
   },
@@ -271,6 +281,7 @@ window.FED_CAL = {
    "name": "Sicir-bararka (CPI) · Nofembar",
    "name_en": "Inflation (CPI) · November",
    "time": "2026-12-10T08:30:00-05:00",
+   "period": "2026-11",
    "impact": "Sare",
    "impact_en": "High"
   }

@@ -59,6 +59,17 @@
     const e = (window.FED_CAL.upcoming || []).find(function (x) { return x.name.indexOf(word) !== -1 && new Date(x.time).getTime() > now; });
     return e ? F.fmtDateTime(new Date(e.time)) : null;
   }
+  // CUSUB: xogta la soo daayay 24-kii saac ee la soo dhaafay
+  const NEW_MS = 24 * 3600e3;
+  function releasedAt(word, period) {
+    const now = Date.now();
+    const e = (window.FED_CAL.upcoming || []).filter(function (x) {
+      return x.name.indexOf(word) !== -1 && x.period === period && new Date(x.time).getTime() <= now;
+    }).pop();
+    return e ? e.time : null;
+  }
+  function isNew(iso) { return !!iso && Date.now() - Date.parse(iso) < NEW_MS && Date.now() >= Date.parse(iso); }
+
   function nextMeeting() {
     const now = Date.now();
     const m = window.FED_CAL.meetings.find(function (x) { return new Date(x.time).getTime() > now; });
@@ -88,7 +99,7 @@
         "Borrowing is now cheaper. The dollar usually weakens, while crypto and stocks tend to rise, because more money flows into markets."));
       body.push(T("Shirka xiga ee FED: ", "Next Fed meeting: ") + nmText + ".");
       posts.push({ when: f.date, title: T("FED-ku dulsaarka " + k.past + ": ", "The Fed " + k.past + " rates: ") + F.fmtRange(f.range), body: body,
-        chip: f.action === "hold" ? null : { text: k.label, cls: k.chip }, sources: [{ name: T("Bayaanka rasmiga ah (federalreserve.gov)", "Official statement (federalreserve.gov)"), url: f.link }], priority: 3 });
+        chip: f.action === "hold" ? null : { text: k.label, cls: k.chip }, sources: [{ name: T("Bayaanka rasmiga ah (federalreserve.gov)", "Official statement (federalreserve.gov)"), url: f.link }], priority: 3, fresh: isNew(f.date) });
     }
 
     // 2) Filashada suuqa
@@ -125,7 +136,8 @@
         body.push(T("Hadafka FED waa 2%. ", "The Fed's target is 2%. ") + (L.cpi.value > 2.5 ? T("Sicir-bararku wali wuu ka sarreeyaa hadafka, taasina waxay FED-ka ku riixaysaa inuu dulsaarka sare ku hayo ama kor u qaado.", "Inflation is still above target, which pushes the Fed to keep rates high or raise them.") : T("Sicir-bararku wuxuu ku dhow yahay hadafka, taasina waxay FED-ka u fududaynaysaa inuu dulsaarka dhimo.", "Inflation is close to target, which makes it easier for the Fed to cut rates.")));
         const nx = nextEvent("CPI");
         if (nx) body.push(T("Xogta sicir-bararka ee xigta: ", "Next inflation report: ") + nx + ".");
-        posts.push({ when: null, label: mo, title: T("Sicir-bararka (CPI) ", "Inflation (CPI) ") + mo + ": " + L.cpi.value.toFixed(1) + "%", body: body,
+        const relC = releasedAt("CPI", L.cpi.month);
+        posts.push({ when: relC, fresh: isNew(relC), label: mo, title: T("Sicir-bararka (CPI) ", "Inflation (CPI) ") + mo + ": " + L.cpi.value.toFixed(1) + "%", body: body,
           chip: L.cpi.value > 3 ? { text: T("Cadaadis kor u qaadis", "Pressure to hike"), cls: "hawk" } : null,
           sources: [fred("CPIAUCNS", T("Sicir-bararka", "Inflation")), { name: T("Xafiiska shaqada (BLS)", "Bureau of Labor Statistics (BLS)"), url: "https://www.bls.gov/cpi/" }], priority: 1 });
       }
@@ -142,7 +154,8 @@
         else body.push(T("Shaqo abuurku waa dhexdhexaad, mana jirto cadaadis xoog leh oo dhinac kasta ah.", "Hiring is moderate, with no strong pressure in either direction."));
         const nx = nextEvent("NFP");
         if (nx) body.push(T("Xogta shaqada ee xigta: ", "Next jobs report: ") + nx + ".");
-        posts.push({ when: null, label: mo,
+        const relN = releasedAt("NFP", month);
+        posts.push({ when: relN, fresh: isNew(relN), label: mo,
           title: T("Shaqada ", "Jobs ") + mo + ": " + (L.nfp ? signK(L.nfp.value) + T(" shaqo cusub", " new jobs") : "") + (L.nfp && L.un ? ", " : "") + (L.un ? T("shaqo la'aan ", "unemployment ") + L.un.value.toFixed(1) + "%" : ""),
           body: body, chip: null, sources: [fred("PAYEMS", T("Shaqooyinka", "Payrolls")), fred("UNRATE", T("Shaqo la'aanta", "Unemployment"))], priority: 1 });
       }
@@ -160,6 +173,8 @@
 
     posts.sort(function (a, b) {
       const ta = a.when ? Date.parse(a.when) : 0, tb = b.when ? Date.parse(b.when) : 0;
+      if (!!a.fresh !== !!b.fresh) return a.fresh ? -1 : 1;
+      if (a.fresh && b.fresh) return tb - ta;
       const fa = a.priority === 3 && Date.now() - ta < 10 * 864e5, fb = b.priority === 3 && Date.now() - tb < 10 * 864e5;
       if (fa !== fb) return fa ? -1 : 1;
       return b.priority - a.priority || tb - ta;
@@ -171,11 +186,11 @@
     if (!el) return;
     if (!posts.length) { el.innerHTML = '<p class="muted">' + T("Xogta waa la soo qaadayaa…", "Loading data…") + "</p>"; return; }
     el.innerHTML = posts.map(function (p) {
-      const time = p.when ? ago(p.when) : p.label || "";
+      const time = p.when && (p.fresh || p.market || p.priority === 3) ? ago(p.when) : p.label || (p.when ? ago(p.when) : "");
       const body = (Array.isArray(p.body) ? p.body : [p.body]).map(function (x) { return "<p>" + esc(x) + "</p>"; }).join("");
-      return '<article class="post">' +
+      return '<article class="post' + (p.fresh ? " is-new" : "") + '">' +
         '<div class="post-time mono">' + esc(time) + "</div>" +
-        '<div class="post-body"><div class="post-title">' + esc(p.title) + "</div>" + body +
+        '<div class="post-body"><div class="post-title">' + (p.fresh ? '<span class="new-badge">' + T("CUSUB", "NEW") + "</span>" : "") + esc(p.title) + "</div>" + body +
         '<div class="post-meta">' +
           (p.chip ? '<span class="chip ' + p.chip.cls + '">' + esc(p.chip.text) + "</span>" : "") +
           (p.market ? '<span class="chip">' + T("Suuqa saadaasha", "Prediction market") + "</span>" : '<span class="chip ok">✓ ' + T("Il rasmi ah", "Official source") + "</span>") +
