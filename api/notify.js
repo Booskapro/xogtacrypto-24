@@ -1,15 +1,6 @@
-/* =========================================================
-   Ogeysiisyada Telegram — /api/notify
-   cron-job.org ayaa daqiiqad kasta furaya boggan.
-   1) Wuxuu akhriyaa /api/live (FOMC, Kalshi) iyo /api/fed (CPI, NFP)
-   2) Upstash (xusuusta) ayuu ka hubiyaa waxa horay loo diray
-   3) Xog cusub -> fariin af-Soomaali ah ayuu kooxda u diraa
-   Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, KV_REST_API_URL, KV_REST_API_TOKEN
-   Ikhtiyaari: CRON_SECRET (haddii la dhigo: /api/notify?key=...)
-   ========================================================= */
 const SITE = "https://xogtacrypto.vercel.app";
 const MONTHS = ["Janaayo", "Febraayo", "Maarso", "Abriil", "Maajo", "Juun", "Luulyo", "Ogosto", "Sebtember", "Oktoobar", "Nofembar", "Desember"];
-const ODDS_STEP = 15; // isbeddel 15% ama ka badan ee fursadda kor u qaadista
+const ODDS_STEP = 15;
 
 function env(...names) { for (const n of names) if (process.env[n]) return process.env[n]; return ""; }
 function monthName(ym) { const [y, m] = ym.split("-").map(Number); return MONTHS[m - 1] + " " + y; }
@@ -17,7 +8,6 @@ function range(t) { const f = (v) => Number(v).toFixed(2); return t.lo === t.hi 
 function signK(n) { return (n >= 0 ? "+" : "−") + Math.abs(n).toLocaleString("en-US") + ",000"; }
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
-// ---------- Upstash (xusuusta) ----------
 async function kv(cmd) {
   const url = env("KV_REST_API_URL", "UPSTASH_REDIS_REST_URL", "STORAGE_REST_API_URL");
   const token = env("KV_REST_API_TOKEN", "UPSTASH_REDIS_REST_TOKEN", "STORAGE_REST_API_TOKEN");
@@ -29,21 +19,18 @@ async function kv(cmd) {
 }
 const get = (k) => kv(["GET", "xc:" + k]);
 const set = (k, v) => kv(["SET", "xc:" + k, String(v)]);
-// SET NX: kaliya hal mar ayuu guulaystaa -> fariin laba jeer lama diro
 const claim = async (k) => (await kv(["SET", "xc:sent:" + k, Date.now(), "NX", "EX", 60 * 60 * 24 * 120])) === "OK";
 
-// ---------- Telegram ----------
-async function send(text) {
+async function send(text, preview) {
   const token = env("TELEGRAM_BOT_TOKEN"), chat = env("TELEGRAM_CHAT_ID");
   const r = await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chat, text, parse_mode: "HTML", disable_web_page_preview: true })
+    body: JSON.stringify({ chat_id: chat, text, parse_mode: "HTML", disable_web_page_preview: !preview })
   });
   const j = await r.json();
   if (!j.ok) throw new Error("Telegram: " + j.description);
 }
 
-// ---------- Fariimaha ----------
 function msgFomc(f) {
   const word = { hike: "KOR U QAADAY", cut: "DHIMAY", hold: "HAYAY (isma beddelin)" }[f.action];
   const icon = { hike: "🔺", cut: "🔻", hold: "⏸" }[f.action];
@@ -91,6 +78,64 @@ function msgOdds(o, hike, prev) {
     '\n\nIsha: <a href="' + esc(o.url) + '">Kalshi</a>\n👉 ' + SITE;
 }
 
+const NEWS_GAP_MIN = 5;
+const NEWS_MAX_AGE_H = 6;
+const GNEWS = "https://news.google.com/rss/search?q=" + encodeURIComponent('"Federal Reserve" OR "the Fed" OR FOMC OR Warsh when:1d') + "&hl=en-US&gl=US&ceid=US:en";
+const SKIP_FED = /enforcement action|termination of enforcement|discount rate|request for comment|applications|approval of|bank holding/i;
+
+function decode(s) {
+  return String(s || "").replace(/<!\[CDATA\[|\]\]>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/<[^>]+>/g, "").trim();
+}
+function parseRss(xml) {
+  const out = [];
+  const items = String(xml).match(/<item>[\s\S]*?<\/item>/g) || [];
+  for (const it of items) {
+    const tag = (t) => { const m = new RegExp("<" + t + "[^>]*>([\\s\\S]*?)</" + t + ">").exec(it); return m ? decode(m[1]) : ""; };
+    out.push({ title: tag("title"), link: tag("link"), date: tag("pubDate"), source: tag("source") });
+  }
+  return out;
+}
+function hash(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36); }
+
+async function toSomali(text) {
+  const key = "xc:tr:" + hash(text);
+  try { const c = await kv(["GET", key]); if (c) return c; } catch (e) {}
+  try {
+    const r = await fetch("https://api.mymemory.translated.net/get?langpair=en|so&q=" + encodeURIComponent(text.slice(0, 450)));
+    const j = await r.json();
+    const t = j && j.responseData && j.responseData.translatedText;
+    if (t && !/MYMEMORY WARNING|QUERY LENGTH|INVALID/i.test(t)) { const so = decode(t); try { await kv(["SET", key, so, "EX", 60 * 60 * 24 * 14]); } catch (e) {} return so; }
+  } catch (e) {}
+  return null;
+}
+
+async function loadNews(live) {
+  const list = [];
+  try {
+    const xml = await fetch(GNEWS, { headers: { "User-Agent": "Mozilla/5.0 (XogtaCrypto)" } }).then((r) => r.text());
+    parseRss(xml).forEach((n) => {
+      const src = n.source || (n.title.match(/ - ([^-]+)$/) || [])[1] || "";
+      list.push({ title: n.title.replace(/ - [^-]+$/, ""), link: n.link, date: n.date, source: src.trim() });
+    });
+  } catch (e) {}
+  ((live && live.news) || []).forEach((n) => {
+    if (SKIP_FED.test(n.title)) return;
+    list.push({ title: n.title, link: n.link, date: n.date, source: "Federal Reserve", official: true });
+  });
+  const cut = Date.now() - NEWS_MAX_AGE_H * 3600e3;
+  return list.filter((n) => n.title && n.link && Date.parse(n.date) > cut)
+    .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+}
+
+async function msgNews(n) {
+  const so = await toSomali(n.title);
+  return (n.official ? "🏛 <b>FEDERAL RESERVE · RASMI</b>" : "📰 <b>WAR · FED</b>") + "\n\n" +
+    "<b>" + esc(so || n.title) + "</b>\n" +
+    "\n🗞 " + esc(n.source || "War") + "\n" +
+    '🔗 <a href="' + esc(n.link) + '">Akhri warka oo dhan</a>';
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   const out = { sent: [], skipped: [], errors: [] };
@@ -106,7 +151,6 @@ module.exports = async function handler(req, res) {
       fetch(base + "/api/fed").then((r) => (r.ok ? r.json() : null)).catch(() => null)
     ]);
 
-    // Markii ugu horraysay: xasuuso xogta hadda jirta, ha dirin (si xog duug ah loo dirin)
     const first = (await kv(["SET", "xc:init", Date.now(), "NX"])) === "OK";
 
     const jobs = [];
@@ -125,7 +169,6 @@ module.exports = async function handler(req, res) {
       catch (e) { await kv(["DEL", "xc:sent:" + key]); out.errors.push(key + ": " + e.message); }
     }
 
-    // Filashada: kaliya marka fursadda kor u qaadistu 15% ama ka badan isbeddesho
     if (live && live.odds && live.odds.markets && live.odds.markets.length) {
       const o = live.odds;
       const hike = o.markets.filter((m) => m.kind === "hike").reduce((s, m) => s + m.p, 0);
@@ -138,10 +181,29 @@ module.exports = async function handler(req, res) {
         if (!first) { try { await send(msgOdds(o, hike, last)); out.sent.push("odds"); } catch (e) { await set("odds:hike", last); out.errors.push("odds: " + e.message); } }
       }
     }
+
+    const news = await loadNews(live);
+    const newsFirst = (await kv(["SET", "xc:news:init", Date.now(), "NX"])) === "OK";
+    if (newsFirst) {
+      for (const n of news) await kv(["SET", "xc:sent:news:" + hash(n.link), 1, "EX", 60 * 60 * 72]);
+      out.skipped.push("news x" + news.length + " (bilow)");
+    } else {
+      const last = Number(await get("news:last")) || 0;
+      if (Date.now() - last >= NEWS_GAP_MIN * 60e3) {
+        for (const n of news) {
+          const key = "xc:sent:news:" + hash(n.link);
+          const ok = (await kv(["SET", key, Date.now(), "NX", "EX", 60 * 60 * 72])) === "OK";
+          if (!ok) continue;
+          try { await send(await msgNews(n), true); await set("news:last", Date.now()); out.sent.push("news: " + n.title.slice(0, 60)); }
+          catch (e) { await kv(["DEL", key]); out.errors.push("news: " + e.message); }
+          break;
+        }
+      } else out.skipped.push("news (sug)");
+    }
+
     return res.status(200).json(out);
   } catch (e) {
     out.errors.push(String(e.message || e));
     return res.status(200).json(out);
   }
 };
-module.exports._internal = { msgFomc, msgCpi, msgNfp, msgOdds };
