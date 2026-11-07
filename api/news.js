@@ -23,21 +23,32 @@ async function kv(cmd) {
     return (await r.json()).result;
   } catch (e) { return null; }
 }
-async function translate(text) {
-  const key = "xc:tr:" + hash(text);
-  const cached = await kv(["GET", key]);
-  if (cached) return { so: cached, fresh: false };
+const BAD_SO = /xasan|sheekh|khayre|farmaajo|madaxweyne|ra'iisul|somaliland|puntland|muqdisho|al-shabaab|xamar/i;
+function trOk(src, so) {
+  if (!so) return false;
+  const r = so.length / Math.max(1, src.length);
+  if (r < 0.5 || r > 2.2) return false;
+  if (BAD_SO.test(so) && !BAD_SO.test(src) && !/somal/i.test(src)) return false;
+  const nums = (src.match(/\d+/g) || []);
+  for (const n of nums) if (so.indexOf(n) === -1) return false;
+  return true;
+}
+async function mtSomali(text) {
   try {
-    const r = await fetch("https://api.mymemory.translated.net/get?langpair=en|so&q=" + encodeURIComponent(text.slice(0, 450)));
+    const r = await fetch("https://api.mymemory.translated.net/get?mt=1&langpair=en|so&q=" + encodeURIComponent(text.slice(0, 450)));
     const j = await r.json();
-    const t = j && j.responseData && j.responseData.translatedText;
-    if (t && !/MYMEMORY WARNING|QUERY LENGTH|INVALID/i.test(t)) {
-      const so = decode(t);
-      await kv(["SET", key, so, "EX", 60 * 60 * 24 * 14]);
-      return { so, fresh: true };
-    }
-  } catch (e) {}
-  return { so: null, fresh: true };
+    const m = ((j && j.matches) || []).find((x) => /^MT/i.test(String(x["created-by"] || "")));
+    const so = m ? decode(m.translation) : null;
+    return trOk(text, so) ? so : null;
+  } catch (e) { return null; }
+}
+async function translate(text) {
+  const key = "xc:tr2:" + hash(text);
+  const cached = await kv(["GET", key]);
+  if (cached) return { so: cached === "-" ? null : cached };
+  const so = await mtSomali(text);
+  await kv(["SET", key, so || "-", "EX", 60 * 60 * 24 * 14]);
+  return { so };
 }
 
 async function load() {
@@ -59,8 +70,8 @@ module.exports = async function handler(req, res) {
     const items = await load();
     let budget = MAX_NEW_TR;
     for (const n of items) {
-      const cached = await kv(["GET", "xc:tr:" + hash(n.title)]);
-      if (cached) { n.title_so = cached; continue; }
+      const cached = await kv(["GET", "xc:tr2:" + hash(n.title)]);
+      if (cached) { n.title_so = cached === "-" ? null : cached; continue; }
       if (budget-- <= 0) continue;
       n.title_so = (await translate(n.title)).so;
     }
