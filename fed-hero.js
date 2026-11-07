@@ -140,29 +140,110 @@
       : T("Xog kayd ah oo la hubiyay ", "Backup data checked ") + F.fmtDate(CAL.fallback.checked);
   }
 
-  // ---------- 3. Timeline: xogta soo socota ----------
+  // ---------- 3. Timeline (xogta ugu muhiimsan) + kalandarka buuxa ----------
+  const KIND = {
+    infl: T("Sicir-barar", "Inflation"), jobs: T("Shaqo", "Jobs"), growth: T("Koboc", "Growth"), fed: "FED"
+  };
+  function allEvents() {
+    const items = CAL.upcoming.map(function (x) {
+      return { name: F.EN && x.name_en ? x.name_en : x.name, time: x.time, kind: x.kind || "infl", lvl: x.lvl || 2, src: x.src || "", url: x.url || "", fomc: false };
+    });
+    CAL.meetings.forEach(function (m) {
+      items.push({ name: T("Go'aanka FED (FOMC)", "Fed decision (FOMC)") + (m.sep ? T(" + saadaasha", " + projections") : ""), time: m.time, kind: "fed", lvl: 3,
+        src: "Federal Reserve", url: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", fomc: true });
+    });
+    return items.sort(function (a, b) { return new Date(a.time) - new Date(b.time); });
+  }
+  function leftText(ms) {
+    const days = Math.floor(ms / 864e5), hrs = Math.floor(ms / 36e5), mins = Math.max(1, Math.floor(ms / 6e4));
+    if (days >= 1) return days + T(" maalmood", days === 1 ? " day" : " days");
+    if (hrs >= 1) return hrs + T(" saacadood", " h");
+    return mins + T(" daqiiqo", " min");
+  }
   function renderTimeline() {
-    const items = CAL.upcoming.map(function (x) { return { name: F.EN && x.name_en ? x.name_en : x.name, time: x.time, fomc: false }; });
-    CAL.meetings.forEach(function (m) { items.push({ name: T("Go'aanka FED (FOMC)", "Fed decision (FOMC)") + (m.sep ? T(" + saadaasha", " + projections") : ""), time: m.time, fomc: true }); });
-    const up = items.filter(function (x) { return new Date(x.time).getTime() > now(); })
-      .sort(function (a, b) { return new Date(a.time) - new Date(b.time); }).slice(0, 5);
+    const up = allEvents().filter(function (x) { return x.lvl >= 3 && new Date(x.time).getTime() > now(); }).slice(0, 5);
     const tl = $("fh-timeline");
     if (!up.length) { tl.innerHTML = '<p class="muted">' + T("Jadwalka cusub waa la cusbooneysiinayaa.", "The new schedule is being updated.") + "</p>"; return; }
     tl.innerHTML = '<div class="tl-line"></div><span class="tl-now">' + T("MAANTA", "TODAY") + "</span>" + up.map(function (x, i) {
-      const d = new Date(x.time), ms = d.getTime() - now(), days = Math.floor(ms / 864e5), hrs = Math.floor(ms / 36e5);
-      const left = days >= 1 ? days + T(" maalmood", days === 1 ? " day" : " days") : hrs + T(" saacadood", " hours");
+      const d = new Date(x.time), ms = d.getTime() - now();
       const pos = up.length === 1 ? 50 : 8 + (i / (up.length - 1)) * 86;
       const cls = "tl-ev " + (i % 2 ? "t-dn" : "t-up") + (x.fomc ? " fomc" : "");
       return '<div class="' + cls + '" style="--x:' + pos.toFixed(2) + '%"><i></i><div class="tl-c">' +
         '<b class="tl-d">' + esc(d.getDate() + " " + F.MONTHS[d.getMonth()]) + "</b>" +
         '<span class="tl-n">' + esc(x.name) + "</span>" +
-        '<em class="tl-m">' + esc(F.DAYS[d.getDay()] + " " + F.pad(d.getHours()) + ":" + F.pad(d.getMinutes())) + " · <strong>" + esc(left) + "</strong></em></div></div>";
+        '<em class="tl-m">' + esc(F.DAYS[d.getDay()] + " " + F.pad(d.getHours()) + ":" + F.pad(d.getMinutes())) + " · <strong>" + esc(leftText(ms)) + "</strong></em></div></div>";
     }).join("");
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       if (tz) $("fh-tz").textContent = T("Saacaddaada: ", "Your time: ") + tz.split("/").pop().replace(/_/g, " ");
     } catch (e) {}
+    renderCalendar();
   }
+
+  // ---------- 4. Kalandarka + shaandhaynta dhinaca ----------
+  const st = { q: "", when: "month", lvl: { 1: true, 2: true, 3: true }, kind: { infl: true, jobs: true, growth: true, fed: true } };
+  function dayKey(d) { return d.getFullYear() + "-" + F.pad(d.getMonth() + 1) + "-" + F.pad(d.getDate()); }
+  function horizon() {
+    if (st.when === "all") return Infinity;
+    if (st.when === "week") { const d = new Date(); d.setHours(23, 59, 59, 0); d.setDate(d.getDate() + ((7 - d.getDay()) % 7)); return d.getTime(); }
+    return now() + 31 * 864e5;
+  }
+  function renderCalendar() {
+    const box = $("fh-cal");
+    if (!box) return;
+    const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+    const H = horizon(), q = st.q.trim().toLowerCase();
+    const inRange = allEvents().filter(function (x) { const t = new Date(x.time).getTime(); return t >= t0.getTime() && t <= H; });
+    const matchQ = function (x) { return !q || (x.name + " " + x.src).toLowerCase().indexOf(q) !== -1; };
+    [1, 2, 3].forEach(function (l) { const el = $("cnt-l" + l); if (el) el.textContent = inRange.filter(function (x) { return x.lvl === l && st.kind[x.kind] && matchQ(x); }).length; });
+    Object.keys(st.kind).forEach(function (k) { const el = $("cnt-" + k); if (el) el.textContent = inRange.filter(function (x) { return x.kind === k && st.lvl[x.lvl] && matchQ(x); }).length; });
+    const ev = inRange.filter(function (x) { return st.lvl[x.lvl] && st.kind[x.kind] && matchQ(x); });
+    const today = dayKey(new Date()), tmr = dayKey(new Date(now() + 864e5));
+    let html = "", cur = "";
+    ev.forEach(function (x) {
+      const d = new Date(x.time), k = dayKey(d), ms = d.getTime() - now();
+      if (k !== cur) {
+        cur = k;
+        const lbl = k === today ? T("Maanta", "Today") : k === tmr ? T("Berri", "Tomorrow") : "";
+        html += '<div class="cal-day"><b>' + esc(F.DAYS[d.getDay()] + " " + d.getDate() + " " + F.MONTHS[d.getMonth()] + " " + d.getFullYear()) + "</b>" + (lbl ? '<span class="cal-tag">' + lbl + "</span>" : "") + "</div>";
+      }
+      const dots = '<span class="cal-dots">' + [1, 2, 3].map(function (n) { return "<i" + (n <= x.lvl ? ' class="on"' : "") + "></i>"; }).join("") + "</span>";
+      html += '<div class="cal-row lvl' + x.lvl + " k-" + x.kind + '">' +
+        '<span class="cal-time fnum">' + F.pad(d.getHours()) + ":" + F.pad(d.getMinutes()) + "</span>" +
+        '<span class="cal-name"><b>' + esc(x.name) + '</b><em>' + esc(KIND[x.kind] || "") + (x.src ? " · " + (x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.src) + "</a>" : esc(x.src)) : "") + "</em></span>" +
+        dots + '<span class="cal-left">' + (ms > 0 ? esc(leftText(ms)) : '<span class="muted">' + T("Waa soo baxday", "Released") + "</span>") + "</span></div>";
+    });
+    box.innerHTML = html || '<div class="cal-empty"><b>' + T("Wax xog ah lama helin", "No releases found") + "</b><span>" + T("Beddel shaandhaynta ama riix “Dib u celi”.", "Change the filters or press “Reset”.") + "</span></div>";
+    $("cal-sum").textContent = ev.length + T(" xog", ev.length === 1 ? " release" : " releases") + " · " +
+      (st.when === "week" ? T("toddobaadkan", "this week") : st.when === "month" ? T("30-ka maalmood ee soo socda", "next 30 days") : T("jadwalka oo dhan", "full schedule"));
+    const off = (st.q ? 1 : 0) + (st.when !== "month" ? 1 : 0) + [1, 2, 3].filter(function (l) { return !st.lvl[l]; }).length + Object.keys(st.kind).filter(function (k) { return !st.kind[k]; }).length;
+    $("cal-fcount").textContent = off ? off : "";
+  }
+  (function wire() {
+    const side = $("cal-side");
+    if (!side) return;
+    const q = $("cal-q");
+    if (F.EN && q.dataset.enPh) q.placeholder = q.dataset.enPh;
+    q.addEventListener("input", function () { st.q = q.value; renderCalendar(); });
+    side.querySelectorAll("#cal-when button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        st.when = b.dataset.w;
+        side.querySelectorAll("#cal-when button").forEach(function (o) { o.classList.toggle("on", o === b); });
+        renderCalendar();
+      });
+    });
+    side.querySelectorAll("input[data-lvl]").forEach(function (c) { c.addEventListener("change", function () { st.lvl[c.dataset.lvl] = c.checked; renderCalendar(); }); });
+    side.querySelectorAll("input[data-kind]").forEach(function (c) { c.addEventListener("change", function () { st.kind[c.dataset.kind] = c.checked; renderCalendar(); }); });
+    $("cal-reset").addEventListener("click", function () {
+      st.q = ""; q.value = ""; st.when = "month";
+      side.querySelectorAll("#cal-when button").forEach(function (o) { o.classList.toggle("on", o.dataset.w === "month"); });
+      side.querySelectorAll("input[type=checkbox]").forEach(function (c) { c.checked = true; });
+      st.lvl = { 1: true, 2: true, 3: true }; st.kind = { infl: true, jobs: true, growth: true, fed: true };
+      renderCalendar();
+    });
+    const tg = $("cal-ftoggle");
+    tg.addEventListener("click", function () { const open = side.classList.toggle("open"); tg.setAttribute("aria-expanded", open ? "true" : "false"); });
+  })();
 
   renderTimeline();
   setInterval(renderTimeline, 60000);
