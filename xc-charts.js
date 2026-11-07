@@ -451,7 +451,7 @@
                               : T(`Bond 10 sano ${A}% · 2 sano ${Bv}%`, `10-year ${A}% · 2-year ${Bv}%`),
           sub: T(`Bond-yada dowladda Mareykanka 10 sano iyo 2 sano · toddobaadle · meesha cas = 2Y > 10Y`, `US Treasury 10-year and 2-year yields · weekly · red = 2Y above 10Y`),
           legend: [[T("10 sano", "10-year"), C.blu], [T("2 sano", "2-year"), "alt"]].concat(sp.some((v) => v < 0) ? [[T("Rogmasho (inversion)", "Inversion"), C.red, "box"]] : []),
-          source: "US Treasury, FRED", badge: T("Xogta: ", "Data: ") + dLabel(MACRO.asOf.y10 || rows[n - 1][0]),
+          source: MACRO.treasury ? "US Treasury" : "US Treasury, FRED", badge: T("Xogta: ", "Data: ") + dLabel(MACRO.asOf.y10 || rows[n - 1][0]),
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Farqiga 10Y − 2Y: ${S > 0 ? "+" : ""}${S.toFixed(2)} dhibcood`, `10Y − 2Y spread: ${S > 0 ? "+" : ""}${S.toFixed(2)} pts`),
             inv ? T(`Rogmashadii u dambeysay: ${dLabel(rows[st0][0])} – ${nowInv ? "hadda" : dLabel(rows[e][0])}`, `Last inversion: ${dLabel(rows[st0][0])} – ${nowInv ? "now" : dLabel(rows[e][0])}`) : T("Muddadan curve-ku ma rogmanin.", "No inversion in this period.")
@@ -930,10 +930,26 @@
     if (j) { SENT = j; renderCard("sentiment"); } else if (!SENT) failMsg("sent");
   }
   loadFed(); loadBtc(); loadMacro(); loadSent();
-  setInterval(loadSent, 10 * 60 * 1000);   // Fear & Greed: 10 daqiiqo kasta
-  setInterval(loadMacro, 60 * 60 * 1000);  // Suuqyada (FRED): saac kasta
+  // Live: qiimaha BTC iyo saliidda daqiiqad kasta (Hyperliquid) — dhibicda u dambeysa ayaa la cusboonaysiinayaa
+  async function tick() {
+    try {
+      const mk = await (await fetch("/api/markets", { cache: "no-store" })).json(), d = mk && mk.data;
+      if (!d) return;
+      const today = new Date().toISOString().slice(0, 10);
+      if (BTC && d.BTC && d.BTC.px > 0) {
+        const px = Math.round(d.BTC.px);
+        BTC.live = px; BTC.weeks[BTC.weeks.length - 1][1] = px;
+        if (BTC.daily && BTC.daily.length) { const L = BTC.daily[BTC.daily.length - 1]; if (L[0] === today) L[1] = px; else BTC.daily.push([today, px]); }
+        renderCard("btc-50-200"); renderCard("btc-fed"); if (SENT) renderCard("sentiment");
+      }
+      if (MACRO && d["xyz:CL"] && d["xyz:CL"].px > 0) { MACRO.oilLive = { date: today, px: Math.round(d["xyz:CL"].px * 100) / 100 }; renderCard("dollar-oil"); }
+    } catch (e) { /* xiriirka ayaa go'ay — mar kale ayaa la isku dayi doonaa */ }
+  }
+  setInterval(tick, 60 * 1000);
+  setInterval(loadSent, 10 * 60 * 1000);   // Fear & Greed + dominance: 10 daqiiqo kasta
+  setInterval(loadMacro, 15 * 60 * 1000);  // Bonds (Treasury) + FRED: 15 daqiiqo kasta
   setInterval(loadBtc, 5 * 60 * 1000);     // Bitcoin: 5 daqiiqo kasta
-  setInterval(loadFed, 30 * 60 * 1000);    // FED/BLS: 30 daqiiqo kasta
+  setInterval(loadFed, 15 * 60 * 1000);    // FED/BLS: 15 daqiiqo kasta (xog cusub isla markiiba)
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderAll, 150); });
   new MutationObserver(renderAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   // Filter-ka kooxaha
