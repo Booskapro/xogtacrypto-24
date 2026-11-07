@@ -7,10 +7,10 @@
   const NAV = [
     { href: "index.html",       key: "maanta",     label: "Maanta",         en: "Today" },
     { href: "wararka.html",     key: "wararka",    label: "Wararka",        en: "News" },
-    { href: "fahanka-fed.html", key: "fahanka",    label: "Fahanka FED",    en: "Learn the Fed" },
     { href: "kalandarka.html",  key: "kalandarka", label: "Kalandarka",     en: "Calendar" },
     { href: "charts.html",      key: "charts",     label: "Charts",         en: "Charts" },
     { href: "taariikhda.html",  key: "taariikhda", label: "Taariikhda FED", en: "Fed History" },
+    { href: "fahanka-fed.html", key: "fahanka",    label: "Fahanka FED",    en: "Learn the Fed" },
     { href: "ku-saabsan.html",  key: "ku-saabsan", label: "Ku saabsan",     en: "About" }
   ];
 

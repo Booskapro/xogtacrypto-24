@@ -316,10 +316,10 @@
                      : T(`FED-ku wuxuu kordhiyay sicirka ${cyc.count} jeer tan iyo ${ymLabel(d0.slice(0, 7))}`, `The Fed has hiked ${cyc.count} times since ${ymLabel(d0.slice(0, 7))}`),
           sub: T(`Sicir-dulsaarka FED (heerka sare) · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`, `Fed funds target (upper bound) · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`),
           legend: [[T("Sicir-dulsaarka FED", "Fed funds target"), C.blu]],
-          source: "Federal Reserve, FRED", badge: T("Go'aankii u dambeeyay: ", "Last decision: ") + dLabel(cyc.last.date),
+          source: "Federal Reserve, FRED", badge: T("Dhaqan galay: ", "Effective: ") + dLabel(cyc.last.date),
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Heerka hadda: ${rangeTxt(cur)}`, `Current range: ${rangeTxt(cur)}`),
-            T(`Go'aankii u dambeeyay (${dLabel(cyc.last.date)}): ${cyc.last.change > 0 ? "+" : "−"}${Math.round(Math.abs(cyc.last.change) * 100)} dhibcood (bps)`, `Last move (${dLabel(cyc.last.date)}): ${cyc.last.change > 0 ? "+" : "−"}${Math.round(Math.abs(cyc.last.change) * 100)} bps`)
+            T(`Isbeddelkii u dambeeyay: ${cyc.last.change > 0 ? "+" : "−"}${Math.round(Math.abs(cyc.last.change) * 100)} dhibcood (bps), dhaqan galay ${dLabel(cyc.last.date)}`, `Last move: ${cyc.last.change > 0 ? "+" : "−"}${Math.round(Math.abs(cyc.last.change) * 100)} bps, effective ${dLabel(cyc.last.date)}`)
           ] },
           series: [{ name: T("Hadafka FED", "Fed target"), color: C.blu, type: "steparea", data: ms.map((m, i) => [m + "-01", ff[i]]), fmt: F2 }, { name: T("Dhabta (EFFR)", "Effective (EFFR)"), color: C.org, type: "line", data: ms.map((m) => [m + "-01", FED.monthly[m].ff !== undefined ? FED.monthly[m].ff : null]), fmt: F2 }],
           n, tip: (i) => [[ymLabel(ms[i])], ["FED", C.blu, ff[i] != null ? ff[i].toFixed(2) + "%" : "—"]],
