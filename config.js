@@ -13,6 +13,7 @@ window.SITE = {
     // Sawirkaaga: ku shub sawirka (tusaale "founder.jpg"), kadibna halkan ku qor magaciisa
     photo: "booskapro.jpg",
     handle: "@booskapro",
+    x: "https://x.com/booskapro",
     // Qoraalka aasaasaha (paragraph kasta waa xariiq gooni ah)
     // Qoraal gaaban oo ku saabsan sababta website-ka loo aasaasay
     bio: "Waxaan dhisay Xogta Crypto 24/7 si qof kasta oo Soomaali ah uu xogta FED-ka iyo suuqyada uga helo hal meel, oo toos ah, sax ah, una fudud in la fahmo. Waa bilaash, waana loogu talagalay bulshada.",
@@ -23,13 +24,16 @@ window.SITE = {
 
   // Baraha bulshada — ku qor link-gaaga buuxa (tusaale: "https://x.com/booskapro")
   social: {
-    x: "https://x.com/booskapro",
+    x: "https://x.com/Xogtacrypto24",
     telegram: "https://t.me/Xogtacrypto24_7",
     youtube: "",
     tiktok: "",
     facebook: "",
     instagram: ""
   },
+
+  // Akoonka X ee website-ka
+  x_handle: "@Xogtacrypto24",
 
   // Tirada xubnaha kooxda Telegram (gacanta ku beddel)
   telegram_members: "1,400+",

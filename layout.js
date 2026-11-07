@@ -73,7 +73,7 @@
     const names = { x: "X / Twitter", telegram: "Telegram", youtube: "YouTube", tiktok: "TikTok", facebook: "Facebook", instagram: "Instagram" };
     const soc = Object.keys(names).filter(function (k) { return s.social[k]; });
     const follow = soc.length
-      ? soc.map(function (k) { return item(s.social[k] + '" rel="noopener', names[k] + (k === "x" && s.founder.handle ? " · " + s.founder.handle : ""), T("Ka raac ", "Follow on ") + names[k]); }).join("")
+      ? soc.map(function (k) { return item(s.social[k] + '" rel="noopener', names[k] + (k === "x" && s.x_handle ? " · " + s.x_handle : ""), T("Ka raac ", "Follow on ") + names[k]); }).join("")
       : item("ku-saabsan.html", "Telegram", T("Dhawaan", "Coming soon"));
     return (
       '<div class="mega" id="mega-about" hidden>' +
@@ -115,6 +115,8 @@
           (showStatus ? '<div class="status" id="status" role="status" aria-live="polite"><span class="dot"></span><span id="status-text">' + T("Xiriirinaya…", "Connecting…") + "</span></div>" : "") +
           '<button type="button" class="icon-btn lang-btn" data-lang-set="' + (LANG === "en" ? "so" : "en") + '" aria-label="' + T("Switch to English", "U beddel af-Soomaali") + '">' + (LANG === "en" ? "SO" : "EN") + "</button>" +
           '<button type="button" class="icon-btn" id="theme-btn" aria-label="' + T("Dejinta", "Settings") + '" aria-expanded="false" aria-controls="theme-panel">' + icon.gear + "</button>" +
+          '<button type="button" class="icon-btn menu-btn" id="menu-btn" aria-label="Menu" aria-expanded="false" aria-controls="drawer">' +
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>' +
         "</div>" +
         buildPanel() +
       "</div>" +
@@ -194,6 +196,62 @@
     syncPanel();
   }
 
+  // ---------- Menu-ga taleefanka (☰ -> dhinaca midig) ----------
+  function buildDrawer(active) {
+    const T = window.I18N.tx, s = window.SITE;
+    const big = NAV.map(function (n) {
+      return '<a class="dr-big" href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + (LANG === "en" ? n.en : n.label) + "</a>";
+    }).join("");
+    function sec(title, links) {
+      return '<div class="dr-label">' + title + "</div>" + links.map(function (l) {
+        return '<a class="dr-link" href="' + l[0] + '"' + (/^https?:/.test(l[0]) ? ' target="_blank" rel="noopener"' : "") + ">" + l[1] + "</a>";
+      }).join("");
+    }
+    const follow = [];
+    if (s.social.telegram) follow.push([s.social.telegram, "Telegram · " + T("kooxda", "group")]);
+    if (s.social.x) follow.push([s.social.x, "X · " + (s.x_handle || "")]);
+    return (
+      '<div class="drawer-bg" id="drawer-bg" hidden></div>' +
+      '<aside class="drawer" id="drawer" aria-label="Menu" hidden>' +
+        '<button type="button" class="icon-btn dr-close" id="drawer-close" aria-label="' + T("Xir", "Close") + '">' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+        '<nav class="dr-main">' + big + "</nav>" +
+        '<div class="dr-sep"></div>' +
+        sec(T("XOGTA", "DATA"), [["index.html#fed", T("Go'aannada FED", "Fed decisions")], ["index.html#crypto", T("Suuqyada 24/7", "Markets 24/7")], ["wararka.html", T("Filashada & wararka", "Expectations & news")]]) +
+        sec(T("WAXBARASHO", "LEARN"), [["fahanka-fed.html", T("Koorsada FED · 8 cashar", "Fed course · 8 lessons")], ["taariikhda.html", T("Taariikhda tan iyo 1954", "History since 1954")]]) +
+        (follow.length ? sec(T("NALA SOCO", "FOLLOW US"), follow) : "") +
+        '<div class="dr-label">' + T("DEJINTA", "SETTINGS") + "</div>" +
+        '<div class="dr-set"><span>' + T("Luqadda", "Language") + '</span><div class="pill-seg">' +
+          '<button type="button" data-lang-set="so" aria-pressed="' + (LANG === "so") + '">SO</button>' +
+          '<button type="button" data-lang-set="en" aria-pressed="' + (LANG === "en") + '">EN</button></div></div>' +
+        '<div class="dr-set"><span>' + T("Muuqaalka", "Theme") + '</span><div class="pill-seg">' +
+          '<button type="button" data-dmode="light" aria-label="Light">' + icon.sun + "</button>" +
+          '<button type="button" data-dmode="dark" aria-label="Dark">' + icon.moon + "</button>" +
+          '<button type="button" data-dmode="auto" aria-label="Auto">' + icon.screen + "</button></div></div>" +
+        '<p class="dr-foot">© ' + new Date().getFullYear() + " " + s.name + "</p>" +
+      "</aside>"
+    );
+  }
+  function wireDrawer() {
+    const d = document.getElementById("drawer"), bg = document.getElementById("drawer-bg"), btn = document.getElementById("menu-btn");
+    if (!d || !btn) return;
+    function sync() {
+      const m = load("xc-mode", "dark");
+      d.querySelectorAll("[data-dmode]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.dmode === m)); });
+    }
+    function open() { d.hidden = false; bg.hidden = false; requestAnimationFrame(function () { d.classList.add("open"); bg.classList.add("open"); }); btn.setAttribute("aria-expanded", "true"); document.body.style.overflow = "hidden"; sync(); }
+    function close() { d.classList.remove("open"); bg.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); document.body.style.overflow = ""; setTimeout(function () { d.hidden = true; bg.hidden = true; }, 220); }
+    btn.addEventListener("click", open);
+    bg.addEventListener("click", close);
+    document.getElementById("drawer-close").addEventListener("click", close);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !d.hidden) close(); });
+    d.addEventListener("click", function (e) {
+      const a = e.target.closest("a"); if (a) { close(); return; }
+      const m = e.target.closest("[data-dmode]"); if (m) { save("xc-mode", m.dataset.dmode); applyTheme(); sync(); return; }
+      const l = e.target.closest("[data-lang-set]"); if (l && l.dataset.langSet !== LANG) { save("xc-lang", l.dataset.langSet); location.reload(); }
+    });
+  }
+
   function buildFooter() {
     const s = window.SITE;
     const socialNames = { x: "X / Twitter", telegram: "Telegram", youtube: "YouTube", tiktok: "TikTok", facebook: "Facebook", instagram: "Instagram" };
@@ -229,6 +287,8 @@
     if (header) {
       header.className = "site-header";
       header.innerHTML = buildHeader(header.dataset.header, header.hasAttribute("data-live"));
+      document.body.insertAdjacentHTML("beforeend", buildDrawer(header.dataset.header));
+      wireDrawer();
       wirePanel();
       header.querySelectorAll("[data-lang-set]").forEach(function (b) {
         b.addEventListener("click", function (e) {

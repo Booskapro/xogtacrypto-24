@@ -6,8 +6,17 @@
   <title>Xogta Crypto 24/7 – Xogta FED-ka iyo crypto oo toos ah, af-Soomaali</title>
   <meta name="title-en" content="Xogta Crypto 24/7 – Live Fed data, crypto and markets">
   <meta name="description" content="Xogta FED-ka, go'aannada dulsaarka iyo qiimaha crypto oo toos ah (live), af-Soomaali. 24 saac maalintii.">
-  <meta property="og:title" content="Xogta Crypto 24/7">
-  <meta property="og:description" content="Xogta FED-ka iyo crypto oo toos ah, af-Soomaali.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Xogta Crypto 24/7">
+  <meta property="og:title" content="Xogta Crypto 24/7 – Xogta FED-ka iyo crypto oo toos ah, af-Soomaali">
+  <meta property="og:description" content="Xogta FED-ka, go'aannada dulsaarka iyo qiimaha crypto oo toos ah (live), af-Soomaali. 24 saac maalintii.">
+  <meta property="og:url" content="https://xogtacrypto.vercel.app/">
+  <meta property="og:image" content="https://xogtacrypto.vercel.app/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@xogtacrypto24">
+  <meta name="twitter:image" content="https://xogtacrypto.vercel.app/og-image.png">
   <meta name="theme-color" content="#0B1220">
   <link rel="icon" href="logo.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -34,7 +43,7 @@
       <a href="taariikhda.html" class="small" data-en="See the full history →">Arag taariikhda oo dhan →</a>
     </div>
 
-    <div class="grid" style="--min: 260px">
+    <div class="grid dec-grid" style="--min: 260px">
       <div class="decision" id="dec-prev"><span class="when" data-en="Previous">Kii hore</span><span class="what">—</span><span class="detail"></span></div>
       <div class="decision" id="dec-last"><span class="when" data-en="Latest">Kii u dambeeyay</span><span class="what">—</span><span class="detail"></span></div>
       <div class="decision next" id="dec-next">
@@ -140,7 +149,10 @@
         <p class="tg-text" data-en="Get Fed decisions, CPI, jobs data and market alerts the moment they are released, explained in Somali. Ask questions and discuss with other traders.">Hel go'aannada FED-ka, CPI, xogta shaqada iyo ogeysiisyada suuqa isla marka ay soo baxaan, oo af-Soomaali lagu sharxay. Su'aalo weydii, kalana dood ganacsatada kale.</p>
         <div class="tg-meta"><span id="tg-members">1,400+</span> <span data-en="members">xubnood</span> · <span data-en="free">bilaash</span></div>
       </div>
-      <a class="tg-btn" id="tg-join" href="https://t.me/Xogtacrypto24_7" target="_blank" rel="noopener"><span data-en="Join the group">Ku biir kooxda</span> →</a>
+      <div class="tg-actions">
+        <a class="tg-btn" id="tg-join" href="https://t.me/Xogtacrypto24_7" target="_blank" rel="noopener"><span data-en="Join the group">Ku biir kooxda</span> →</a>
+        <a class="x-btn" id="x-follow" href="https://x.com/Xogtacrypto24" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> @Xogtacrypto24</a>
+      </div>
     </div>
   </section>
 
@@ -155,6 +167,8 @@
 document.addEventListener("DOMContentLoaded", function () {
   var t = window.SITE && window.SITE.social && window.SITE.social.telegram;
   if (t) document.getElementById("tg-join").href = t;
+  var x = window.SITE && window.SITE.social && window.SITE.social.x;
+  if (x) document.getElementById("x-follow").href = x;
   if (window.SITE && window.SITE.telegram_members) document.getElementById("tg-members").textContent = window.SITE.telegram_members;
 });
 </script>

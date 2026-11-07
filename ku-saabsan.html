@@ -6,6 +6,17 @@
   <title>Ku saabsan | Xogta Crypto 24/7</title>
   <meta name="title-en" content="About – Xogta Crypto 24/7">
   <meta name="description" content="Xogta Crypto 24/7: xogta suuqa oo dhan, hal meel, af-Soomaali. Aasaasaha: Booskapro (@booskapro).">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Xogta Crypto 24/7">
+  <meta property="og:title" content="Ku saabsan | Xogta Crypto 24/7">
+  <meta property="og:description" content="Xogta Crypto 24/7: xogta suuqa oo dhan, hal meel, af-Soomaali. Aasaasaha: Booskapro (@booskapro).">
+  <meta property="og:url" content="https://xogtacrypto.vercel.app/ku-saabsan">
+  <meta property="og:image" content="https://xogtacrypto.vercel.app/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@xogtacrypto24">
+  <meta name="twitter:image" content="https://xogtacrypto.vercel.app/og-image.png">
   <meta name="theme-color" content="#0B1220">
   <link rel="icon" href="logo.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -52,8 +63,12 @@ document.addEventListener("DOMContentLoaded", function () {
   var icons = { telegram: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.94 4.3 18.8 19.13c-.24 1.05-.86 1.31-1.74.82l-4.8-3.54-2.32 2.23c-.26.26-.47.47-.96.47l.34-4.88 8.88-8.02c.39-.34-.08-.53-.6-.19L6.62 12.93 1.9 11.45c-1.03-.32-1.05-1.03.21-1.52l18.47-7.12c.86-.31 1.61.2 1.33 1.49z"/></svg>', x: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' };
   var names = { x: "X", telegram: "Telegram", youtube: "YouTube", tiktok: "TikTok", facebook: "Facebook", instagram: "Instagram" };
   var box = document.getElementById("socials");
+  if (f.x) {
+    var fx = document.createElement("a"); fx.className = "fbtn"; fx.href = f.x; fx.rel = "noopener";
+    fx.innerHTML = icons.x + "<span></span>"; fx.querySelector("span").textContent = f.handle || "X"; box.appendChild(fx);
+  }
   Object.keys(names).forEach(function (k) {
-    if (!s.social[k]) return;
+    if (!s.social[k] || k === "x") return;
     var a = document.createElement("a");
     a.className = "fbtn"; a.href = s.social[k]; a.rel = "noopener";
     a.innerHTML = (icons[k] || "") + "<span></span>";

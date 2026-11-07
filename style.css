@@ -444,3 +444,81 @@ html:not([data-lang="en"]) .en { display: none !important; }
 .media-meta .new-badge { margin-right: 0; }
 .media-src { font: 700 .78rem Inter, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .media-title { display: block; font-weight: 600; font-size: 1.04rem; line-height: 1.45; color: var(--text); }
+
+/* ---------- Telegram + X badhamada ---------- */
+.tg-actions { display: flex; flex-direction: column; gap: 10px; flex: none; }
+.x-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 20px; border-radius: 14px; border: 1px solid var(--line-2); background: color-mix(in srgb, var(--text) 5%, transparent); color: var(--text); font-weight: 700; text-decoration: none; }
+.x-btn:hover { border-color: var(--text); }
+
+/* ---------- Qoraalka dheer: "Akhri dhammaan" ---------- */
+.post-text.clamp p:not(:first-child) { display: none; }
+.post-more { border: 0; background: none; padding: 2px 0 8px; color: var(--accent-ink); font: 600 .88rem Inter, sans-serif; cursor: pointer; }
+
+/* ---------- Menu-ga taleefanka (☰) ---------- */
+.menu-btn, .drawer, .drawer-bg { display: none; }
+@media (max-width: 760px) {
+  .menu-btn { display: grid; }
+  .header-tools #theme-btn, .header-tools .lang-btn { display: none; }
+  .main-nav { display: none !important; }
+  .drawer-bg { display: block; position: fixed; inset: 0; z-index: 40; background: rgba(3,6,12,.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); opacity: 0; transition: opacity .2s; }
+  .drawer-bg.open { opacity: 1; }
+  .drawer { display: block; position: fixed; top: 0; right: 0; bottom: 0; z-index: 41; width: min(84vw, 360px); overflow-y: auto;
+    padding: 18px 26px calc(28px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 6%, var(--bg-2)), var(--bg-2));
+    border-left: 1px solid var(--line-2); box-shadow: -20px 0 50px rgba(0,0,0,.4); transform: translateX(100%); transition: transform .22s ease; }
+  .drawer.open { transform: none; }
+  .drawer[hidden], .drawer-bg[hidden] { display: none; }
+  .dr-close { margin-left: auto; display: grid; }
+  .dr-main { display: flex; flex-direction: column; margin-top: 10px; }
+  .dr-big { padding: 12px 0; font: 700 1.5rem "Space Grotesk", sans-serif; letter-spacing: -.01em; color: var(--text); text-decoration: none; }
+  .dr-big[aria-current="page"] { color: var(--accent-ink); }
+  .dr-sep { height: 1px; background: var(--line-2); margin: 14px 0 6px; }
+  .dr-label { margin: 22px 0 8px; font: 700 .74rem Inter, sans-serif; letter-spacing: .14em; color: var(--muted); }
+  .dr-link { display: block; padding: 9px 0; font-size: 1.08rem; color: var(--text-2); text-decoration: none; }
+  .dr-link:hover { color: var(--text); }
+  .dr-set { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; color: var(--text-2); }
+  .dr-foot { margin-top: 26px; font-size: .8rem; color: var(--muted); }
+  .header-row { flex-wrap: nowrap; padding-top: 10px; padding-bottom: 10px; }
+  .header-tools { gap: 8px; }
+  .header-tools .icon-btn { width: 42px; height: 42px; min-height: 42px; }
+  .status { padding: 6px 10px; font-size: .78rem; }
+  .brand-logo svg { width: 34px; height: 34px; }
+  .brand-wm span { font-size: 1.08rem; }
+  .brand-wm em { font-size: .55rem; letter-spacing: .26em; }
+
+  /* qoraalka */
+  h1, .h1 { font-size: 1.65rem !important; line-height: 1.2 !important; letter-spacing: -.02em; }
+  .h2 { font-size: 1.3rem; }
+  .lead { font-size: 1rem; }
+  .section { padding-top: 22px; padding-bottom: 6px; }
+  .card { padding: 16px; border-radius: 16px; }
+
+  /* go'aannada FED: 2 tiir */
+  .dec-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .dec-grid > .next { grid-column: 1 / -1; }
+  .dec-grid .decision { padding: 14px; }
+  .dec-grid .decision .when { font-size: .66rem; letter-spacing: .06em; }
+  .dec-grid .decision .what { font-size: 1.15rem; }
+  .dec-grid .decision .detail { font-size: .8rem; }
+  .dec-grid .decision.next .what { font-size: 1.2rem; line-height: 1.3; }
+  .status { max-width: 110px; overflow: hidden; white-space: nowrap; }
+
+  /* countdown: 4 sanduuq hal saf */
+  .countdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .countdown div { min-width: 0; padding: 8px 4px; }
+  .countdown b { font-size: 1.2rem; }
+  .countdown span { font-size: .66rem; }
+
+  /* xogta u dambeysay: magaca iyo qiimaha */
+  #latest-data .card-2 { padding: 12px 14px; }
+  #latest-data .card-2 a.small { font-size: .72rem; white-space: nowrap; }
+
+  /* kaararka suuqa: 2 tiir */
+  #crypto .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  #crypto .kpi { padding: 14px; }
+  #crypto .kpi-label { font-size: .76rem; }
+  #crypto .kpi-value { font-size: 1.3rem; }
+
+  /* Telegram */
+  .tg-actions { width: 100%; }
+  .x-btn { width: 100%; }
+}

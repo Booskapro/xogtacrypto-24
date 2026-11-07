@@ -187,7 +187,9 @@
     if (!posts.length) { el.innerHTML = '<p class="muted">' + T("Xogta waa la soo qaadayaa…", "Loading data…") + "</p>"; return; }
     el.innerHTML = posts.map(function (p) {
       const time = p.when && (p.fresh || p.market || p.priority === 3) ? ago(p.when) : p.label || (p.when ? ago(p.when) : "");
-      const body = (Array.isArray(p.body) ? p.body : [p.body]).map(function (x) { return "<p>" + esc(x) + "</p>"; }).join("");
+      const paras = (Array.isArray(p.body) ? p.body : [p.body]);
+      const body = '<div class="post-text' + (paras.length > 1 ? " clamp" : "") + '">' + paras.map(function (x) { return "<p>" + esc(x) + "</p>"; }).join("") + "</div>" +
+        (paras.length > 1 ? '<button type="button" class="post-more">' + T("Akhri dhammaan ↓", "Read more ↓") + "</button>" : "");
       return '<article class="post' + (p.fresh ? " is-new" : "") + '">' +
         '<div class="post-time mono">' + esc(time) + "</div>" +
         '<div class="post-body"><div class="post-title">' + (p.fresh ? '<span class="new-badge">' + T("CUSUB", "NEW") + "</span>" : "") + esc(p.title) + "</div>" + body +
@@ -325,6 +327,12 @@
       loadLive().then(renderNews);
     };
   }
+
+  document.addEventListener("click", function (e) {
+    const b = e.target.closest(".post-more"); if (!b) return;
+    const t = b.previousElementSibling; t.classList.toggle("clamp");
+    b.textContent = t.classList.contains("clamp") ? T("Akhri dhammaan ↓", "Read more ↓") : T("Yaree ↑", "Show less ↑");
+  });
 
   // ---------- Wararka FED ee warbaahinta (/api/news) ----------
   function loadMedia() {
