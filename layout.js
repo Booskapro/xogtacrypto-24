@@ -83,7 +83,7 @@
           '<div class="mega-cols">' +
             '<div><div class="mm-label">' + T("GUUD MAR", "OVERVIEW") + "</div>" +
               item("ku-saabsan.html", T("Hadafkayaga", "Our mission"), T("Xogta suuqa oo dhan, hal meel", "All market data, in one place")) +
-              item("ku-saabsan.html#aasaasaha", T("Aasaasaha", "Founder"), s.founder.name + T(" · aasaasaha & horumariyaha", " · founder & developer")) +
+              item("kooxda.html", T("Aasaasayaasha", "Founders"), T("Kooxda ka dambeysa Xogta Crypto 24/7", "The team behind Xogta Crypto 24/7")) +
             "</div>" +
             '<div><div class="mm-label">' + T("NA RAAC", "FOLLOW US") + "</div>" + follow + "</div>" +
             '<div><div class="mm-label">' + T("WAXBARASHO", "LEARN") + "</div>" +
@@ -286,7 +286,7 @@
             col(T("Xogta", "Data"), [["index.html", T("Maanta", "Today")], ["kalandarka.html", T("Kalandarka", "Calendar"), T("cusub", "new")], ["index.html#fed-charts", T("Chart-yada FED", "Fed charts")], ["wararka.html", T("Wararka", "News")], ["taariikhda.html", T("Taariikhda FED", "Fed history")]]) +
             col(T("Waxbarasho", "Learn"), [["fahanka-fed.html", T("Fahanka FED", "Learn the Fed")], ["taariikhda.html", T("Go'aannadii hore", "Past decisions")]]) +
             col(T("Bulshada", "Community"), [[s.social.telegram || "#", T("Kooxda Telegram", "Telegram group")], [s.social.x || "#", s.x_handle || "X"], [s.founder.x || "#", s.founder.handle || s.founder.name]]) +
-            col(T("Ku saabsan", "About"), [["ku-saabsan.html", T("Ku saabsan", "About us")], ["ku-saabsan.html#aasaasaha", T("Aasaasaha", "Founder")]]) +
+            col(T("Ku saabsan", "About"), [["ku-saabsan.html", T("Ku saabsan", "About us")], ["kooxda.html", T("Aasaasayaasha", "Founders")]]) +
           "</div>" +
         "</div>" +
         '<div class="ff-bottom"><span>© ' + new Date().getFullYear() + " " + s.name + ". " + T("Xuquuqda oo dhan way dhowran tahay.", "All rights reserved.") + "</span>" +
