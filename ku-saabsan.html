@@ -30,41 +30,52 @@
 </head>
 <body>
 <header data-header="ku-saabsan"></header>
-<main class="wrap about">
-  <section class="ab-hero">
-    <span class="eyebrow" data-en="ABOUT">KU SAABSAN</span>
-    <h1 class="ab-title" data-en="All the market data. One place.">Xogta suuqa oo dhan. Hal meel.</h1>
-    <p class="lead" data-en="Fed decisions, economic data, crypto, gold, oil and stocks — live, in Somali and English.">Go'aannada FED-ka, xogta dhaqaalaha, crypto, dahab, shidaal iyo saamiyo — oo toos ah, af-Soomaali iyo English.</p>
+<main class="wrap about ab2">
+  <section class="ab2-hero">
+    <h1 class="ab2-title" data-en="About us">Ku saabsan</h1>
+    <p class="ab2-lead" data-en="We bring Fed decisions, economic data and the markets to the Somali community — live, accurate and in one place.">Waxaan bulshada Soomaaliyeed u keennaa go'aannada FED-ka, xogta dhaqaalaha iyo suuqyada — toos, sax ah, hal meel.</p>
   </section>
 
-  <section class="team" id="aasaasaha">
-    <div class="team-head">
-      <span class="team-eb"><i></i><span data-en="THE TEAM">KOOXDA</span><i></i></span>
-      <h2 class="team-title" data-en="The &lt;em&gt;Founders&lt;/em&gt;"><em>Aasaasayaasha</em></h2>
-    </div>
-    <div class="team-grid" id="team-grid"></div>
+  <section class="ab2-row">
+    <h2 class="ab2-h" data-en="&lt;span&gt;Our&lt;/span&gt; Mission"><span>Hadaf</span>kayaga</h2>
+    <p class="ab2-p" data-en="Xogta Crypto 24/7 gives every Somali free access to the data that moves the market: Fed decisions, inflation, jobs, bonds, crypto, gold and oil. The data comes live from official sources such as the Federal Reserve, BLS and FRED, and is explained in plain Somali and English so anyone can understand it.">Xogta Crypto 24/7 waxay qof kasta oo Soomaali ah si bilaash ah ugu fududaysaa xogta suuqa dhaqaajisa: go'aannada FED-ka, sicir-bararka, shaqooyinka, bonds-ka, crypto, dahabka iyo shidaalka. Xogtu waxay si toos ah uga timaadaa ilaha rasmiga ah sida Federal Reserve, BLS iyo FRED, waxaana lagu sharxaa af-Soomaali iyo English oo fudud, si qof kastaa u fahmo.</p>
+  </section>
+  <section class="ab2-row">
+    <h2 class="ab2-h" data-en="&lt;span&gt;Our&lt;/span&gt; Vision"><span>Aragti</span>dayada</h2>
+    <p class="ab2-p" data-en="A Somali community that follows the global markets with confidence — where every investor, trader and student finds accurate market data in their own language, in one place, at any time of day.">Bulsho Soomaaliyeed oo si kalsooni leh ula socota suuqyada caalamka — halkaas oo maalgaliye kasta, ganacsade kasta iyo arday kasta uu xogta suuqa ee saxda ah ka helo luqaddiisa, hal meel, saacad kasta oo maalinta ah.</p>
+  </section>
+
+  <a class="ab2-stat" id="ab2-stat" href="#" target="_blank" rel="noopener">
+    <b class="ab2-num" id="ab2-num">1,400+</b>
+    <span class="ab2-st" data-en="members in our&lt;br&gt;Telegram community">xubnood oo ku jira<br>bulshadayada Telegram</span>
+    <i class="ab2-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.94 4.3 18.8 19.13c-.24 1.05-.86 1.31-1.74.82l-4.8-3.54-2.32 2.23c-.26.26-.47.47-.96.47l.34-4.88 8.88-8.02c.39-.34-.08-.53-.6-.19L6.62 12.93 1.9 11.45c-1.03-.32-1.05-1.03.21-1.52l18.47-7.12c.86-.31 1.61.2 1.33 1.49z"/></svg></i>
+  </a>
+
+  <section class="ab2-team" id="aasaasaha">
+    <h2 class="ab2-tt" data-en="Our leadership team">Kooxdayada hoggaanka</h2>
+    <div class="ab2-grid" id="team-grid"></div>
   </section>
 </main>
 <footer data-footer></footer>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   var s = window.SITE, f = s.founder, EN = window.I18N.lang === "en";
-  var xIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
-  var people = [{ name: f.name, role: f.role, role_en: f.role_en, photo: f.photo, handle: f.handle, x: f.x, desc: f.desc, desc_en: f.desc_en, lead: true }].concat(s.team || []);
+  var st = document.getElementById("ab2-stat");
+  if (s.social && s.social.telegram) st.href = s.social.telegram;
+  if (s.telegram_members) document.getElementById("ab2-num").textContent = s.telegram_members;
+  var xIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
+  var people = [{ name: f.name, role: f.role, role_en: f.role_en, photo: f.photo, handle: f.handle, x: f.x }].concat(s.team || []);
   var grid = document.getElementById("team-grid");
   people.forEach(function (m) {
-    var card = document.createElement(m.x ? "a" : "article"); card.className = "pc" + (m.lead ? " lead" : "");
-    if (m.x) { card.href = m.x; card.target = "_blank"; card.rel = "noopener"; }
-    if (m.photo) { var img = document.createElement("img"); img.src = m.photo; img.alt = m.name; img.loading = "lazy"; card.appendChild(img); }
-    else { var ini = document.createElement("div"); ini.className = "pc-ini"; ini.textContent = m.name.charAt(0); card.appendChild(ini); }
-    var inn = document.createElement("div"); inn.className = "pc-in";
-    var rl = document.createElement("span"); rl.className = "pc-rl"; rl.textContent = EN && m.role_en ? m.role_en : m.role;
-    var nm = document.createElement("h3"); nm.className = "pc-nm"; nm.textContent = m.name;
-    inn.appendChild(rl); inn.appendChild(nm);
-    var d = EN && m.desc_en ? m.desc_en : m.desc;
-    if (d) { var ds = document.createElement("p"); ds.className = "pc-ds"; ds.textContent = d; inn.appendChild(ds); }
-    if (m.x) { var x = document.createElement("span"); x.className = "pc-x"; x.innerHTML = "<i>" + xIcon + "</i><span></span>"; x.querySelector("span").textContent = m.handle || "X"; inn.appendChild(x); }
-    card.appendChild(inn); grid.appendChild(card);
+    var card = document.createElement("article"); card.className = "ex";
+    var ph = document.createElement("div"); ph.className = "ex-ph";
+    if (m.photo) { var img = document.createElement("img"); img.src = m.photo; img.alt = m.name; img.loading = "lazy"; ph.appendChild(img); }
+    else ph.textContent = m.name.charAt(0);
+    var nm = document.createElement("h3"); nm.className = "ex-nm"; nm.textContent = m.name;
+    var rl = document.createElement("p"); rl.className = "ex-rl"; rl.textContent = EN && m.role_en ? m.role_en : m.role;
+    card.appendChild(ph); card.appendChild(nm); card.appendChild(rl);
+    if (m.x) { var a = document.createElement("a"); a.className = "ex-x"; a.href = m.x; a.target = "_blank"; a.rel = "noopener"; a.setAttribute("aria-label", "X " + (m.handle || m.name)); a.innerHTML = xIcon + "<span></span>"; a.querySelector("span").textContent = m.handle || ""; card.appendChild(a); }
+    grid.appendChild(card);
   });
 });
 </script>

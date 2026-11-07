@@ -487,7 +487,7 @@ html:not([data-lang="en"]) .en { display: none !important; }
   .brand-wm em { font-size: .55rem; letter-spacing: .26em; }
 
   /* qoraalka */
-  h1, .h1 { font-size: 1.65rem !important; line-height: 1.2 !important; letter-spacing: -.02em; }
+  h1:not(.ab2-title), .h1 { font-size: 1.65rem !important; line-height: 1.2 !important; letter-spacing: -.02em; }
   .h2 { font-size: 1.3rem; }
   .lead { font-size: 1rem; }
   .section { padding-top: 22px; padding-bottom: 6px; }
@@ -887,31 +887,43 @@ body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiase
 .cal-row { grid-template-columns: 54px 1fr auto minmax(100px, auto); }
 @media (max-width: 760px) { .cal-row { grid-template-columns: 44px 1fr auto; } }
 
-/* ---------- Aasaasayaasha (kaarar sawir weyn) ---------- */
-.team { margin: 24px 0 72px; }
-.team-head { text-align: center; margin: 0 auto 40px; }
-.team-eb { display: inline-flex; align-items: center; gap: 14px; font-size: .76rem; font-weight: 700; letter-spacing: .32em; color: var(--muted); }
-.team-eb i { width: 44px; height: 1px; background: linear-gradient(90deg, transparent, var(--line-2)); }
-.team-eb i:last-child { background: linear-gradient(90deg, var(--line-2), transparent); }
-.team-title { margin: 14px 0 0; font-family: var(--font-display); font-size: clamp(2.6rem, 6.5vw, 4.4rem); font-weight: 800; letter-spacing: -.045em; line-height: 1; }
-.team-title em { font-style: normal; background: linear-gradient(100deg, var(--text) 0%, var(--text) 35%, #4C9AFF 70%, #22E39A 100%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: .08em; }
-.team-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 28px; }
-.pc { position: relative; display: block; width: 340px; height: 440px; border-radius: 28px; overflow: hidden; border: 1px solid var(--line-2); color: #fff; text-decoration: none;
-  box-shadow: 0 30px 60px -24px rgba(0,0,0,.55); transition: transform .25s, box-shadow .25s; background: #0B1220; }
-.pc:hover { transform: translateY(-6px); box-shadow: 0 40px 70px -24px rgba(0,0,0,.65); }
-.pc img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
-.pc:hover img { transform: scale(1.04); }
-.pc::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,9,13,0) 38%, rgba(6,9,13,.82) 70%, #06090D 100%); }
-.pc-ini { position: absolute; inset: 0; display: grid; place-items: center; font: 800 7rem var(--font-display); color: #4C9AFF; }
-.pc-in { position: absolute; left: 26px; right: 26px; bottom: 24px; z-index: 2; }
-.pc-rl { display: inline-block; font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; padding: 6px 11px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(8px); }
-.pc.lead .pc-rl { background: linear-gradient(90deg, #F5D27A, #E9A23B); color: #1A1205; border: 0; }
-.pc-nm { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; letter-spacing: -.03em; margin: 12px 0 14px; color: #fff; }
-.pc-ds { color: #B8C3CF; font-size: .95rem; line-height: 1.5; margin: 0 0 16px; }
-.pc-x { display: inline-flex; align-items: center; gap: 9px; font-weight: 700; font-size: .9rem; color: #fff; }
-.pc-x i { width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #0B1220; display: grid; place-items: center; }
+/* ---------- Ku saabsan (qaabka Sonic + Coinbase) ---------- */
+.ab2-hero { padding: 64px 0 40px; }
+.ab2 .ab2-title { font-family: var(--font-display); font-size: clamp(3.2rem, 9vw, 6.4rem); font-weight: 600; letter-spacing: -.05em; line-height: .95; margin: 0; }
+.ab2-lead { margin: 22px 0 0; max-width: 34ch; font-size: clamp(1.15rem, 2.2vw, 1.45rem); line-height: 1.55; color: var(--text-2); }
+.ab2-row { display: grid; grid-template-columns: 280px 1fr; gap: 48px; padding: 52px 0; border-top: 1px solid var(--line); }
+.ab2-h { margin: 0; font-family: var(--font-display); font-size: clamp(1.8rem, 3.2vw, 2.3rem); font-weight: 700; letter-spacing: -.03em; line-height: 1.1; }
+.ab2-h span { color: var(--muted); font-weight: 600; }
+.ab2-p { margin: 0; max-width: 64ch; font-size: 1.05rem; line-height: 1.75; color: var(--text-2); }
+.ab2-stat { display: flex; align-items: center; gap: 22px; margin: 20px 0 0; padding: 26px 40px; border-radius: 20px; border: 1px solid var(--line-2); background: var(--card); color: var(--text); text-decoration: none; box-shadow: 0 10px 30px -18px rgba(0,0,0,.35); transition: border-color .2s; }
+.ab2-stat:hover { border-color: var(--accent); }
+.ab2-num { font-family: var(--font-display); font-size: clamp(2.6rem, 6vw, 4rem); font-weight: 500; letter-spacing: -.04em; line-height: 1; }
+.ab2-st { font-size: 1.05rem; line-height: 1.35; color: var(--text-2); }
+.ab2-ic { margin-left: auto; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; background: var(--card-2); color: #229ED9; box-shadow: 0 8px 20px -8px rgba(0,0,0,.35); flex: none; }
+.ab2-team { padding: 90px 0 80px; }
+.ab2-tt { margin: 0 0 36px; font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 600; letter-spacing: -.045em; line-height: 1; }
+.ab2-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 18px; }
+.ex { min-width: 0; }
+.ex-ph { aspect-ratio: 4 / 5; border-radius: 26px; overflow: hidden; background: var(--card-2); display: grid; place-items: center; font: 700 5rem var(--font-display); color: var(--accent); }
+.ex-ph img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+.ex:hover .ex-ph img { transform: scale(1.03); }
+.ex-nm { margin: 22px 0 0; padding-bottom: 20px; border-bottom: 1px solid var(--line-2); font-size: 1.2rem; font-weight: 700; letter-spacing: -.01em; }
+.ex-rl { margin: 18px 0 0; font-size: 1rem; color: var(--text-2); }
+.ex-x { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--text); text-decoration: none; font-weight: 600; font-size: .9rem; }
+.ex-x:hover { color: var(--accent); }
+@media (max-width: 900px) { .ab2-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) {
-  .team-head { margin-bottom: 28px; }
-  .team-grid { gap: 16px; }
-  .pc { width: 100%; max-width: 380px; height: 420px; }
+  .ab2-hero { padding: 36px 0 24px; }
+  .ab2-row { grid-template-columns: 1fr; gap: 14px; padding: 34px 0; }
+  .ab2-stat { padding: 20px 20px; gap: 14px; }
+  .ab2-ic { width: 48px; height: 48px; }
+  .ab2-st { font-size: .92rem; }
+  .ab2-team { padding: 56px 0 50px; }
+  .ab2-tt { margin-bottom: 24px; }
+  .ab2-grid { gap: 14px 12px; }
+  .ex-ph { border-radius: 18px; }
+  .ex-nm { font-size: 1rem; margin-top: 14px; padding-bottom: 12px; }
+  .ex-rl { font-size: .84rem; margin-top: 12px; }
+  .ex-x { font-size: .74rem; }
+  .ex-x span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
