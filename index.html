@@ -82,6 +82,17 @@
     </div>
   </section>
 
+  <!-- 1c. WARARKA FED -->
+  <section class="section" id="home-news-sec">
+    <div class="card">
+      <div class="section-head" style="margin-bottom:4px">
+        <h2 class="h2" style="margin:0" data-en="Latest Fed news">Wararka FED-ka ee ugu dambeeyay</h2>
+        <a href="wararka.html" class="small" data-en="All news →">Dhammaan wararka →</a>
+      </div>
+      <div id="home-news" class="media-list"><p class="muted" data-en="Loading news…">Wararka waa la soo qaadayaa…</p></div>
+    </div>
+  </section>
+
   <!-- 2. SUUQA CRYPTO -->
   <section class="section" id="crypto">
     <div class="section-head">
@@ -119,14 +130,17 @@
     <p class="note" id="data-note" hidden></p>
   </section>
 
-  <!-- 3. DHAWAAN -->
+  <!-- 3. TELEGRAM -->
   <section class="section">
-    <div class="card soon">
-      <span class="eyebrow" data-en="COMING SOON">DHAWAAN</span>
-      <h2 class="h3" data-en="What&#x27;s coming">Waxa ku soo biiraya</h2>
-      <ul class="soon-list">
-        <li data-en="&lt;b&gt;Telegram alerts:&lt;/b&gt; when important data is released"><b>Ogeysiisyo Telegram ah:</b> marka xog muhiim ah soo baxdo</li>
-      </ul>
+    <div class="tg-card">
+      <div class="tg-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.94 4.3 18.8 19.13c-.24 1.05-.86 1.31-1.74.82l-4.8-3.54-2.32 2.23c-.26.26-.47.47-.96.47l.34-4.88 8.88-8.02c.39-.34-.08-.53-.6-.19L6.62 12.93 1.9 11.45c-1.03-.32-1.05-1.03.21-1.52l18.47-7.12c.86-.31 1.61.2 1.33 1.49z"/></svg></div>
+      <div class="tg-body">
+        <span class="eyebrow" style="color:#7CC8FF" data-en="TELEGRAM GROUP">KOOXDA TELEGRAM</span>
+        <h2 class="tg-title" data-en="Join the community">Ku biir bulshada</h2>
+        <p class="tg-text" data-en="Get Fed decisions, CPI, jobs data and market alerts the moment they are released, explained in Somali. Ask questions and discuss with other traders.">Hel go'aannada FED-ka, CPI, xogta shaqada iyo ogeysiisyada suuqa isla marka ay soo baxaan, oo af-Soomaali lagu sharxay. Su'aalo weydii, kalana dood ganacsatada kale.</p>
+        <div class="tg-meta"><span id="tg-members">1,400+</span> <span data-en="members">xubnood</span> · <span data-en="free">bilaash</span></div>
+      </div>
+      <a class="tg-btn" id="tg-join" href="https://t.me/Xogtacrypto24_7" target="_blank" rel="noopener"><span data-en="Join the group">Ku biir kooxda</span> →</a>
     </div>
   </section>
 
@@ -137,5 +151,12 @@
 <script src="fed-core.js"></script>
 <script src="home.js"></script>
 <script src="live-feed.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var t = window.SITE && window.SITE.social && window.SITE.social.telegram;
+  if (t) document.getElementById("tg-join").href = t;
+  if (window.SITE && window.SITE.telegram_members) document.getElementById("tg-members").textContent = window.SITE.telegram_members;
+});
+</script>
 </body>
 </html>

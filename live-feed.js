@@ -326,6 +326,30 @@
     };
   }
 
+  // ---------- Wararka FED ee warbaahinta (/api/news) ----------
+  function loadMedia() {
+    const all = $("media-news"), home = $("home-news");
+    if (!all && !home) return;
+    if (location.protocol === "file:") return;
+    fetch("/api/news", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      const items = (j && j.items) || [];
+      function row(n) {
+        const title = EN ? n.title : (n.title_so || n.title);
+        const isNew = Date.now() - Date.parse(n.date) < 3 * 3600e3;
+        return '<a class="media-item" href="' + esc(n.link) + '" target="_blank" rel="noopener">' +
+          '<span class="media-meta">' + (n.official ? '<span class="chip ok">🏛 Federal Reserve</span>' : '<span class="media-src">' + esc(n.source || "") + "</span>") +
+          (isNew ? '<span class="new-badge">' + T("CUSUB", "NEW") + "</span>" : "") +
+          '<span class="small muted">' + esc(ago(n.date)) + "</span></span>" +
+          '<span class="media-title">' + esc(title) + "</span></a>";
+      }
+      const empty = '<p class="muted">' + T("Wararka lama heli karo hadda. Waxaan isku dayi doonnaa mar kale.", "News is not available right now. We will try again shortly.") + "</p>";
+      if (all) all.innerHTML = items.length ? items.map(row).join("") : empty;
+      if (home) home.innerHTML = items.length ? items.slice(0, 6).map(row).join("") : empty;
+      const up = $("media-updated");
+      if (up && j) up.textContent = T("La cusbooneysiiyay ", "Updated ") + hhmm(new Date());
+    }).catch(function () {});
+  }
+
   // ---------- Si joogto ah u cusbooneysii ----------
   function refresh(forceLive, forceFed) {
     return Promise.all([loadLive(forceLive), F.load(forceFed)]).then(function (r) {
@@ -340,6 +364,8 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+    loadMedia();
+    setInterval(loadMedia, 2 * 60 * 1000);
     if (!$("agent-feed") && !$("odds") && !$("news-list")) return;
     wireNewsFilter();
     refresh(false, false);

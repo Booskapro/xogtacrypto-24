@@ -24,12 +24,15 @@ window.SITE = {
   // Baraha bulshada — ku qor link-gaaga buuxa (tusaale: "https://x.com/booskapro")
   social: {
     x: "https://x.com/booskapro",
-    telegram: "",
+    telegram: "https://t.me/Xogtacrypto24_7",
     youtube: "",
     tiktok: "",
     facebook: "",
     instagram: ""
   },
+
+  // Tirada xubnaha kooxda Telegram (gacanta ku beddel)
+  telegram_members: "1,400+",
 
   email: "" // tusaale: "info@xogtacrypto247.com"
 };
