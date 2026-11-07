@@ -315,3 +315,73 @@ html:not([data-lang="en"]) .en { display: none !important; }
 .lang-switch { display: flex; border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; }
 .lang-switch button { min-width: 44px; min-height: 42px; padding: 0 10px; border: 0; background: transparent; color: var(--muted); font: 700 .85rem Inter, sans-serif; cursor: pointer; }
 .lang-switch button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+
+/* ---------- Dejinta: menu yar ---------- */
+.theme-panel { width: 290px; padding: 6px 0; gap: 0; border-radius: 14px; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; font-size: .95rem; color: var(--text); }
+.set-row + .set-row { border-top: 1px solid var(--line); }
+.pill-seg { display: flex; padding: 3px; gap: 2px; background: var(--card-2); border: 1px solid var(--line); border-radius: 10px; }
+.pill-seg button { min-width: 36px; height: 32px; padding: 0 8px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font: 700 .82rem Inter, sans-serif; display: grid; place-items: center; cursor: pointer; }
+.pill-seg button:hover { color: var(--text); }
+.pill-seg button[aria-pressed="true"] { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.dots { display: flex; gap: 8px; }
+.dot-sw { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; outline: 2px solid transparent; cursor: pointer; padding: 0; }
+.dot-sw[aria-pressed="true"] { outline-color: var(--text); outline-offset: 2px; }
+.lang-btn { font: 700 .82rem Inter, sans-serif; width: 44px; }
+
+/* ---------- Ku saabsan: mega menu ---------- */
+.nav-drop { display: inline-flex; align-items: center; gap: 6px; padding: 10px 12px; border-radius: 8px; border: 0; background: transparent; color: var(--text-2); font: 500 1rem Inter, sans-serif; cursor: pointer; white-space: nowrap; }
+.nav-drop:hover, .nav-drop[aria-expanded="true"] { background: var(--card-2); color: var(--text); }
+.nav-drop[aria-current="page"] { color: var(--text); font-weight: 700; }
+.nav-drop .chev-ic { transition: transform .2s; }
+.nav-drop[aria-expanded="true"] .chev-ic { transform: rotate(180deg); }
+.mega { position: absolute; left: 0; right: 0; top: 100%; background: #0E0E0C; color: #F3F1EA; border-bottom: 1px solid #2A2A27; box-shadow: 0 30px 60px rgba(0,0,0,.45); z-index: 25; animation: megaIn .18s ease-out; }
+.mega[hidden] { display: none; }
+@keyframes megaIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.mega-inner { padding-top: 34px; padding-bottom: 40px; }
+.mega-head { display: inline-flex; align-items: center; gap: 16px; color: #F3F1EA; text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1px; font-family: "Space Grotesk", sans-serif; font-size: 1.7rem; letter-spacing: -.02em; }
+.mega-arrow { width: 42px; height: 42px; border-radius: 50%; border: 1px solid #4A4A45; display: grid; place-items: center; transition: background .2s, color .2s; }
+.mega-head:hover .mega-arrow { background: #F3F1EA; color: #0E0E0C; }
+.mega-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 26px; padding-top: 30px; border-top: 1px solid #2A2A27; }
+.mm-label { font-family: "JetBrains Mono", monospace; font-size: .74rem; letter-spacing: .08em; color: #8C8A82; margin-bottom: 18px; }
+.mm-item { display: block; text-decoration: none; padding: 8px 0 12px; }
+.mm-t { display: block; color: #F3F1EA; font-size: 1.08rem; }
+.mm-s { display: block; color: #A3A199; font-size: .88rem; margin-top: 2px; line-height: 1.4; }
+.mm-item:hover .mm-t { text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 760px) {
+  .mega { max-height: calc(100vh - 120px); overflow-y: auto; }
+  .mega-inner { padding-top: 22px; padding-bottom: 26px; }
+  .mega-head { font-size: 1.3rem; }
+  .mega-cols { grid-template-columns: 1fr; gap: 6px; margin-top: 18px; padding-top: 18px; }
+  .mm-label { margin: 12px 0 6px; }
+  .nav-drop { padding: 8px 10px; font-size: .93rem; }
+}
+
+/* ---------- Bogga Ku saabsan ---------- */
+.about { padding-bottom: 40px; }
+.ab-hero { padding: 64px 0 40px; max-width: 900px; }
+.ab-title { font-family: "Space Grotesk", sans-serif; font-size: clamp(2.2rem, 6vw, 4.2rem); line-height: 1.04; letter-spacing: -.035em; margin: 14px 0 18px; }
+.ab-row { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 32px; padding: 40px 0; border-top: 1px solid var(--line); scroll-margin-top: 90px; }
+.ab-label h2 { font-family: "Space Grotesk", sans-serif; font-size: 1.35rem; margin: 6px 0 0; }
+.mm-num { font-family: "JetBrains Mono", monospace; font-size: .78rem; color: var(--muted); letter-spacing: .08em; }
+.ab-body { max-width: 760px; }
+.ab-body p { color: var(--text-2); line-height: 1.7; margin: 0 0 14px; }
+.ab-big { font-size: 1.3rem; color: var(--text) !important; line-height: 1.5 !important; }
+.ab-offer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin-top: 18px; border-top: 1px solid var(--line); }
+.ab-offer a { display: block; padding: 16px 16px 16px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+.ab-offer b { display: block; color: var(--text); font-weight: 600; }
+.ab-offer span { display: block; color: var(--muted); font-size: .9rem; margin-top: 3px; }
+.ab-offer a:hover b { text-decoration: underline; text-underline-offset: 4px; }
+.fd { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.fd-photo { width: 140px; height: 140px; border-radius: 50%; background: var(--card-2); border: 1px solid var(--line-2); display: grid; place-items: center; font: 700 3.4rem "Space Grotesk", sans-serif; color: var(--accent); overflow: hidden; flex: none; }
+.fd-photo.has-img { background: #fff; }
+.fd-photo img { width: 100%; height: 100%; object-fit: cover; }
+.fd-handle { display: inline-block; margin-top: 8px; font-weight: 600; }
+.fd-quote { margin: 26px 0 20px; padding: 0 0 0 18px; border-left: 3px solid var(--accent); font-family: "Space Grotesk", sans-serif; font-size: 1.45rem; line-height: 1.35; color: var(--text); }
+@media (max-width: 760px) {
+  .ab-hero { padding: 36px 0 24px; }
+  .ab-row { grid-template-columns: 1fr; gap: 14px; padding: 28px 0; }
+  .ab-offer { grid-template-columns: 1fr; }
+  .fd-photo { width: 104px; height: 104px; }
+  .fd-quote { font-size: 1.2rem; }
+}

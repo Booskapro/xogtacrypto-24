@@ -56,12 +56,55 @@
 
   const icon = {
     logo: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>',
-    palette: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4A5.6 5.6 0 0 0 22 10c0-4.4-4.5-8-10-8z"/></svg>'
+    gear: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+    sun: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+    moon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+    screen: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+    chev: '<svg class="chev-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>',
+    arrow: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
   };
 
+  // ---------- Menu-ga "Ku saabsan" (mega menu) ----------
+  function buildAbout() {
+    const T = window.I18N.tx, s = window.SITE;
+    function item(href, title, sub) {
+      return '<a class="mm-item" href="' + href + '"><span class="mm-t">' + title + '</span><span class="mm-s">' + sub + "</span></a>";
+    }
+    const names = { x: "X / Twitter", telegram: "Telegram", youtube: "YouTube", tiktok: "TikTok", facebook: "Facebook", instagram: "Instagram" };
+    const soc = Object.keys(names).filter(function (k) { return s.social[k]; });
+    const follow = soc.length
+      ? soc.map(function (k) { return item(s.social[k] + '" rel="noopener', names[k], T("Ka raac ", "Follow on ") + names[k]); }).join("")
+      : item("ku-saabsan.html#xiriir", "Telegram", T("Ogeysiisyo toos ah · dhawaan", "Live alerts · coming soon")) +
+        item("ku-saabsan.html#xiriir", T("Baraha bulshada", "Social media"), T("Dhawaan ayaa la furayaa", "Opening soon"));
+    return (
+      '<div class="mega" id="mega-about" hidden>' +
+        '<div class="wrap mega-inner">' +
+          '<a class="mega-head" href="ku-saabsan.html"><span>' + T("Ku saabsan Xogta Crypto 24/7", "About Xogta Crypto 24/7") + '</span><span class="mega-arrow">' + icon.arrow + "</span></a>" +
+          '<div class="mega-cols">' +
+            '<div><div class="mm-label">' + T("GUUD MAR", "OVERVIEW") + "</div>" +
+              item("ku-saabsan.html#hadaf", T("Hadafkayaga", "Our mission"), T("Sababta website-kan loo dhisay", "Why we built this website")) +
+              item("ku-saabsan.html#aasaasaha", T("Aasaasaha", "Founder"), s.founder.name + T(" · sheekada iyo hadafka", " · story and vision")) +
+              item("ku-saabsan.html#xiriir", T("Nala soo xiriir", "Contact"), T("Email iyo baraha bulshada", "Email and social media")) +
+            "</div>" +
+            '<div><div class="mm-label">' + T("NA RAAC", "FOLLOW US") + "</div>" + follow + "</div>" +
+            '<div><div class="mm-label">' + T("SHURUUDAHA", "LEGAL") + "</div>" +
+              item("ku-saabsan.html#khatar", T("Ogeysiiska khatarta", "Risk disclaimer"), T("Tani ma aha talo maaliyadeed", "This is not financial advice")) +
+              item("ku-saabsan.html#asturnaan", T("Asturnaanta", "Privacy"), T("Xogtaada shakhsiyeed ma kaydino", "We don't store your personal data")) +
+            "</div>" +
+          "</div>" +
+        "</div>" +
+      "</div>"
+    );
+  }
+
   function buildHeader(active, showStatus) {
+    const T = window.I18N.tx;
     const links = NAV.map(function (n) {
-      return '<a href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + (LANG === "en" ? n.en : n.label) + "</a>";
+      const label = LANG === "en" ? n.en : n.label;
+      if (n.key === "ku-saabsan") {
+        return '<button type="button" class="nav-drop" id="about-btn" aria-expanded="false" aria-controls="mega-about"' + (n.key === active ? ' aria-current="page"' : "") + ">" + label + icon.chev + "</button>";
+      }
+      return '<a href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + label + "</a>";
     }).join("");
     return (
       '<div class="wrap header-row" style="position:relative">' +
@@ -69,40 +112,38 @@
           '<span class="brand-mark">' + icon.logo + '</span>' +
           '<span class="brand-name">Xogta Crypto <span class="accent">24/7</span></span>' +
         "</a>" +
-        '<nav class="main-nav" aria-label="Menu-ga">' + links + "</nav>" +
+        '<nav class="main-nav" aria-label="Menu">' + links + "</nav>" +
         '<div class="header-tools">' +
-          (showStatus ? '<div class="status" id="status" role="status" aria-live="polite"><span class="dot"></span><span id="status-text">' + (LANG === "en" ? "Connecting…" : "Xiriirinaya…") + "</span></div>" : "") +
-          '<div class="lang-switch" role="group" aria-label="Luqadda / Language">' +
-            '<button type="button" data-lang-set="so" aria-pressed="' + (LANG === "so") + '">SO</button>' +
-            '<button type="button" data-lang-set="en" aria-pressed="' + (LANG === "en") + '">EN</button>' +
-          "</div>" +
-          '<button type="button" class="icon-btn" id="theme-btn" aria-label="' + (LANG === "en" ? "Change website colours" : "Beddel midabka website-ka") + '" aria-expanded="false" aria-controls="theme-panel">' + icon.palette + "</button>" +
+          (showStatus ? '<div class="status" id="status" role="status" aria-live="polite"><span class="dot"></span><span id="status-text">' + T("Xiriirinaya…", "Connecting…") + "</span></div>" : "") +
+          '<button type="button" class="icon-btn lang-btn" data-lang-set="' + (LANG === "en" ? "so" : "en") + '" aria-label="' + T("Switch to English", "U beddel af-Soomaali") + '">' + (LANG === "en" ? "SO" : "EN") + "</button>" +
+          '<button type="button" class="icon-btn" id="theme-btn" aria-label="' + T("Dejinta", "Settings") + '" aria-expanded="false" aria-controls="theme-panel">' + icon.gear + "</button>" +
         "</div>" +
         buildPanel() +
       "</div>" +
-      (showStatus ? '<div class="ticker" aria-label="Qiimaha tooska ah"><div class="ticker-track" id="ticker-track"></div></div>' : "")
+      buildAbout() +
+      (showStatus ? '<div class="ticker" aria-label="Live"><div class="ticker-track" id="ticker-track"></div></div>' : "")
     );
   }
 
+  // ---------- Dejinta (menu yar) ----------
   function buildPanel() {
-    const sw = ACCENTS.map(function (a) {
-      return '<button type="button" class="swatch" data-accent="' + a.value + '" aria-label="' + a.name + '" style="background:' + a.value + '"></button>';
-    }).join("");
     const T = window.I18N.tx;
+    const sw = ACCENTS.map(function (a) {
+      return '<button type="button" class="dot-sw" data-accent="' + a.value + '" aria-label="' + a.name + '" style="background:' + a.value + '"></button>';
+    }).join("");
+    function row(label, ctrl) { return '<div class="set-row"><span>' + label + "</span>" + ctrl + "</div>"; }
     return (
-      '<div class="theme-panel" id="theme-panel" hidden>' +
-        "<h2>" + T("Midabka website-ka", "Website colours") + "</h2>" +
-        '<div><div class="label">' + T("Midabka muhiimka ah", "Accent colour") + '</div><div class="swatches">' + sw + "</div></div>" +
-        '<div><div class="label">' + T("Asalka", "Background") + '</div><div class="seg">' +
-          '<button type="button" data-mode="dark">' + T("Mugdi", "Dark") + "</button>" +
-          '<button type="button" data-mode="light">' + T("Iftiin", "Light") + "</button>" +
-          '<button type="button" data-mode="auto">Auto</button>' +
-        "</div></div>" +
-        '<div><div class="label">' + T("Cabbirka qoraalka", "Text size") + '</div><div class="seg">' +
-          '<button type="button" data-size="s" style="font-size:.8rem">' + T("A yar", "Small") + "</button>" +
-          '<button type="button" data-size="m">A</button>' +
-          '<button type="button" data-size="l" style="font-size:1.05rem">' + T("A weyn", "Large") + "</button>" +
-        "</div></div>" +
+      '<div class="theme-panel" id="theme-panel" role="dialog" aria-label="' + T("Dejinta", "Settings") + '" hidden>' +
+        row(T("Luqadda", "Language"), '<div class="pill-seg"><button type="button" data-lang-set="so" aria-pressed="' + (LANG === "so") + '">SO</button><button type="button" data-lang-set="en" aria-pressed="' + (LANG === "en") + '">EN</button></div>') +
+        row(T("Muuqaalka", "Theme"), '<div class="pill-seg">' +
+          '<button type="button" data-mode="light" aria-label="' + T("Iftiin", "Light") + '">' + icon.sun + "</button>" +
+          '<button type="button" data-mode="dark" aria-label="' + T("Mugdi", "Dark") + '">' + icon.moon + "</button>" +
+          '<button type="button" data-mode="auto" aria-label="' + T("Sida qalabkaaga", "System") + '">' + icon.screen + "</button></div>") +
+        row(T("Midabka", "Colour"), '<div class="dots">' + sw + "</div>") +
+        row(T("Qoraalka", "Text size"), '<div class="pill-seg">' +
+          '<button type="button" data-size="s" aria-label="' + T("Yar", "Small") + '" style="font-size:.75rem">A</button>' +
+          '<button type="button" data-size="m" aria-label="' + T("Caadi", "Normal") + '">A</button>' +
+          '<button type="button" data-size="l" aria-label="' + T("Weyn", "Large") + '" style="font-size:1.1rem">A</button></div>') +
       "</div>"
     );
   }
@@ -116,17 +157,34 @@
     document.querySelectorAll("[data-size]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.size === size)); });
   }
 
-  function wirePanel() {
-    const btn = document.getElementById("theme-btn");
-    const panel = document.getElementById("theme-panel");
-    if (!btn || !panel) return;
+  function popup(btn, panel, others) {
+    function close() { if (!panel.hidden) { panel.hidden = true; btn.setAttribute("aria-expanded", "false"); } }
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
+      others.forEach(function (f) { f(); });
       panel.hidden = !panel.hidden;
       btn.setAttribute("aria-expanded", String(!panel.hidden));
     });
+    panel.addEventListener("click", function (e) { e.stopPropagation(); });
+    document.addEventListener("click", close);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !panel.hidden) { close(); btn.focus(); } });
+    return close;
+  }
+
+  function wirePanel() {
+    const btn = document.getElementById("theme-btn");
+    const panel = document.getElementById("theme-panel");
+    const ab = document.getElementById("about-btn");
+    const mega = document.getElementById("mega-about");
+    if (!btn || !panel) return;
+    const closers = [];
+    const closeSet = popup(btn, panel, closers);
+    if (ab && mega) {
+      const closeMega = popup(ab, mega, [closeSet]);
+      closers.push(closeMega);
+      mega.addEventListener("click", function (e) { if (e.target.closest("a")) closeMega(); });
+    }
     panel.addEventListener("click", function (e) {
-      e.stopPropagation();
       const t = e.target.closest("button");
       if (!t) return;
       if (t.dataset.accent) save("xc-accent", t.dataset.accent);
@@ -134,12 +192,6 @@
       if (t.dataset.size) save("xc-size", t.dataset.size);
       applyTheme();
       syncPanel();
-    });
-    document.addEventListener("click", function () {
-      if (!panel.hidden) { panel.hidden = true; btn.setAttribute("aria-expanded", "false"); }
-    });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && !panel.hidden) { panel.hidden = true; btn.setAttribute("aria-expanded", "false"); btn.focus(); }
     });
     syncPanel();
   }
@@ -181,7 +233,8 @@
       header.innerHTML = buildHeader(header.dataset.header, header.hasAttribute("data-live"));
       wirePanel();
       header.querySelectorAll("[data-lang-set]").forEach(function (b) {
-        b.addEventListener("click", function () {
+        b.addEventListener("click", function (e) {
+          e.stopPropagation();
           if (b.dataset.langSet === LANG) return;
           save("xc-lang", b.dataset.langSet);
           location.reload();
