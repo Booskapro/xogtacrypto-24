@@ -900,7 +900,7 @@ body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiase
 .ab2-num { font-family: var(--font-display); font-size: clamp(2.6rem, 6vw, 4rem); font-weight: 500; letter-spacing: -.04em; line-height: 1; }
 .ab2-st { font-size: 1.05rem; line-height: 1.35; color: var(--text-2); }
 .ab2-ic { margin-left: auto; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; background: var(--card-2); color: #229ED9; box-shadow: 0 8px 20px -8px rgba(0,0,0,.35); flex: none; }
-.ab2-team { padding: 90px 0 80px; }
+.ab2-team { padding: 90px 0 80px; scroll-margin-top: 20px; }
 .ab2-tt { margin: 0 0 36px; font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 600; letter-spacing: -.045em; line-height: 1; }
 .ab2-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 18px; }
 .ex { min-width: 0; }
@@ -926,4 +926,74 @@ body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiase
   .ex-rl { font-size: .84rem; margin-top: 12px; }
   .ex-x { font-size: .74rem; }
   .ex-x span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+.ab2-teamlink { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 18px 0 90px; padding: 26px 40px; border-radius: 20px; border: 1px solid var(--line-2); background: var(--card); color: var(--text); text-decoration: none; transition: border-color .2s, transform .2s; }
+.ab2-teamlink:hover { border-color: var(--accent); transform: translateY(-2px); }
+.ab2-teamlink b { display: block; font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; letter-spacing: -.03em; }
+.ab2-teamlink em { display: block; font-style: normal; color: var(--muted); margin-top: 4px; }
+.ab2-teamlink i { font-style: normal; font-size: 1.6rem; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--card-2); flex: none; }
+@media (max-width: 760px) { .ab2-teamlink { padding: 20px; margin-bottom: 56px; } .ab2-teamlink b { font-size: 1.3rem; } .ab2-teamlink i { width: 44px; height: 44px; } }
+@media (min-width: 761px) { .mega-cols > .mm-follow { justify-self: end; min-width: 240px; } }
+
+/* =========================================================
+   CHARTS (charts.html) — xc-charts.js
+   ========================================================= */
+.xch-hero { padding: 64px 0 26px; }
+.xch-eb { font-size: .78rem; letter-spacing: .2em; font-weight: 700; color: var(--accent-ink); }
+.xch-title { font-family: var(--font-display, "Inter Tight"), Inter, sans-serif; font-size: clamp(2.6rem, 6vw, 4.6rem); font-weight: 800; letter-spacing: -.045em; line-height: 1; margin: 12px 0 14px; }
+.xch-lead { max-width: 640px; color: var(--muted); font-size: 1.08rem; line-height: 1.6; margin: 0; }
+.xch-disc { color: var(--muted); font-size: .85rem; margin: 26px 0 70px; }
+.xc-grid { display: grid; gap: 22px; }
+.xcc { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px 26px 22px; scroll-margin-top: 90px; }
+.xcc-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.xcc-k { font-size: .74rem; letter-spacing: .18em; font-weight: 700; color: var(--accent-ink); text-transform: uppercase; }
+.xcc-act { position: relative; display: flex; align-items: center; gap: 6px; }
+.xcc-badge { display: inline-flex; align-items: center; gap: 7px; font-size: .76rem; font-weight: 600; color: var(--muted); background: var(--card-2); border: 1px solid var(--line); padding: 5px 10px; border-radius: 999px; margin-right: 4px; white-space: nowrap; }
+.xcc-badge b { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.xcc-badge b.pulse { background: #1F9D6B; box-shadow: 0 0 0 0 rgba(31,157,107,.5); animation: xcPulse 1.8s infinite; }
+@keyframes xcPulse { 70% { box-shadow: 0 0 0 7px rgba(31,157,107,0); } 100% { box-shadow: 0 0 0 0 rgba(31,157,107,0); } }
+.xcc-ib { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--card); color: var(--text-2); display: grid; place-items: center; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.xcc-ib:hover, .xcc-ib.on { border-color: var(--text); color: var(--text); background: var(--card-2); }
+.xcc-ib svg, .xcc-menu svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.xcc-menu svg.fill { fill: currentColor; stroke: none; width: 16px; height: 16px; margin: 0 1px; }
+.xcc-menu { position: absolute; top: 44px; right: 0; z-index: 30; min-width: 230px; background: var(--card); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,.28); padding: 6px; }
+[data-theme="light"] .xcc-menu { box-shadow: 0 14px 34px rgba(11,18,32,.14); }
+.xcc-menu[hidden] { display: none !important; }
+.xcc-menu button { display: flex; width: 100%; align-items: center; gap: 12px; padding: 10px 12px; border: 0; border-radius: 8px; background: none; color: var(--text); font: 500 .92rem/1.2 Inter, sans-serif; text-align: left; cursor: pointer; }
+.xcc-menu button:hover { background: var(--card-2); }
+.xcc-menu button svg { color: var(--muted); }
+.xcc-menu button.busy { opacity: .55; pointer-events: none; }
+.xcc-menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 6px; }
+.xcc-t { font-family: var(--font-display, "Inter Tight"), Inter, sans-serif; font-size: clamp(1.25rem, 2.4vw, 1.75rem); font-weight: 700; letter-spacing: -.02em; line-height: 1.2; margin: 10px 0 6px; }
+.xcc-s { color: var(--muted); font-size: .92rem; margin: 0; }
+.xcc-lg { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 14px 0 6px; font-size: .86rem; color: var(--text-2); }
+.xcc-lg span { display: inline-flex; align-items: center; gap: 8px; }
+.xcc-lg i { width: 20px; height: 3px; border-radius: 2px; display: inline-block; }
+.xcc-lg i.bx { width: 16px; height: 11px; border-radius: 3px; opacity: .45; }
+.xcc-plot { position: relative; min-height: 260px; margin-top: 8px; touch-action: pan-y; }
+.xcc-plot svg { display: block; width: 100%; height: auto; font-family: Inter, sans-serif; }
+.xcc-load { display: grid; place-items: center; height: 260px; color: var(--muted); font-size: .92rem; }
+.xcc-tip { position: absolute; top: 8px; z-index: 5; min-width: 150px; background: var(--card); border: 1px solid var(--line-2); border-radius: 10px; padding: 9px 11px; box-shadow: 0 10px 26px rgba(0,0,0,.22); font-size: .8rem; pointer-events: none; }
+.xcc-tip[hidden] { display: none !important; }
+.xcc-tip b { display: block; margin-bottom: 5px; font-weight: 700; }
+.xcc-tip span { display: flex; align-items: center; gap: 7px; color: var(--text-2); margin-top: 3px; }
+.xcc-tip i { width: 8px; height: 8px; border-radius: 2px; }
+.xcc-tip em { font-style: normal; margin-left: auto; padding-left: 12px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.xcc-bot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.xcc-rg { display: inline-flex; background: var(--card-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 2px; }
+.xcc-rg button { border: 0; background: none; color: var(--muted); font: 600 .8rem Inter, sans-serif; padding: 6px 12px; border-radius: 7px; cursor: pointer; }
+.xcc-rg button.on { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+.xcc-src { color: var(--muted); font-size: .8rem; }
+.xcc-note { margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: var(--card-2); border: 1px solid var(--line); display: grid; gap: 4px; font-size: .9rem; color: var(--text-2); }
+.xcc-note b { color: var(--text); font-size: .86rem; }
+.xcc-note:empty { display: none; }
+.xcc.full { position: fixed; inset: 12px; z-index: 200; overflow: auto; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+body.xc-noscroll { overflow: hidden; }
+#xc-toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); z-index: 300; background: var(--text); color: var(--bg); padding: 11px 18px; border-radius: 10px; font-size: .9rem; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+#xc-toast.on { opacity: 1; transform: translate(-50%, 0); }
+@media (max-width: 760px) {
+  .xch-hero { padding: 40px 0 18px; }
+  .xcc { padding: 18px 14px 16px; border-radius: 16px; }
+  .xcc-badge { display: none; }
+  .xcc-plot { margin-left: -4px; margin-right: -4px; }
 }

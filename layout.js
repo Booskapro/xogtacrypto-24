@@ -9,6 +9,7 @@
     { href: "wararka.html",     key: "wararka",    label: "Wararka",        en: "News" },
     { href: "fahanka-fed.html", key: "fahanka",    label: "Fahanka FED",    en: "Learn the Fed" },
     { href: "kalandarka.html",  key: "kalandarka", label: "Kalandarka",     en: "Calendar" },
+    { href: "charts.html",      key: "charts",     label: "Charts",         en: "Charts" },
     { href: "taariikhda.html",  key: "taariikhda", label: "Taariikhda FED", en: "Fed History" },
     { href: "ku-saabsan.html",  key: "ku-saabsan", label: "Ku saabsan",     en: "About" }
   ];
@@ -283,7 +284,7 @@
             '<div class="ff-social">' + socials + "</div>" +
           "</div>" +
           '<div class="ff-cols">' +
-            col(T("Xogta", "Data"), [["index.html", T("Maanta", "Today")], ["kalandarka.html", T("Kalandarka", "Calendar"), T("cusub", "new")], ["index.html#fed-charts", T("Chart-yada FED", "Fed charts")], ["wararka.html", T("Wararka", "News")], ["taariikhda.html", T("Taariikhda FED", "Fed history")]]) +
+            col(T("Xogta", "Data"), [["index.html", T("Maanta", "Today")], ["kalandarka.html", T("Kalandarka", "Calendar")], ["charts.html", T("Charts", "Charts"), T("cusub", "new")], ["wararka.html", T("Wararka", "News")], ["taariikhda.html", T("Taariikhda FED", "Fed history")]]) +
             col(T("Waxbarasho", "Learn"), [["fahanka-fed.html", T("Fahanka FED", "Learn the Fed")], ["taariikhda.html", T("Go'aannadii hore", "Past decisions")]]) +
             col(T("Bulshada", "Community"), [[s.social.telegram || "#", T("Kooxda Telegram", "Telegram group")], [s.social.x || "#", s.x_handle || "X"], [s.founder.x || "#", s.founder.handle || s.founder.name]]) +
             col(T("Ku saabsan", "About"), [["ku-saabsan.html", T("Ku saabsan", "About us")], ["ku-saabsan.html#aasaasaha", T("Aasaasayaasha", "Founders")]]) +
