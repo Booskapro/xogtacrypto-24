@@ -66,7 +66,8 @@
     tv.forEach((v) => {
       const y = sc.y(v);
       if (!right) this.s += `<line x1="${b.gx0 || b.x0}" x2="${b.gx1 || b.x1}" y1="${y}" y2="${y}" stroke="${th.grid}" stroke-width="1" />`;
-      this.s += `<text x="${right ? (b.gx1 || b.x1) + 10 : (b.gx0 || b.x0) - 10}" y="${y + fs * 0.35}" fill="${th.mut}" font-size="${fs}" text-anchor="${right ? "start" : "end"}">${esc(fmt(v))}</text>`;
+      const t = `<text x="${right ? (b.gx1 || b.x1) + 10 : (b.gx0 || b.x0) - 10}" y="${y + fs * 0.35}" fill="${th.mut}" font-size="${fs}" text-anchor="${right ? "start" : "end"}">${esc(fmt(v))}</text>`;
+      if (right) (this.rlab = this.rlab || []).push([y, t]); else this.s += t;
     });
   };
   // Axis-ka hoose: sanadaha oo keliya (2022, 2023 …), sida website-yada xirfadda leh
@@ -154,6 +155,7 @@
     if (over > 0) tg.forEach((t) => { t.y -= over; });
     for (let k = tg.length - 2; k >= 0; k--) if (tg[k + 1].y - tg[k].y < h + gap) tg[k].y = tg[k + 1].y - h - gap;
     const x = (b.gx1 || b.x1) + 6;
+    (this.rlab || []).forEach((r) => { if (!tg.some((t) => Math.abs(t.y - r[0]) < h)) this.s += r[1]; });
     tg.forEach((t) => {
       const w = t.text.length * fs * 0.62 + fs * 1.1, light = /^#(F5B700|FFFFFF|E8EEF4|84CC16)/i.test(t.col);
       const fg = t.soft ? t.col : light || t.col === this.th.ink ? this.th.bg : "#FFFFFF";
@@ -325,8 +327,11 @@
         const fi = ms.indexOf(d0.slice(0, 7));
         return {
           kicker: "FED",
-          title: cut ? T(`FED-ku wuxuu dhimay sicirka ${cyc.count} jeer tan iyo ${ymLabel(d0.slice(0, 7))}`, `The Fed has cut ${cyc.count} times since ${ymLabel(d0.slice(0, 7))}`)
-                     : T(`FED-ku wuxuu kordhiyay sicirka ${cyc.count} jeer tan iyo ${ymLabel(d0.slice(0, 7))}`, `The Fed has hiked ${cyc.count} times since ${ymLabel(d0.slice(0, 7))}`),
+          title: cyc.count === 1
+                   ? (cut ? T(`FED-ku wuxuu dhimay sicirka ${ymLabel(d0.slice(0, 7))} — hadda ${rangeTxt(cur)}`, `The Fed cut in ${ymLabel(d0.slice(0, 7))} — now ${rangeTxt(cur)}`)
+                          : T(`FED-ku wuxuu kordhiyay sicirka ${ymLabel(d0.slice(0, 7))} — hadda ${rangeTxt(cur)}`, `The Fed hiked in ${ymLabel(d0.slice(0, 7))} — now ${rangeTxt(cur)}`))
+                   : cut ? T(`FED-ku wuxuu dhimay sicirka ${cyc.count} jeer tan iyo ${ymLabel(d0.slice(0, 7))}`, `The Fed has cut ${cyc.count} times since ${ymLabel(d0.slice(0, 7))}`)
+                         : T(`FED-ku wuxuu kordhiyay sicirka ${cyc.count} jeer tan iyo ${ymLabel(d0.slice(0, 7))}`, `The Fed has hiked ${cyc.count} times since ${ymLabel(d0.slice(0, 7))}`),
           sub: T(`Sicir-dulsaarka FED (heerka sare) · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`, `Fed funds target (upper bound) · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`),
           legend: [[T("Hadafka FED", "Fed target"), C.blu], [T("Dhabta (EFFR)", "Effective (EFFR)"), "alt"]],
           source: "Federal Reserve, FRED", badge: T("Dhaqan galay: ", "Effective: ") + dLabel(cyc.last.date),
@@ -428,7 +433,7 @@
                         : inv ? (weeksInv >= 9 ? T(`Curve-ku wuu rogmanaa ${Math.round(weeksInv / 4.35)} bilood — hadda waa caadi`, `The curve was inverted for ${Math.round(weeksInv / 4.35)} months — now normal`) : T(`Curve-ku wuu rogmanaa ${weeksInv} toddobaad — hadda waa caadi`, `The curve was inverted for ${weeksInv} weeks — now normal`))
                               : T(`Bond 10 sano ${A}% · 2 sano ${Bv}%`, `10-year ${A}% · 2-year ${Bv}%`),
           sub: T(`Bond-yada dowladda Mareykanka 10 sano iyo 2 sano · toddobaadle · meesha cas = 2Y > 10Y`, `US Treasury 10-year and 2-year yields · weekly · red = 2Y above 10Y`),
-          legend: [[T("10 sano", "10-year"), C.blu], [T("2 sano", "2-year"), "alt"], [T("Rogmasho (inversion)", "Inversion"), C.red, "box"]],
+          legend: [[T("10 sano", "10-year"), C.blu], [T("2 sano", "2-year"), "alt"]].concat(sp.some((v) => v < 0) ? [[T("Rogmasho (inversion)", "Inversion"), C.red, "box"]] : []),
           source: "US Treasury, FRED", badge: T("Xogta: ", "Data: ") + dLabel(MACRO.asOf.y10 || rows[n - 1][0]),
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Farqiga 10Y − 2Y: ${S > 0 ? "+" : ""}${S.toFixed(2)} dhibcood`, `10Y − 2Y spread: ${S > 0 ? "+" : ""}${S.toFixed(2)} pts`),
@@ -752,7 +757,7 @@
       lx += 30 + l[0].length * 8.2 + 30;
     });
     // badge
-    s += `<rect x="${W - 44 - (m.badge.length * 8 + 34)}" y="36" width="${m.badge.length * 8 + 34}" height="28" rx="14" fill="rgba(31,157,107,.12)" /><circle cx="${W - 44 - (m.badge.length * 8 + 34) + 16}" cy="50" r="4.5" fill="#1F9D6B" /><text x="${W - 44 - 12}" y="55" font-family="${F}" font-size="13.5" font-weight="700" fill="#1F9D6B" text-anchor="end">${esc(m.badge)}</text>`;
+    s += `<rect x="${W - 44 - (m.badge.length * 7.4 + 34)}" y="36" width="${m.badge.length * 7.4 + 34}" height="28" rx="14" fill="rgba(31,157,107,.12)" /><circle cx="${W - 44 - (m.badge.length * 7.4 + 34) + 16}" cy="50" r="4.5" fill="#1F9D6B" /><text x="${W - 44 - 12}" y="55" font-family="${F}" font-size="13.5" font-weight="700" fill="#1F9D6B" text-anchor="end">${esc(m.badge)}</text>`;
     const box = { x0: 86, x1: W - 132, y0: y + 34, y1: H - 96 };
     const P = new Plot(box, th, 15);
     P.s += `<text x="${(box.x0 + box.x1) / 2}" y="${(box.y0 + box.y1) / 2 + 36}" text-anchor="middle" font-family="${FD}" font-weight="800" font-size="96" fill="${th.ink}" opacity="${theme() === "dark" ? 0.05 : 0.045}">Xogta Crypto</text>`;
