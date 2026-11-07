@@ -522,3 +522,92 @@ html:not([data-lang="en"]) .en { display: none !important; }
   .tg-actions { width: 100%; }
   .x-btn { width: 100%; }
 }
+
+
+/* ---------- Chart-yada FED (kaararka) ---------- */
+.ft-head { align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.ft-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.ft-tabs button { font: 600 .85rem Inter, system-ui, sans-serif; padding: 7px 13px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--muted); cursor: pointer; }
+.ft-tabs button.on { background: var(--line-2); color: var(--text); }
+.ft-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.ft-grid + .ft-grid { margin-top: 16px; }
+.ft {
+  --ft-bg: radial-gradient(120% 90% at 50% 0%, #163039 0%, #0D1A20 45%, #090F14 100%);
+  position: relative; display: block; overflow: hidden; border-radius: 18px; padding: 20px 20px 0;
+  border: 1px solid #1E2C33; background: var(--ft-bg); color: var(--text); text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05); transition: transform .15s, border-color .15s;
+}
+.ft:hover { transform: translateY(-2px); border-color: #2C4651; }
+.ft.big { height: 290px; }
+.ft.mid { height: 215px; }
+.ft-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.ft-name { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.3rem; min-width: 0; }
+.ft.mid .ft-name { font-size: 1.12rem; }
+.ft-ic { width: 30px; height: 30px; flex: none; border-radius: 50%; background: rgba(255,255,255,.06); display: grid; place-items: center; font-size: 15px; }
+.ft-badge { flex: none; font-size: .78rem; font-weight: 600; padding: 5px 10px; border-radius: 8px; background: rgba(255,255,255,.06); color: #9AA7B4; white-space: nowrap; }
+.ft-badge.gold { color: #F5D27A; font-weight: 700; }
+.ft-val { margin-top: 12px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.ft-val .mono { font: 700 1.4rem "JetBrains Mono", monospace; }
+.ft.mid .ft-val .mono { font-size: 1.2rem; }
+.ft-chg { font-weight: 700; font-size: .92rem; }
+.ft-chg.up { color: #2FD9A6; } .ft-chg.down { color: #FF7A6B; } .ft-chg.flat { color: #9AA7B4; }
+.ft-sub { font-size: .78rem; color: #8696A3; margin-top: 4px; }
+.ft-chart { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; pointer-events: none; }
+.ft.mid .ft-chart { height: 50%; }
+.ft-chart svg { width: 100%; height: 100%; display: block; }
+.ft-next { display: grid; grid-template-columns: repeat(4, 1fr) 130px; gap: 12px; margin-top: 16px; }
+.ftn { border-radius: 14px; padding: 14px 16px; background: var(--card); border: 1px solid var(--line); color: var(--text); text-decoration: none; }
+.ftn-n { font-weight: 700; }
+.ftn-d { color: var(--text-2); font-size: .86rem; margin-top: 5px; }
+.ftn-c { color: #2FD9A6; font-size: .84rem; font-weight: 700; margin-top: 5px; }
+.ftn.more { display: grid; place-items: center; text-align: center; font-weight: 700; }
+[data-theme="light"] .ft { --ft-bg: radial-gradient(120% 90% at 50% 0%, #E6F6F1 0%, #F5FAF9 50%, #FFFFFF 100%); border-color: var(--line); box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+[data-theme="light"] .ft-badge, [data-theme="light"] .ft-ic { background: var(--card-2); color: var(--muted); }
+[data-theme="light"] .ft-badge.gold { color: #A16207; }
+[data-theme="light"] .ft-sub { color: var(--muted); }
+[data-theme="light"] .ft-chg.up, [data-theme="light"] .ftn-c { color: #047857; }
+[data-theme="light"] .ft-chg.down { color: #C2410C; }
+[data-theme="light"] .ft-chart .glow { display: none; }
+@media (max-width: 1000px) {
+  .ft-grid { grid-template-columns: repeat(2, 1fr); }
+  .ft-next { grid-template-columns: repeat(2, 1fr); }
+  .ftn.more { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .ft-grid { grid-template-columns: 1fr; gap: 12px; }
+  .ft-grid + .ft-grid { margin-top: 12px; }
+  .ft.big { height: 230px; } .ft.mid { height: 190px; }
+  .ft { padding: 16px 16px 0; }
+  .ft-name { font-size: 1.12rem; }
+  .ft-tabs { overflow-x: auto; flex-wrap: nowrap; width: 100%; padding-bottom: 2px; }
+  .ft-tabs button { flex: none; }
+}
+
+/* ---------- Footer (qaabka RootData) ---------- */
+.site-footer { position: relative; margin-top: 64px; border-top: 1px solid var(--line); background: var(--bg-2); }
+.ff-grid { display: grid; grid-template-columns: minmax(260px, 1.1fr) 2fr; gap: 40px; padding: 56px 0 28px; }
+.ff-logo { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text); }
+.ff-logo svg { border-radius: 12px; }
+.ff-wm { display: flex; flex-direction: column; line-height: 1.05; }
+.ff-wm b { font-size: 1.55rem; letter-spacing: .04em; }
+.ff-wm span { font-size: .78rem; letter-spacing: .28em; color: var(--accent); font-weight: 700; margin-top: 3px; }
+.ff-tag { font-weight: 600; color: var(--text-2); margin: 16px 0 18px; max-width: 34ch; }
+.ff-social { display: flex; gap: 18px; flex-wrap: wrap; }
+.fs-ic { color: var(--text); opacity: .85; transition: opacity .15s, transform .15s; display: inline-flex; }
+.fs-ic:hover { opacity: 1; transform: translateY(-2px); color: var(--accent); }
+.ff-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.fcol b { display: block; font-size: 1.05rem; margin-bottom: 14px; color: var(--text); }
+.fcol a { display: block; color: var(--muted); text-decoration: none; padding: 7px 0; }
+.fcol a:hover { color: var(--text); }
+.fbadge { display: inline-block; margin-left: 6px; vertical-align: 1px; white-space: nowrap; font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--accent); color: var(--on-accent); }
+.ff-bottom { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 20px 64px 32px 0; border-top: 1px solid var(--line); font-size: .84rem; color: var(--muted); }
+.ff-disc { max-width: 60ch; }
+.to-top { position: absolute; right: 24px; bottom: 28px; width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--card); color: var(--text); display: grid; place-items: center; cursor: pointer; }
+.to-top:hover { border-color: var(--accent); color: var(--accent); }
+@media (max-width: 900px) {
+  .ff-grid { grid-template-columns: 1fr; gap: 32px; padding-top: 40px; }
+  .ff-cols { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 760px) {
+  .to-top { right: 16px; bottom: auto; top: 24px; }
+}

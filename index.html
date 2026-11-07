@@ -69,6 +69,25 @@
     <p class="note" id="fed-updated"></p>
   </section>
 
+  <!-- 1a. CHART-YADA FED -->
+  <section class="section" id="fed-charts">
+    <div class="section-head ft-head">
+      <div>
+        <span class="eyebrow" data-en="FED DATA · CHARTS">XOGTA FED · CHART-YADA</span>
+        <h2 class="h2" data-en="Fed data at a glance">Xogta FED-ka, sawir ahaan</h2>
+      </div>
+      <div class="ft-tabs" id="fed-tabs" role="tablist">
+        <button type="button" data-g="all" class="on" data-en="All">Dhammaan</button>
+        <button type="button" data-g="rate" data-en="Rate">Dulsaarka</button>
+        <button type="button" data-g="cpi" data-en="Inflation">Sicir-barar</button>
+        <button type="button" data-g="jobs" data-en="Jobs">Shaqo</button>
+        <button type="button" data-g="bonds" data-en="Bonds">Bonds</button>
+      </div>
+    </div>
+    <div id="fed-tiles"><p class="muted" data-en="Loading charts…">Chart-yada waa la soo qaadayaa…</p></div>
+    <p class="note" data-en="Source: FRED (Federal Reserve Bank of St. Louis) and BLS · Fed rate = upper bound of the target range.">Isha: FRED (Federal Reserve Bank of St. Louis) iyo BLS · Dulsaarka FED = xadka sare ee range-ka.</p>
+  </section>
+
   <!-- 1b. AI AGENT + FILASHADA -->
   <section class="section" id="agent">
     <div class="split">
@@ -140,6 +159,7 @@
     <p class="note" id="data-note" hidden></p>
   </section>
 
+
   <!-- 3. TELEGRAM -->
   <section class="section">
     <div class="tg-card">
@@ -163,6 +183,7 @@
 <script src="fed-data.js"></script>
 <script src="fed-core.js"></script>
 <script src="home.js"></script>
+<script src="fed-charts.js"></script>
 <script src="live-feed.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

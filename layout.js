@@ -254,24 +254,44 @@
 
   function buildFooter() {
     const s = window.SITE;
-    const socialNames = { x: "X / Twitter", telegram: "Telegram", youtube: "YouTube", tiktok: "TikTok", facebook: "Facebook", instagram: "Instagram" };
-    const socials = Object.keys(socialNames).filter(function (k) { return s.social[k]; }).map(function (k) {
-      return '<a href="' + s.social[k] + '" rel="noopener">' + socialNames[k] + "</a>";
-    }).join("");
     const T = window.I18N.tx;
+    const ico = {
+      x: '<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="currentColor"/>',
+      telegram: '<path d="M21.5 4.5 2.9 11.7c-1 .4-1 1.2-.2 1.5l4.7 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.3-2.2 4.8 3.5c.9.5 1.5.2 1.7-.8l3.1-14.8c.3-1.3-.5-1.9-1.4-1.5zM9.6 14.4l8.4-7.6-6.9 8.6-.3 3.2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
+      youtube: '<rect x="2.5" y="5.5" width="19" height="13" rx="4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/>',
+      tiktok: '<path d="M14 3v11.5a3.5 3.5 0 1 1-3-3.46M14 3c.4 2.6 2.2 4.4 5 4.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      facebook: '<path d="M14 8h2.5V4.5H14c-2.5 0-4 1.6-4 4V11H7.5v3.5H10V21h3.5v-6.5H16l.5-3.5h-3V8.8c0-.5.2-.8.5-.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
+      instagram: '<rect x="3.5" y="3.5" width="17" height="17" rx="5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor"/>'
+    };
+    const names = { x: "X", telegram: "Telegram", youtube: "YouTube", tiktok: "TikTok", facebook: "Facebook", instagram: "Instagram" };
+    const socials = Object.keys(ico).filter(function (k) { return s.social[k]; }).map(function (k) {
+      return '<a class="fs-ic" href="' + s.social[k] + '" target="_blank" rel="noopener" aria-label="' + names[k] + '" title="' + names[k] + '"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">' + ico[k] + "</svg></a>";
+    }).join("");
+    const col = function (title, links) {
+      return '<div class="fcol"><b>' + title + "</b>" + links.map(function (l) {
+        return '<a href="' + l[0] + '"' + (/^https?:/.test(l[0]) ? ' target="_blank" rel="noopener"' : "") + ">" + l[1] + (l[2] ? ' <span class="fbadge">' + l[2] + "</span>" : "") + "</a>";
+      }).join("") + "</div>";
+    };
+    const logo = icon.logo.replace(/xm-h/g, "xm-f").replace('width="40" height="40"', 'width="48" height="48"');
     return (
       '<div class="wrap">' +
-        '<div class="footer-grid">' +
-          '<div><div class="brand-name">Xogta Crypto <span class="accent">24/7</span></div>' +
-            '<p class="muted small">' + T("Xogta FED-ka, crypto iyo suuqyada caalamka oo af-Soomaali ah. Aasaasaha: ", "Fed data, crypto and global markets in Somali and English. Founder: ") + s.founder.name + ".</p></div>" +
-          "<div><b>" + T("Xogta", "Data") + '</b><a href="index.html">' + T("Maanta", "Today") + '</a><a href="wararka.html">' + T("Wararka", "News") + '</a><a href="taariikhda.html">' + T("Taariikhda FED", "Fed History") + "</a></div>" +
-          "<div><b>" + T("Waxbarasho", "Learn") + '</b><a href="fahanka-fed.html">' + T("Fahanka FED", "Learn the Fed") + "</a></div>" +
-          "<div><b>" + T("Shirkadda", "Company") + '</b><a href="ku-saabsan.html">' + T("Ku saabsan", "About") + "</a>" + socials +
-            (s.email ? '<span class="small muted" style="display:block;padding:4px 0">' + s.email + "</span>" : "") + "</div>" +
+        '<div class="ff-grid">' +
+          '<div class="ff-brand">' +
+            '<a class="ff-logo" href="index.html">' + logo + '<span class="ff-wm"><b>XOGTA</b><span>CRYPTO 24/7</span></span></a>' +
+            '<p class="ff-tag">' + T("Xogta FED-ka, crypto iyo suuqyada caalamka — af-Soomaali, 24/7.", "Fed data, crypto and global markets — in Somali, 24/7.") + "</p>" +
+            '<div class="ff-social">' + socials + "</div>" +
+          "</div>" +
+          '<div class="ff-cols">' +
+            col(T("Xogta", "Data"), [["index.html", T("Maanta", "Today")], ["index.html#fed-charts", T("Chart-yada FED", "Fed charts"), T("cusub", "new")], ["wararka.html", T("Wararka", "News")], ["taariikhda.html", T("Taariikhda FED", "Fed history")]]) +
+            col(T("Waxbarasho", "Learn"), [["fahanka-fed.html", T("Fahanka FED", "Learn the Fed")], ["taariikhda.html", T("Go'aannadii hore", "Past decisions")]]) +
+            col(T("Bulshada", "Community"), [[s.social.telegram || "#", T("Kooxda Telegram", "Telegram group")], [s.social.x || "#", s.x_handle || "X"], [s.founder.x || "#", s.founder.handle || s.founder.name]]) +
+            col(T("Ku saabsan", "About"), [["ku-saabsan.html", T("Ku saabsan", "About us")], ["ku-saabsan.html#aasaasaha", T("Aasaasaha", "Founder")]]) +
+          "</div>" +
         "</div>" +
-        '<div class="footer-bottom"><span>' + T("Tani ma aha talo maaliyadeed. Crypto waa khatar sare; go\'aankaaga adiga ayaa mas\'uul ka ah.", "This is not financial advice. Crypto is high risk; you are responsible for your own decisions.") + "</span>" +
-          "<span>© " + new Date().getFullYear() + " " + s.name + "</span></div>" +
-      "</div>"
+        '<div class="ff-bottom"><span>© ' + new Date().getFullYear() + " " + s.name + ". " + T("Xuquuqda oo dhan way dhowran tahay.", "All rights reserved.") + "</span>" +
+          '<span class="ff-disc">' + T("Tani ma aha talo maaliyadeed. Crypto waa khatar sare; go\'aankaaga adiga ayaa mas\'uul ka ah.", "This is not financial advice. Crypto is high risk; you are responsible for your own decisions.") + "</span></div>" +
+      "</div>" +
+      '<button type="button" class="to-top" aria-label="' + T("Kor u noqo", "Back to top") + '" onclick="window.scrollTo({top:0,behavior:\'smooth\'})"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>'
     );
   }
 
