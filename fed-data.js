@@ -254,6 +254,513 @@ window.FED_CAL = {
  ],
  "upcoming": [
   {
+   "name": "Shaqooyinka (NFP) · Desember 2025",
+   "name_en": "Jobs report (NFP) · December 2025",
+   "time": "2026-01-09T08:30:00-05:00",
+   "period": "2025-12",
+   "kind": "jobs",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Sicir-bararka (CPI) · Desember 2025",
+   "name_en": "Inflation (CPI) · December 2025",
+   "time": "2026-01-13T08:30:00-05:00",
+   "period": "2025-12",
+   "kind": "infl",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Qiimaha soo-saarayaasha (PPI) · Nofembar 2025",
+   "name_en": "Producer prices (PPI) · November 2025",
+   "time": "2026-01-14T08:30:00-05:00",
+   "period": "2025-11",
+   "kind": "infl",
+   "lvl": 2,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+   "code": "ppi",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Iibka tafaariiqda (Retail Sales) · Nofembar 2025",
+   "name_en": "Retail sales · November 2025",
+   "time": "2026-01-14T08:30:00-05:00",
+   "period": "2025-11",
+   "kind": "growth",
+   "lvl": 2,
+   "src": "Census",
+   "url": "https://census.gov/retail/release_schedule.html",
+   "code": "retail",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Qiimaha soo-saarayaasha (PPI) · Desember 2025",
+   "name_en": "Producer prices (PPI) · December 2025",
+   "time": "2026-01-30T08:30:00-05:00",
+   "period": "2025-12",
+   "kind": "infl",
+   "lvl": 2,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+   "code": "ppi",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Iibka tafaariiqda (Retail Sales) · Desember 2025",
+   "name_en": "Retail sales · December 2025",
+   "time": "2026-02-10T08:30:00-05:00",
+   "period": "2025-12",
+   "kind": "growth",
+   "lvl": 2,
+   "src": "Census",
+   "url": "https://census.gov/retail/release_schedule.html",
+   "code": "retail",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Shaqooyinka (NFP) · Janaayo",
+   "name_en": "Jobs report (NFP) · January",
+   "time": "2026-02-11T08:30:00-05:00",
+   "period": "2026-01",
+   "kind": "jobs",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Sicir-bararka (CPI) · Janaayo",
+   "name_en": "Inflation (CPI) · January",
+   "time": "2026-02-13T08:30:00-05:00",
+   "period": "2026-01",
+   "kind": "infl",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Shaqooyinka (NFP) · Febraayo",
+   "name_en": "Jobs report (NFP) · February",
+   "time": "2026-03-06T08:30:00-05:00",
+   "period": "2026-02",
+   "kind": "jobs",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Iibka tafaariiqda (Retail Sales) · Janaayo",
+   "name_en": "Retail sales · January",
+   "time": "2026-03-06T08:30:00-05:00",
+   "period": "2026-01",
+   "kind": "growth",
+   "lvl": 2,
+   "src": "Census",
+   "url": "https://census.gov/retail/release_schedule.html",
+   "code": "retail",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Sicir-bararka (CPI) · Febraayo",
+   "name_en": "Inflation (CPI) · February",
+   "time": "2026-03-11T08:30:00-04:00",
+   "period": "2026-02",
+   "kind": "infl",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Iibka tafaariiqda (Retail Sales) · Febraayo",
+   "name_en": "Retail sales · February",
+   "time": "2026-04-01T08:30:00-04:00",
+   "period": "2026-02",
+   "kind": "growth",
+   "lvl": 2,
+   "src": "Census",
+   "url": "https://census.gov/retail/release_schedule.html",
+   "code": "retail",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Shaqooyinka (NFP) · Maarso",
+   "name_en": "Jobs report (NFP) · March",
+   "time": "2026-04-03T08:30:00-04:00",
+   "period": "2026-03",
+   "kind": "jobs",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Sicir-bararka (CPI) · Maarso",
+   "name_en": "Inflation (CPI) · March",
+   "time": "2026-04-10T08:30:00-04:00",
+   "period": "2026-03",
+   "kind": "infl",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Iibka tafaariiqda (Retail Sales) · Maarso",
+   "name_en": "Retail sales · March",
+   "time": "2026-04-21T08:30:00-04:00",
+   "period": "2026-03",
+   "kind": "growth",
+   "lvl": 2,
+   "src": "Census",
+   "url": "https://census.gov/retail/release_schedule.html",
+   "code": "retail",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Shaqooyinka (NFP) · Abriil",
+   "name_en": "Jobs report (NFP) · April",
+   "time": "2026-05-08T08:30:00-04:00",
+   "period": "2026-04",
+   "kind": "jobs",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Sicir-bararka (CPI) · Abriil",
+   "name_en": "Inflation (CPI) · April",
+   "time": "2026-05-12T08:30:00-04:00",
+   "period": "2026-04",
+   "kind": "infl",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Qiimaha soo-saarayaasha (PPI) · Abriil",
+   "name_en": "Producer prices (PPI) · April",
+   "time": "2026-05-13T08:30:00-04:00",
+   "period": "2026-04",
+   "kind": "infl",
+   "lvl": 2,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+   "code": "ppi",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Iibka tafaariiqda (Retail Sales) · Abriil",
+   "name_en": "Retail sales · April",
+   "time": "2026-05-14T08:30:00-04:00",
+   "period": "2026-04",
+   "kind": "growth",
+   "lvl": 2,
+   "src": "Census",
+   "url": "https://census.gov/retail/release_schedule.html",
+   "code": "retail",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Shaqooyinka (NFP) · Maajo",
+   "name_en": "Jobs report (NFP) · May",
+   "time": "2026-06-05T08:30:00-04:00",
+   "period": "2026-05",
+   "kind": "jobs",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Sicir-bararka (CPI) · Maajo",
+   "name_en": "Inflation (CPI) · May",
+   "time": "2026-06-10T08:30:00-04:00",
+   "period": "2026-05",
+   "kind": "infl",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Qiimaha soo-saarayaasha (PPI) · Maajo",
+   "name_en": "Producer prices (PPI) · May",
+   "time": "2026-06-11T08:30:00-04:00",
+   "period": "2026-05",
+   "kind": "infl",
+   "lvl": 2,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+   "code": "ppi",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Iibka tafaariiqda (Retail Sales) · Maajo",
+   "name_en": "Retail sales · May",
+   "time": "2026-06-17T08:30:00-04:00",
+   "period": "2026-05",
+   "kind": "growth",
+   "lvl": 2,
+   "src": "Census",
+   "url": "https://census.gov/retail/release_schedule.html",
+   "code": "retail",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Shaqooyinka (NFP) · Juun",
+   "name_en": "Jobs report (NFP) · June",
+   "time": "2026-07-02T08:30:00-04:00",
+   "period": "2026-06",
+   "kind": "jobs",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Sicir-bararka (CPI) · Juun",
+   "name_en": "Inflation (CPI) · June",
+   "time": "2026-07-14T08:30:00-04:00",
+   "period": "2026-06",
+   "kind": "infl",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Qiimaha soo-saarayaasha (PPI) · Juun",
+   "name_en": "Producer prices (PPI) · June",
+   "time": "2026-07-15T08:30:00-04:00",
+   "period": "2026-06",
+   "kind": "infl",
+   "lvl": 2,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+   "code": "ppi",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Iibka tafaariiqda (Retail Sales) · Juun",
+   "name_en": "Retail sales · June",
+   "time": "2026-07-16T08:30:00-04:00",
+   "period": "2026-06",
+   "kind": "growth",
+   "lvl": 2,
+   "src": "Census",
+   "url": "https://census.gov/retail/release_schedule.html",
+   "code": "retail",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Shaqooyinka (NFP) · Luulyo",
+   "name_en": "Jobs report (NFP) · July",
+   "time": "2026-08-07T08:30:00-04:00",
+   "period": "2026-07",
+   "kind": "jobs",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Sicir-bararka (CPI) · Luulyo",
+   "name_en": "Inflation (CPI) · July",
+   "time": "2026-08-12T08:30:00-04:00",
+   "period": "2026-07",
+   "kind": "infl",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Qiimaha soo-saarayaasha (PPI) · Luulyo",
+   "name_en": "Producer prices (PPI) · July",
+   "time": "2026-08-13T08:30:00-04:00",
+   "period": "2026-07",
+   "kind": "infl",
+   "lvl": 2,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+   "code": "ppi",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Iibka tafaariiqda (Retail Sales) · Luulyo",
+   "name_en": "Retail sales · July",
+   "time": "2026-08-14T08:30:00-04:00",
+   "period": "2026-07",
+   "kind": "growth",
+   "lvl": 2,
+   "src": "Census",
+   "url": "https://census.gov/retail/release_schedule.html",
+   "code": "retail",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Shaqooyinka (NFP) · Ogosto",
+   "name_en": "Jobs report (NFP) · August",
+   "time": "2026-09-04T08:30:00-04:00",
+   "period": "2026-08",
+   "kind": "jobs",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Qiimaha soo-saarayaasha (PPI) · Ogosto",
+   "name_en": "Producer prices (PPI) · August",
+   "time": "2026-09-10T08:30:00-04:00",
+   "period": "2026-08",
+   "kind": "infl",
+   "lvl": 2,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+   "code": "ppi",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Sicir-bararka (CPI) · Ogosto",
+   "name_en": "Inflation (CPI) · August",
+   "time": "2026-09-11T08:30:00-04:00",
+   "period": "2026-08",
+   "kind": "infl",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Iibka tafaariiqda (Retail Sales) · Ogosto",
+   "name_en": "Retail sales · August",
+   "time": "2026-09-16T08:30:00-04:00",
+   "period": "2026-08",
+   "kind": "growth",
+   "lvl": 2,
+   "src": "Census",
+   "url": "https://census.gov/retail/release_schedule.html",
+   "code": "retail",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Shaqooyinka (NFP) · Sebtember",
+   "name_en": "Jobs report (NFP) · September",
+   "time": "2026-10-02T08:30:00-04:00",
+   "period": "2026-09",
+   "kind": "jobs",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Sicir-bararka (CPI) · Sebtember",
+   "name_en": "Inflation (CPI) · September",
+   "time": "2026-10-14T08:30:00-04:00",
+   "period": "2026-09",
+   "kind": "infl",
+   "lvl": 3,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi",
+   "impact": "Aad u sare",
+   "impact_en": "Very high"
+  },
+  {
+   "name": "Qiimaha soo-saarayaasha (PPI) · Sebtember",
+   "name_en": "Producer prices (PPI) · September",
+   "time": "2026-10-15T08:30:00-04:00",
+   "period": "2026-09",
+   "kind": "infl",
+   "lvl": 2,
+   "src": "BLS",
+   "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+   "code": "ppi",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
+   "name": "Iibka tafaariiqda (Retail Sales) · Sebtember",
+   "name_en": "Retail sales · September",
+   "time": "2026-10-15T08:30:00-04:00",
+   "period": "2026-09",
+   "kind": "growth",
+   "lvl": 2,
+   "src": "Census",
+   "url": "https://census.gov/retail/release_schedule.html",
+   "code": "retail",
+   "impact": "Sare",
+   "impact_en": "High"
+  },
+  {
    "name": "Shaqooyinka (NFP) · Oktoobar",
    "name_en": "Jobs report (NFP) · October",
    "time": "2026-11-06T08:30:00-05:00",
@@ -263,7 +770,8 @@ window.FED_CAL = {
    "kind": "jobs",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/empsit.htm"
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp"
   },
   {
    "name": "Sicir-bararka (CPI) · Oktoobar",
@@ -275,7 +783,8 @@ window.FED_CAL = {
    "kind": "infl",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/cpi.htm"
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi"
   },
   {
    "name": "Codsiyada shaqo la'aanta (toddobaadle)",
@@ -434,7 +943,8 @@ window.FED_CAL = {
    "kind": "jobs",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/empsit.htm"
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp"
   },
   {
    "name": "Kalsoonida macaamiisha (UMich) · Desember, hordhac",
@@ -457,7 +967,8 @@ window.FED_CAL = {
    "kind": "infl",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/cpi.htm"
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi"
   },
   {
    "name": "Codsiyada shaqo la'aanta (toddobaadle)",
@@ -571,7 +1082,8 @@ window.FED_CAL = {
    "kind": "jobs",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/empsit.htm"
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp"
   },
   {
    "name": "Sicir-bararka (CPI) · Desember 2026",
@@ -583,7 +1095,8 @@ window.FED_CAL = {
    "kind": "infl",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/cpi.htm"
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi"
   },
   {
    "name": "Beige Book (warbixinta gobollada Fed)",
@@ -662,7 +1175,8 @@ window.FED_CAL = {
    "kind": "jobs",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/empsit.htm"
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp"
   },
   {
    "name": "Sicir-bararka (CPI) · Janaayo",
@@ -674,7 +1188,8 @@ window.FED_CAL = {
    "kind": "infl",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/cpi.htm"
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi"
   },
   {
    "name": "Shaqooyinka (NFP) · Febraayo",
@@ -686,7 +1201,8 @@ window.FED_CAL = {
    "kind": "jobs",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/empsit.htm"
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp"
   },
   {
    "name": "Sicir-bararka (CPI) · Febraayo",
@@ -698,7 +1214,8 @@ window.FED_CAL = {
    "kind": "infl",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/cpi.htm"
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi"
   },
   {
    "name": "Shaqooyinka (NFP) · Maarso",
@@ -710,7 +1227,8 @@ window.FED_CAL = {
    "kind": "jobs",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/empsit.htm"
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp"
   },
   {
    "name": "Sicir-bararka (CPI) · Maarso",
@@ -722,7 +1240,8 @@ window.FED_CAL = {
    "kind": "infl",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/cpi.htm"
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi"
   },
   {
    "name": "Shaqooyinka (NFP) · Abriil",
@@ -734,7 +1253,8 @@ window.FED_CAL = {
    "kind": "jobs",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/empsit.htm"
+   "url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+   "code": "nfp"
   },
   {
    "name": "Sicir-bararka (CPI) · Abriil",
@@ -746,7 +1266,8 @@ window.FED_CAL = {
    "kind": "infl",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/cpi.htm"
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi"
   },
   {
    "name": "Sicir-bararka (CPI) · Maajo",
@@ -758,7 +1279,8 @@ window.FED_CAL = {
    "kind": "infl",
    "lvl": 3,
    "src": "BLS",
-   "url": "https://www.bls.gov/schedule/news_release/cpi.htm"
+   "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+   "code": "cpi"
   }
  ],
  "fallback": {

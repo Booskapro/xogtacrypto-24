@@ -13,11 +13,11 @@
 
   function allEvents() {
     const items = CAL.upcoming.map(function (x) {
-      return { name: F.EN && x.name_en ? x.name_en : x.name, time: x.time, kind: x.kind || "infl", lvl: x.lvl || 2, src: x.src || "", url: x.url || "", fomc: false };
+      return { name: F.EN && x.name_en ? x.name_en : x.name, time: x.time, kind: x.kind || "infl", lvl: x.lvl || 2, src: x.src || "", url: x.url || "", fomc: false, code: x.code || "", period: x.period || "" };
     });
     CAL.meetings.forEach(function (m) {
       items.push({ name: T("Go'aanka FED (FOMC)", "Fed decision (FOMC)") + (m.sep ? T(" + saadaasha", " + projections") : ""), time: m.time, kind: "fed", lvl: 3,
-        src: "Federal Reserve", url: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", fomc: true });
+        src: "Federal Reserve", url: "https://www.federalreserve.gov/newsevents/pressreleases/monetary" + m.date.replace(/-/g, "") + "a.htm", fomc: true, meeting: m });
     });
     return items.sort(function (a, b) { return new Date(a.time) - new Date(b.time); });
   }
@@ -76,7 +76,11 @@
 
   // 7 maalmood (fallaadhaha ‹ › ayaa toddobaad toddobaad u dhaqaajiya)
   let kwOff = 0; // maalmo laga bilaabo maanta (0, 7, 14 …)
-  const KW_MIN = -28;
+  function kwMin() {
+    const first = allEvents().reduce(function (m, x) { return Math.min(m, new Date(x.time).getTime()); }, now());
+    const y0 = new Date(new Date().getFullYear(), 0, 1).getTime();
+    return -Math.ceil((now() - Math.max(first, y0)) / 864e5 / 7) * 7;
+  }
   function kwMax() {
     const last = allEvents().reduce(function (m, x) { return Math.max(m, new Date(x.time).getTime()); }, now());
     return Math.max(0, Math.floor((last - now()) / 864e5 / 7) * 7);
@@ -99,10 +103,10 @@
         "<small>" + (items.length ? items.length + T(" xog", items.length === 1 ? " release" : " releases") : T("Xog ma jirto", "No data")) + "</small></button>";
     }
     strip.innerHTML = html;
-    const same = start.getMonth() === end.getMonth();
-    const range = start.getDate() + (same ? "" : " " + F.MONTHS[start.getMonth()]) + " – " + end.getDate() + " " + F.MONTHS[end.getMonth()] + " " + end.getFullYear();
+    const same = start.getMonth() === end.getMonth(), sameY = start.getFullYear() === end.getFullYear();
+    const range = start.getDate() + (same && sameY ? "" : " " + F.MONTHS[start.getMonth()]) + (sameY ? "" : " " + start.getFullYear()) + " – " + end.getDate() + " " + F.MONTHS[end.getMonth()] + " " + end.getFullYear();
     $("kw-title").textContent = kwOff === 0 ? T("7-da maalmood ee soo socda", "Next 7 days") + " · " + range : range;
-    $("kw-prev").disabled = kwOff <= KW_MIN;
+    $("kw-prev").disabled = kwOff <= kwMin();
     $("kw-next").disabled = kwOff >= kwMax();
     $("kw-today").hidden = kwOff === 0;
     strip.querySelectorAll(".kw-day").forEach(function (b) {
@@ -115,7 +119,7 @@
     });
   }
   function moveWeek(delta) {
-    kwOff = delta === 0 ? 0 : Math.min(kwMax(), Math.max(KW_MIN, kwOff + delta));
+    kwOff = delta === 0 ? 0 : Math.min(kwMax(), Math.max(kwMin(), kwOff + delta));
     const strip = $("k-week");
     strip.classList.remove("slide-l", "slide-r"); void strip.offsetWidth;
     strip.classList.add(delta < 0 ? "slide-r" : "slide-l");
@@ -134,6 +138,29 @@
     }, { passive: true });
   })();
 
+  // ---------- Natiijooyinka xogtii hore (FRED via /api/fed) ----------
+  let API = null;
+  function shiftM(ym, d) { let y = +ym.slice(0, 4), m = +ym.slice(5, 7) + d; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; } return y + "-" + F.pad(m); }
+  function result(x) {
+    if (x.fomc && API && x.meeting) {
+      const o = F.meetingOutcome(API.target.events, x.meeting);
+      const a = F.ACTION[o.action];
+      return { text: a.short + " · " + F.fmtRange(o.to), cls: o.action === "hike" ? "up" : o.action === "cut" ? "down" : "flat" };
+    }
+    if (!API || !x.period || !API.monthly) return null;
+    const r = API.monthly[x.period], pr = API.monthly[shiftM(x.period, -1)];
+    if (!r) return null;
+    if (x.code === "cpi" && r.cpi != null) {
+      const d = pr && pr.cpi != null ? r.cpi - pr.cpi : null;
+      return { text: r.cpi.toFixed(1) + "%" + (pr && pr.cpi != null ? T(" (hore ", " (prev ") + pr.cpi.toFixed(1) + "%)" : ""), cls: d == null || Math.abs(d) < 1e-9 ? "flat" : d > 0 ? "up" : "down" };
+    }
+    if (x.code === "nfp" && r.nfp != null) {
+      const k = function (v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(Math.round(v)) + "K"; };
+      return { text: k(r.nfp) + (r.un != null ? T(" · shaqo la'aan ", " · unemployment ") + r.un.toFixed(1) + "%" : ""), cls: r.nfp >= 0 ? "up" : "down" };
+    }
+    return null;
+  }
+
   // ---------- 3. Kalandarka + shaandhaynta dhinaca ----------
   const st = { q: "", when: "month", day: null, lvl: { 1: true, 2: true, 3: true }, kind: { infl: true, jobs: true, growth: true, fed: true } };
   function horizon() {
@@ -145,11 +172,13 @@
     const box = $("fh-cal");
     const t0 = new Date(); t0.setHours(0, 0, 0, 0);
     const H = horizon(), q = st.q.trim().toLowerCase();
-    const inRange = allEvents().filter(function (x) {
+    let inRange = allEvents().filter(function (x) {
       const t = new Date(x.time).getTime();
       if (st.day) return dayKey(new Date(x.time)) === st.day;
+      if (st.when === "past") return t < now() && t >= new Date(new Date().getFullYear(), 0, 1).getTime();
       return t >= t0.getTime() && t <= H;
     });
+    if (st.when === "past" && !st.day) inRange = inRange.reverse();
     const matchQ = function (x) { return !q || (x.name + " " + x.src).toLowerCase().indexOf(q) !== -1; };
     [1, 2, 3].forEach(function (l) { $("cnt-l" + l).textContent = inRange.filter(function (x) { return x.lvl === l && st.kind[x.kind] && matchQ(x); }).length; });
     Object.keys(st.kind).forEach(function (k) { $("cnt-" + k).textContent = inRange.filter(function (x) { return x.kind === k && st.lvl[x.lvl] && matchQ(x); }).length; });
@@ -167,12 +196,15 @@
       html += '<div class="cal-row lvl' + x.lvl + " k-" + x.kind + '">' +
         '<span class="cal-time fnum">' + F.pad(d.getHours()) + ":" + F.pad(d.getMinutes()) + "</span>" +
         '<span class="cal-name"><b>' + esc(x.name) + "</b><em>" + esc(KIND[x.kind] || "") + (x.src ? " · " + (x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.src) + "</a>" : esc(x.src)) : "") + "</em></span>" +
-        dots + '<span class="cal-left">' + (ms > 0 ? esc(leftText(ms)) : '<span class="muted">' + T("Waa soo baxday", "Released") + "</span>") + "</span></div>";
+        dots + '<span class="cal-left">' + (ms > 0 ? esc(leftText(ms)) : (function () {
+          const r = result(x);
+          return r ? '<span class="cal-res ' + r.cls + '">' + esc(r.text) + "</span>" : '<span class="muted">' + T("Waa soo baxday", "Released") + "</span>";
+        })()) + "</span></div>";
     });
     box.innerHTML = html || '<div class="cal-empty"><b>' + T("Wax xog ah lama helin", "No releases found") + "</b><span>" + T("Beddel shaandhaynta ama riix “Dib u celi”.", "Change the filters or press “Reset”.") + "</span></div>";
     let range;
     if (st.day) { const d = new Date(st.day + "T12:00:00"); range = F.DAYS[d.getDay()] + " " + d.getDate() + " " + F.MONTHS[d.getMonth()]; }
-    else range = st.when === "week" ? T("7-da maalmood ee soo socda", "next 7 days") : st.when === "month" ? T("30-ka maalmood ee soo socda", "next 30 days") : T("jadwalka oo dhan", "full schedule");
+    else range = st.when === "past" ? T("xogtii hore ee 2026 (tan ugu dambeysay marka hore)", "past 2026 releases (newest first)") : st.when === "week" ? T("7-da maalmood ee soo socda", "next 7 days") : st.when === "month" ? T("30-ka maalmood ee soo socda", "next 30 days") : T("jadwalka oo dhan", "full schedule");
     $("cal-sum").innerHTML = "<b>" + ev.length + "</b>" + esc(T(" xog", ev.length === 1 ? " release" : " releases")) + " · " + esc(range) +
       (st.day ? ' <button type="button" class="cal-clear" id="cal-clearday">' + T("× Ka saar maalinta", "× Clear day") + "</button>" : "");
     const cd = $("cal-clearday");
@@ -211,6 +243,7 @@
   })();
 
   function renderAll() { renderHero(); renderStats(); renderCalendar(); }
+  F.load().then(function (api) { if (api) { API = api; renderCalendar(); } });
   renderAll();
   setInterval(function () { renderStats(); renderCalendar(); }, 60000);
 })();

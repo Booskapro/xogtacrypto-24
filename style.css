@@ -744,7 +744,7 @@ body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiase
 .cal-search:focus-within { border-color: var(--accent); }
 .cal-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: 500 .9rem Inter, sans-serif; }
 .cal-grp > b { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 8px; }
-.cal-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 11px; background: var(--card); border: 1px solid var(--line); }
+.cal-seg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 4px; border-radius: 11px; background: var(--card); border: 1px solid var(--line); }
 .cal-seg button { padding: 7px 4px; border-radius: 8px; border: 0; background: transparent; color: var(--muted); font: 600 .78rem Inter, sans-serif; cursor: pointer; }
 .cal-seg button.on { background: var(--accent); color: var(--on-accent); }
 .cal-chk { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 9px; cursor: pointer; font-size: .86rem; }
@@ -879,3 +879,10 @@ body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiase
 @keyframes kwl { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 @keyframes kwr { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
 @media (max-width: 760px) { .kw-head { align-items: center; } .kw-hint { display: none; } }
+
+.cal-res { display: inline-block; font-size: .78rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.cal-res.up { color: var(--up); background: color-mix(in srgb, var(--up) 12%, transparent); }
+.cal-res.down { color: var(--down); background: color-mix(in srgb, var(--down) 12%, transparent); }
+.cal-res.flat { color: var(--text-2); background: var(--card); border: 1px solid var(--line); }
+.cal-row { grid-template-columns: 54px 1fr auto minmax(100px, auto); }
+@media (max-width: 760px) { .cal-row { grid-template-columns: 44px 1fr auto; } }
