@@ -1,7 +1,15 @@
-/* Ogeysiisyada Telegram — /api/notify */
+/* =========================================================
+   Ogeysiisyada Telegram — /api/notify
+   cron-job.org ayaa daqiiqad kasta furaya boggan.
+   1) Wuxuu akhriyaa /api/live (FOMC, Kalshi) iyo /api/fed (CPI, NFP)
+   2) Upstash (xusuusta) ayuu ka hubiyaa waxa horay loo diray
+   3) Xog cusub -> fariin af-Soomaali ah ayuu kooxda u diraa
+   Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, KV_REST_API_URL, KV_REST_API_TOKEN
+   Ikhtiyaari: CRON_SECRET (haddii la dhigo: /api/notify?key=...)
+   ========================================================= */
 const SITE = "https://xogtacrypto.vercel.app";
 const MONTHS = ["Janaayo", "Febraayo", "Maarso", "Abriil", "Maajo", "Juun", "Luulyo", "Ogosto", "Sebtember", "Oktoobar", "Nofembar", "Desember"];
-const ODDS_STEP = 15;
+const ODDS_STEP = 15; // isbeddel 15% ama ka badan ee fursadda kor u qaadista
 
 function env(...names) { for (const n of names) if (process.env[n]) return process.env[n]; return ""; }
 function monthName(ym) { const [y, m] = ym.split("-").map(Number); return MONTHS[m - 1] + " " + y; }
@@ -9,6 +17,7 @@ function range(t) { const f = (v) => Number(v).toFixed(2); return t.lo === t.hi 
 function signK(n) { return (n >= 0 ? "+" : "−") + Math.abs(n).toLocaleString("en-US") + ",000"; }
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
+// ---------- Upstash (xusuusta) ----------
 async function kv(cmd) {
   const url = env("KV_REST_API_URL", "UPSTASH_REDIS_REST_URL", "STORAGE_REST_API_URL");
   const token = env("KV_REST_API_TOKEN", "UPSTASH_REDIS_REST_TOKEN", "STORAGE_REST_API_TOKEN");
@@ -20,8 +29,10 @@ async function kv(cmd) {
 }
 const get = (k) => kv(["GET", "xc:" + k]);
 const set = (k, v) => kv(["SET", "xc:" + k, String(v)]);
+// SET NX: kaliya hal mar ayuu guulaystaa -> fariin laba jeer lama diro
 const claim = async (k) => (await kv(["SET", "xc:sent:" + k, Date.now(), "NX", "EX", 60 * 60 * 24 * 120])) === "OK";
 
+// ---------- Telegram ----------
 async function send(text, previewUrl) {
   const token = env("TELEGRAM_BOT_TOKEN"), chat = env("TELEGRAM_CHAT_ID");
   const r = await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
@@ -33,6 +44,7 @@ async function send(text, previewUrl) {
   if (!j.ok) throw new Error("Telegram: " + j.description);
 }
 
+// ---------- Fariimaha ----------
 function msgFomc(f) {
   const word = { hike: "KOR U QAADAY", cut: "DHIMAY", hold: "HAYAY (isma beddelin)" }[f.action];
   const icon = { hike: "🔺", cut: "🔻", hold: "⏸" }[f.action];
@@ -80,8 +92,10 @@ function msgOdds(o, hike, prev) {
     '\n\nIsha: <a href="' + esc(o.url) + '">Kalshi</a>\n👉 ' + SITE;
 }
 
-const NEWS_GAP_MIN = 5;
-const NEWS_MAX_AGE_H = 6;
+// ---------- Wararka FED ----------
+const NEWS_GAP_MIN = 5;          // ugu yaraan 5 daqiiqo u dhexeeya war kasta
+const NEWS_MAX_AGE_H = 6;        // kaliya wararka 6-dii saac ee u dambeeyay
+// ---------- Ilaha wararka (link toos ah) ----------
 const FED_WORDS = /\b(Fed|FOMC|Federal Reserve|Warsh|rate (hike|cut)s?|interest rates?|Treasury yields?)\b/i;
 const FEEDS = [
   { url: "https://www.bing.com/news/search?q=%22Federal+Reserve%22+OR+FOMC+OR+Warsh+OR+%22Fed+rate%22&format=rss&setlang=en-US&cc=US", src: null },
@@ -104,6 +118,7 @@ function parseRss(xml) {
   });
 }
 function hash(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36); }
+// Bing wuxuu link-ga dhabta ah ku qariyaa "url=" -> soo saar
 function realLink(l) {
   try { const u = new URL(l); const r = u.searchParams.get("url"); if (r && /^https?:/i.test(r)) return r; } catch (e) {}
   return l;
@@ -118,7 +133,7 @@ async function fetchNews() {
   FEEDS.forEach((f, i) => parseRss(texts[i]).forEach((n) => {
     const link = realLink(n.link);
     if (/news\.google\.com/.test(link)) return;
-    if (f.src && !FED_WORDS.test(n.title)) return;
+    if (f.src && !FED_WORDS.test(n.title)) return; // ilaha guud: kaliya wararka FED
     list.push({ title: n.title.replace(/ - [^-]{2,40}$/, ""), link, date: n.date, source: f.src || n.source || siteName(link), official: false });
   }));
   texts.slice(FEEDS.length).forEach((x) => parseRss(x).forEach((n) => {
@@ -133,6 +148,9 @@ async function fetchNews() {
   });
 }
 
+// ---------- Turjumaadda ----------
+// 1) AI (Claude) haddii ANTHROPIC_API_KEY uu Vercel ku jiro -> af-Soomaali dabiici ah
+// 2) Haddii kale: turjumaad mashiin oo bilaash ah (MyMemory), oo la hubiyo
 const BAD_SO = /xasan|sheekh|khayre|farmaajo|madaxweyne|ra'iisul|somaliland|puntland|muqdisho|al-shabaab|xamar|dahabshiil|hormuud|amal|world remit|xawaala/i;
 function trOk(src, so) {
   if (!so) return false;
@@ -144,6 +162,7 @@ function trOk(src, so) {
 }
 const AI_RULES = "You translate financial news headlines into clear, natural Somali for traders. Rules: keep it short like a headline; keep names, tickers, numbers and % unchanged; write 'FED' for the Federal Reserve/the Fed; use common Somali terms (dulsaar = interest rate, sicir-barar = inflation, suuqa saamiyada = stock market, dahab = gold, lacag/silver = silver, shidaal = oil). Never mention Somali companies, people or places unless they are in the headline. Output ONLY the Somali headline, nothing else.";
 function cleanAi(t) { return t ? String(t).trim().split("\n")[0].replace(/^["“*]+|["”*]+$/g, "").trim() : null; }
+// Google Gemini (sida SomTube) -> GEMINI_API_KEY
 async function geminiSomali(text) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
@@ -183,6 +202,116 @@ async function aiSomali(text) {
     return trOk(text, so) ? so : null;
   } catch (e) { return null; }
 }
+async function mtSomali(text) {
+  try {
+    const r = await fetch("https://api.mymemory.translated.net/get?mt=1&langpair=en|so&q=" + encodeURIComponent(text.slice(0, 450)));
+    const j = await r.json();
+    const m = ((j && j.matches) || []).find((x) => /^MT/i.test(String(x["created-by"] || "")));
+    const so = m ? decode(m.translation) : null;
+    return trOk(text, so) ? so : null;
+  } catch (e) { return null; }
+}
 async function translateSo(text, kvf) {
   const ai = !!(process.env.GEMINI_API_KEY || process.env.ANTHROPIC_API_KEY);
-  const key = (ai ? "xc:tr3:" : "xc:tr2:") +
+  const key = (ai ? "xc:tr3:" : "xc:tr2:") + hash(text);
+  try { const c = await kvf(["GET", key]); if (c) return c === "-" ? null : c; } catch (e) {}
+  // Turjumaadda bilaashka ah (MT) waa la joojiyay: way khaldan tahay (tusaale "gold" -> "Dahabshiil").
+  // AI la'aan -> Ingiriiska asalka ah ayaa la muujinayaa.
+  if (!ai) return null;
+  const so = await aiSomali(text);
+  try { await kvf(["SET", key, so || "-", "EX", 60 * 60 * 24 * 14]); } catch (e) {}
+  return so;
+}
+
+async function loadNews() {
+  const cut = Date.now() - NEWS_MAX_AGE_H * 3600e3;
+  return (await fetchNews()).filter((n) => Date.parse(n.date) > cut)
+    .sort((a, b) => Date.parse(a.date) - Date.parse(b.date)); // kii ugu horreeyay marka hore
+}
+
+const LINE = "━━━━━━━━━━━━━━";
+async function msgNews(n) {
+  const so = await translateSo(n.title, kv);
+  const head = n.official ? "🏛 <b>FEDERAL RESERVE · RASMI</b>" : "📰 <b>WARKA FED-KA</b>";
+  return head + "\n" + LINE + "\n\n" +
+    "<b>" + esc(so || n.title) + "</b>\n\n" +
+    "🗞 <b>Isha:</b> " + esc(n.source || siteName(n.link)) + "\n" +
+    '🔗 <a href="' + esc(n.link) + '">' + esc(siteName(n.link) || "Akhri warka") + "</a>\n" +
+    LINE + "\n" +
+    '📊 <a href="' + SITE + '">Xogta Crypto 24/7</a> · <a href="https://t.me/Xogtacrypto24_7">Telegram</a>';
+}
+
+module.exports = async function handler(req, res) {
+  res.setHeader("Cache-Control", "no-store");
+  const out = { sent: [], skipped: [], errors: [] };
+  try {
+    const secret = env("CRON_SECRET");
+    if (secret && (req.query || {}).key !== secret) return res.status(401).json({ error: "key" });
+    if (!env("TELEGRAM_BOT_TOKEN") || !env("TELEGRAM_CHAT_ID")) return res.status(200).json({ error: "TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID lama helin" });
+
+    const host = req.headers["x-forwarded-host"] || req.headers.host;
+    const base = "https://" + host;
+    const [live, fed] = await Promise.all([
+      fetch(base + "/api/live").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch(base + "/api/fed").then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    ]);
+
+    // Markii ugu horraysay: xasuuso xogta hadda jirta, ha dirin (si xog duug ah loo dirin)
+    const first = (await kv(["SET", "xc:init", Date.now(), "NX"])) === "OK";
+
+    const jobs = [];
+    if (live && live.fomc && live.fomc.action && Date.now() - Date.parse(live.fomc.date) < 3 * 864e5) {
+      jobs.push(["fomc:" + live.fomc.date.slice(0, 10), () => msgFomc(live.fomc)]);
+    }
+    if (fed && fed.latest) {
+      const L = fed.latest;
+      if (L.cpi) jobs.push(["cpi:" + L.cpi.month, () => msgCpi(L.cpi, L.core)]);
+      if (L.nfp) jobs.push(["nfp:" + L.nfp.month, () => msgNfp(L.nfp, L.un)]);
+    }
+    for (const [key, build] of jobs) {
+      if (!(await claim(key))) { out.skipped.push(key); continue; }
+      if (first) { out.skipped.push(key + " (bilow)"); continue; }
+      try { await send(build()); out.sent.push(key); }
+      catch (e) { await kv(["DEL", "xc:sent:" + key]); out.errors.push(key + ": " + e.message); }
+    }
+
+    // Filashada: kaliya marka fursadda kor u qaadistu 15% ama ka badan isbeddesho
+    if (live && live.odds && live.odds.markets && live.odds.markets.length) {
+      const o = live.odds;
+      const hike = o.markets.filter((m) => m.kind === "hike").reduce((s, m) => s + m.p, 0);
+      const lastEvent = await get("odds:event");
+      const last = Number(await get("odds:hike"));
+      if (lastEvent !== o.event || isNaN(last)) {
+        await set("odds:event", o.event); await set("odds:hike", hike); out.skipped.push("odds (bilow)");
+      } else if (Math.abs(hike - last) >= ODDS_STEP) {
+        await set("odds:hike", hike);
+        if (!first) { try { await send(msgOdds(o, hike, last)); out.sent.push("odds"); } catch (e) { await set("odds:hike", last); out.errors.push("odds: " + e.message); } }
+      }
+    }
+    // Wararka: hal war mar kasta, ugu yaraan 5 daqiiqo u dhexeeya
+    const news = await loadNews();
+    const newsFirst = (await kv(["SET", "xc:news:init2", Date.now(), "NX"])) === "OK";
+    if (newsFirst) {
+      for (const n of news) await kv(["SET", "xc:sent:news:" + hash(n.link), 1, "EX", 60 * 60 * 72]);
+      out.skipped.push("news x" + news.length + " (bilow)");
+    } else {
+      const last = Number(await get("news:last")) || 0;
+      if (Date.now() - last >= NEWS_GAP_MIN * 60e3) {
+        for (const n of news) {
+          const key = "xc:sent:news:" + hash(n.link);
+          const ok = (await kv(["SET", key, Date.now(), "NX", "EX", 60 * 60 * 72])) === "OK";
+          if (!ok) continue;
+          try { await send(await msgNews(n), n.link); await set("news:last", Date.now()); out.sent.push("news: " + n.title.slice(0, 60)); }
+          catch (e) { await kv(["DEL", key]); out.errors.push("news: " + e.message); }
+          break; // hal war oo kaliya daqiiqaddan
+        }
+      } else out.skipped.push("news (sug)");
+    }
+
+    return res.status(200).json(out);
+  } catch (e) {
+    out.errors.push(String(e.message || e));
+    return res.status(200).json(out);
+  }
+};
+module.exports._internal = { msgFomc, msgCpi, msgNfp, msgOdds, parseRss, msgNews, trOk, realLink };
