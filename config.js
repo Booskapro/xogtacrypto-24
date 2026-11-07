@@ -10,8 +10,8 @@ window.SITE = {
     name: "Booskapro",
     role: "Aasaasaha & Horumariye",
     role_en: "Founder & Developer",
-    // Sawirkaaga: ku shub galka "img" magaca "founder.jpg", kadibna halkan ku qor "img/founder.jpg"
-    photo: "img/booskapro.jpg",
+    // Sawirkaaga: ku shub sawirka (tusaale "founder.jpg"), kadibna halkan ku qor magaciisa
+    photo: "booskapro.jpg",
     handle: "@booskapro",
     // Qoraalka aasaasaha (paragraph kasta waa xariiq gooni ah)
     // Qoraal gaaban oo ku saabsan sababta website-ka loo aasaasay
