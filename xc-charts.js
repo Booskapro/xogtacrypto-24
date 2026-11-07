@@ -100,6 +100,11 @@
     if (this.hid && this.hid.has(col)) return;
     segments(sc, a).forEach((pts) => { this.s += `<path d="${smoothD(pts)}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"${dash ? ` stroke-dasharray="${dash}"` : ""} />`; });
   };
+  // Khad toos ah (maalinle, aan la jilcin) — sida Bitview / TradingView
+  Plot.prototype.raw = function (sc, a, col, w) {
+    if (this.hid && this.hid.has(col)) return;
+    segments(sc, a).forEach((pts) => { this.s += `<path d="${pts.map((p, k) => (k ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ")}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" />`; });
+  };
   // Midab hoose oo gradient ah (jilicsan)
   Plot.prototype.area = function (sc, a, col, base) {
     if (this.hid && this.hid.has(col)) return;
@@ -228,36 +233,48 @@
     {
       id: "btc-50-200", cat: "crypto", notePos: "tl", ranges: [[52, "1S", "1Y"], [104, "2S", "2Y"], [260, "5S", "5Y"], [9999, T("Dhammaan", "All"), "All"]], def: 2, need: "btc", log: true,
       build(range) {
-        const w = BTC.weeks.slice(-range).filter((r) => r[2] != null || BTC.weeks.length <= range);
+        let w = BTC.weeks.slice(-range).filter((r) => r[2] != null || BTC.weeks.length <= range), daily = false;
+        if (BTC.daily && BTC.daily.length > 60 && range < 9999) {
+          // Maalinle: qiimaha maalin kasta + celcelisyada toddobaadka (isku xidhan si toos ah)
+          const wk = BTC.weeks, t = (d) => Date.parse(d + "T00:00:00Z"), cut = Date.now() - range * 7 * 864e5;
+          let k = 0;
+          const rows = BTC.daily.filter((d) => t(d[0]) >= cut).map((d) => {
+            const td = t(d[0]); while (k < wk.length - 2 && t(wk[k + 1][0]) <= td) k++;
+            const a = wk[k], b = wk[Math.min(k + 1, wk.length - 1)], f = b === a ? 0 : Math.max(0, Math.min(1, (td - t(a[0])) / (t(b[0]) - t(a[0]))));
+            const lerp = (x, y) => (x == null || y == null ? x : Math.round(x + (y - x) * f));
+            return [d[0], d[1], lerp(a[2], b[2]), lerp(a[3], b[3])];
+          });
+          if (rows.length > 30) { w = rows; daily = true; }
+        }
         const n = w.length, cl = w.map((r) => r[1]), a50 = w.map((r) => r[2]), a200 = w.map((r) => r[3]);
         const L = cl[n - 1], m50 = a50[n - 1], m200 = a200[n - 1];
         const above = L >= m50, d50 = ((L / m50 - 1) * 100).toFixed(1), d200 = ((L / m200 - 1) * 100).toFixed(1);
         // toddobaadyo xiriir ah oo dhinac ka ah
-        let run = 0; for (let i = n - 1; i >= 0 && a50[i] != null && (cl[i] >= a50[i]) === above; i--) run++;
+        const WK = BTC.weeks; let run = 0; for (let i = WK.length - 1; i >= 0 && WK[i][2] != null && (WK[i][1] >= WK[i][2]) === above; i--) run++;
         const vals = cl.concat(a50, a200).filter((v) => v != null);
         const lo = Math.min(...vals) * 0.9, hi = Math.max(...vals) * 1.08;
         const yr = (iso) => (EN ? MO[+iso.slice(5, 7) - 1] + " '" : MO[+iso.slice(5, 7) - 1] + " '") + iso.slice(2, 4);
         return {
           kicker: "Crypto",
           title: above ? T("Bitcoin wuxuu ka sarreeyaa celceliska 50 toddobaad", "Bitcoin is above its 50-week average") : T("Bitcoin wuxuu ka hooseeyaa celceliska 50 toddobaad", "Bitcoin is below its 50-week average"),
-          sub: T("BTC/USD xiritaanka toddobaadka (log) · celceliska 50 & 200 toddobaad", "BTC/USD weekly close (log) · 50- & 200-week averages"),
-          legend: [["BTC/USD", C.org], [T("Celceliska 50T", "50-week avg"), "alt"], [T("Celceliska 200T", "200-week avg"), C.grn]],
+          sub: daily ? T("BTC/USD maalinle (log) · celceliska 50 & 200 toddobaad", "BTC/USD daily (log) · 50- & 200-week averages") : T("BTC/USD xiritaanka toddobaadka (log) · celceliska 50 & 200 toddobaad", "BTC/USD weekly close (log) · 50- & 200-week averages"),
+          legend: [[T("Qiimaha", "Price"), "alt"], [T("Celceliska 50T", "50-week avg"), C.org], [T("Celceliska 200T", "200-week avg"), C.grn]],
           source: BTC.source + ", Hyperliquid", badge: "Live", live: true,
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Qiimaha: ${fmtUSD(L)} · 50T: ${fmtUSD(m50)} (${d50 > 0 ? "+" : ""}${d50}%)`, `Price: ${fmtUSD(L)} · 50W: ${fmtUSD(m50)} (${d50 > 0 ? "+" : ""}${d50}%)`),
             T(`200T: ${fmtUSD(m200)} (${d200 > 0 ? "+" : ""}${d200}%) · ${run} toddobaad ${above ? "ka sarreeya" : "ka hooseeya"} 50T`, `200W: ${fmtUSD(m200)} (${d200 > 0 ? "+" : ""}${d200}%) · ${run} weeks ${above ? "above" : "below"} 50W`)
           ] },
-          series: [{ name: "BTC", color: C.org, type: "area", data: w.map((r, i) => [r[0], cl[i]]), fmt: FU, log: true }, { name: T("50T", "50W"), color: "alt", type: "line", data: w.map((r, i) => [r[0], a50[i]]), fmt: FU }, { name: T("200T", "200W"), color: C.grn, type: "line", data: w.map((r, i) => [r[0], a200[i]]), fmt: FU }],
+          series: [{ name: T("Qiimaha", "Price"), color: "alt", type: "thin", data: w.map((r, i) => [r[0], cl[i]]), fmt: FU, log: true }, { name: T("50T", "50W"), color: C.org, type: "line", data: w.map((r, i) => [r[0], a50[i]]), fmt: FU }, { name: T("200T", "200W"), color: C.grn, type: "line", data: w.map((r, i) => [r[0], a200[i]]), fmt: FU }],
           labels: w.map((r) => yr(r[0])), n,
-          tip: (i) => [[T("Toddobaadka ", "Week of ") + dLabel(w[i][0])], ["BTC", "alt", fmtUSD(cl[i])], ["50T", C.pur, a50[i] ? fmtUSD(a50[i]) : "—"], ["200T", C.grn, a200[i] ? fmtUSD(a200[i]) : "—"]],
+          tip: (i) => [[(daily ? "" : T("Toddobaadka ", "Week of ")) + dLabel(w[i][0])], ["BTC", "alt", fmtUSD(cl[i])], ["50T", C.org, a50[i] ? fmtUSD(a50[i]) : "—"], ["200T", C.grn, a200[i] ? fmtUSD(a200[i]) : "—"]],
           draw(P, th) {
             const s = P.scale(n, lo, hi, true);
             P.yAxis(s, (v) => (v >= 1000 ? "$" + v / 1000 + "k" : "$" + v)); P.xLabels(s, w.map((r) => yr(r[0])), P.fs > 14 ? 8 : 5);
-            P.area(s, cl, C.org);
-            P.line(s, a200, C.grn, P.fs > 14 ? 2.6 : 1.8);
-            P.line(s, a50, th.alt, P.fs > 14 ? 2.6 : 1.8);
-            P.line(s, cl, C.org, P.fs > 14 ? 2.6 : 1.8);
-            P.dot(s, n - 1, L, C.org, fmtUSD(L), "above");
+            P.line(s, a200, C.grn, P.fs > 14 ? 2.2 : 1.5);
+            P.line(s, a50, C.org, P.fs > 14 ? 2.2 : 1.5);
+            P.raw(s, cl, th.alt, P.fs > 14 ? 1.8 : 1.2);
+            P.dot(s, n - 1, L, th.alt, fmtUSD(L));
+            P.tag(s.y(m50), C.org, fmtUSD(m50));
           }
         };
       }
@@ -511,56 +528,53 @@
       }
     },
     {
-      id: "sentiment", cat: "crypto", ranges: [[7, "1T", "1W"], [30, "1B", "1M"], [90, "3B", "3M"]], def: 2, need: "sent", notePos: "none",
+      id: "sentiment", cat: "crypto", ranges: [[30, "1B", "1M"], [90, "3B", "3M"], [365, "1S", "1Y"]], def: 2, need: "sent", notePos: "none",
       build(range) {
-        const f = SENT.fng || [], d = SENT.dom, cut = (arr) => arr.slice(-(range || 90)), v = f.length ? f[f.length - 1][1] : null;
+        const fAll = SENT.fng || [], d = SENT.dom, f = fAll.slice(-(range || 365)), n = f.length, v = n ? f[n - 1][1] : null;
+        const Z = { xf: "#3B82F6", f: "#7DB6E8", n: "#8CC97A", g: "#F5A54A", xg: "#E5484D" };
+        const zc = (x) => (x < 25 ? Z.xf : x < 45 ? Z.f : x <= 55 ? Z.n : x <= 75 ? Z.g : Z.xg);
         const cls = (x) => (x < 25 ? T("cabsi xad-dhaaf ah", "extreme fear") : x < 45 ? T("cabsi", "fear") : x <= 55 ? T("dhexdhexaad", "neutral") : x <= 75 ? T("hunguri", "greed") : T("hunguri xad-dhaaf ah", "extreme greed"));
-        const ago = (k) => (f.length > k ? f[f.length - 1 - k][1] : null);
-        const segs = [[0, 25, C.red], [25, 45, C.org], [45, 55, C.yel], [55, 75, "#84CC16"], [75, 100, C.grn]];
-        const colOf = (x) => segs.find((s) => x >= s[0] && x <= s[1])[2];
+        const ago = (k) => (fAll.length > k ? fAll[fAll.length - 1 - k][1] : "—");
+        const bm = new Map((BTC && BTC.daily) || []), btc = f.map((x) => (bm.has(x[0]) ? bm.get(x[0]) : null));
+        const hasBtc = btc.filter((x) => x != null).length > n * 0.5, lastB = btc.reduce((a, x) => (x != null ? x : a), null);
+        const extremeDays = f.filter((x) => x[1] < 25).length;
         return {
           kicker: "Crypto",
-          title: v != null ? T(`Suuqu wuxuu ku jiraa ${cls(v)} (${v})`, `The market is in ${cls(v)} (${v})`) + (d ? T(` — BTC wuxuu haystaa ${d.btc}%`, ` — BTC holds ${d.btc}%`) : "") : T("Dareenka suuqa crypto", "Crypto market sentiment"),
-          sub: T("Fear & Greed Index (0 = cabsi, 100 = hunguri) iyo saamiga suuqa crypto (dominance)", "Fear & Greed Index (0 = fear, 100 = greed) and crypto market share (dominance)"),
-          legend: [],
-          source: "alternative.me, CoinGecko", badge: "Live", live: true,
+          title: v != null ? T(`Fear & Greed: ${v} — suuqu wuxuu ku jiraa ${cls(v)}`, `Fear & Greed at ${v} — the market is in ${cls(v)}`) : T("Fear & Greed Index", "Fear & Greed Index"),
+          sub: T("Bitcoin Fear & Greed Index (0–100, maalinle, dhinaca midig) iyo qiimaha BTC (log, bidix)", "Bitcoin Fear & Greed Index (0–100, daily, right axis) and BTC price (log, left axis)"),
+          legend: (hasBtc ? [[T("Qiimaha BTC", "BTC price"), "alt"]] : []).concat([["Fear & Greed", C.pur], [T("Cabsi xad-dhaaf", "Extreme fear"), Z.xf, "box"], [T("Cabsi", "Fear"), Z.f, "box"], [T("Hunguri", "Greed"), Z.g, "box"], [T("Hunguri xad-dhaaf", "Extreme greed"), Z.xg, "box"]]),
+          source: "alternative.me, Binance, CoinGecko", badge: "Live", live: true,
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Shalay: ${ago(1)} · Toddobaad kahor: ${ago(7)} · Bil kahor: ${ago(30)}`, `Yesterday: ${ago(1)} · Last week: ${ago(7)} · Last month: ${ago(30)}`),
-            d ? `BTC ${d.btc}% · ETH ${d.eth}% · Stablecoins ${d.stable}% · ${T("Kuwa kale", "Others")} ${d.other}%` : "",
-            d && d.mcap ? T(`Suuqa crypto oo dhan: $${(d.mcap / 1e12).toFixed(2)}T (${pctTxt(d.mcapChange || 0)} 24 saac)`, `Total crypto market: $${(d.mcap / 1e12).toFixed(2)}T (${pctTxt(d.mcapChange || 0)} 24h)`) : ""
+            T(`${extremeDays} maalmood oo cabsi xad-dhaaf ah muddadan.`, `${extremeDays} days of extreme fear in this period.`),
+            d ? `BTC dominance ${d.btc}% · ETH ${d.eth}% · Stablecoins ${d.stable}%` : ""
           ].filter(Boolean) },
-          n: 0, tip: null,
-          series: f.length > 7 ? [
-            { name: "Fear & Greed", color: C.org, type: "area", data: cut(f.map((x) => [x[0], x[1]])), fmt: (x) => String(Math.round(x)), lines: [[25, C.red, ""], [75, C.grn, ""]] },
-            { name: T("Celcelis 7 maalmood", "7-day average"), color: "alt", type: "line", data: cut(f.map((x, i) => [x[0], i >= 6 ? Math.round(f.slice(i - 6, i + 1).reduce((a, y) => a + y[1], 0) / 7) : null])), fmt: (x) => String(Math.round(x)) }
-          ] : null,
+          n, labels: f.map((x) => ymShort(x[0])),
+          tip: (i) => [[dLabel(f[i][0])], ["F&G", zc(f[i][1]), f[i][1] + " · " + cls(f[i][1])]].concat(hasBtc ? [["BTC", "alt", btc[i] ? fmtUSD(btc[i]) : "—"]] : []),
+          series: n > 7 ? (hasBtc ? [{ name: T("BTC", "BTC"), color: "alt", type: "thin", scale: "left", log: true, data: f.map((x, i) => [x[0], btc[i]]), fmt: FU }] : []).concat([
+            { name: "Fear & Greed", color: C.pur, type: "fng", data: f.map((x) => [x[0], x[1]]), fmt: (x) => String(Math.round(x)), lines: [[25, Z.xf, ""], [45, Z.n, ""], [55, Z.g, ""], [75, Z.xg, ""]] }
+          ]) : null,
           draw(P, th) {
-            const b = P.b, W = b.x1 - b.x0, H = b.y1 - b.y0, big = P.fs > 14, narrow = W < 520;
-            // Gauge
-            if (v != null) {
-              const cx = narrow ? b.x0 + W / 2 : b.x0 + W * 0.27, R = Math.min(narrow ? W * 0.36 : W * 0.21, (narrow ? H * 0.42 : H * 0.62)), cy = narrow ? b.y0 + R + 10 : b.y0 + H * 0.70, sw = R * 0.18;
-              const pt = (x, r) => { const a = Math.PI * (1 - x / 100); return [cx + r * Math.cos(a), cy - r * Math.sin(a)]; };
-              segs.forEach((sg) => { const [a1, b1] = pt(sg[0] + 0.6, R), [a2, b2] = pt(sg[1] - 0.6, R); P.s += `<path d="M${a1},${b1} A${R},${R} 0 0 1 ${a2},${b2}" stroke="${sg[2]}" stroke-width="${sw}" fill="none" />`; });
-              const [nx, ny] = pt(v, R - sw * 1.2);
-              P.s += `<line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="${th.ink}" stroke-width="${big ? 6 : 4}" stroke-linecap="round" /><circle cx="${cx}" cy="${cy}" r="${big ? 11 : 7}" fill="${th.ink}" />`;
-              P.s += `<text x="${cx}" y="${cy + R * 0.42}" text-anchor="middle" font-size="${R * 0.38}" font-weight="800" fill="${colOf(v)}">${v}</text>`;
-              P.s += `<text x="${cx}" y="${cy + R * 0.42 + P.fs * 1.7}" text-anchor="middle" font-size="${P.fs * 1.25}" font-weight="700" fill="${th.ink}">${esc(cls(v).charAt(0).toUpperCase() + cls(v).slice(1))}</text>`;
+            const r = P.scale(n, 0, 100);
+            if (hasBtc) {
+              const bv = btc.filter((x) => x != null), s = P.scale(n, Math.min(...bv) * 0.85, Math.max(...bv) * 1.06, true);
+              P.yAxis(s, (x) => (x >= 1000 ? "$" + Math.round(x / 1000) + "K" : "$" + x));
+              P._btc = () => { P.raw(s, btc, th.alt, P.fs > 14 ? 2 : 1.4); if (lastB) { P.dot(s, n - 1, lastB, th.alt); P.tag(s.y(lastB), th.alt, fmtUSD(lastB)); } };
             }
-            // Donut
-            if (d && !narrow) {
-              const dx = b.x0 + W * 0.66, dy = b.y0 + H * 0.5, r1 = Math.min(W * 0.14, H * 0.42), r0 = r1 * 0.62;
-              const parts = [["Bitcoin", d.btc, "#F7931A"], ["Ethereum", d.eth, C.pur], ["Stablecoins", d.stable, C.grn], [T("Kuwa kale", "Others"), d.other, "#8A97AD"]];
-              let a0 = -Math.PI / 2;
-              parts.forEach((p) => {
-                const a = a0 + p[1] / 100 * Math.PI * 2, lg = p[1] > 50 ? 1 : 0, q = (r, t) => [dx + r * Math.cos(t), dy + r * Math.sin(t)];
-                const [x1, y1] = q(r1, a0), [x2, y2] = q(r1, a - 0.012), [x3, y3] = q(r0, a - 0.012), [x4, y4] = q(r0, a0);
-                P.s += `<path d="M${x1},${y1} A${r1},${r1} 0 ${lg} 1 ${x2},${y2} L${x3},${y3} A${r0},${r0} 0 ${lg} 0 ${x4},${y4} Z" fill="${p[2]}" />`; a0 = a;
-              });
-              P.s += `<text x="${dx}" y="${dy + r0 * 0.12}" text-anchor="middle" font-size="${r0 * 0.42}" font-weight="800" fill="${th.ink}">${d.btc}%</text><text x="${dx}" y="${dy + r0 * 0.12 + P.fs * 1.6}" text-anchor="middle" font-size="${P.fs}" fill="${th.mut}">BTC dominance</text>`;
-              parts.forEach((p, k) => { const ly = dy - r1 * 0.55 + k * P.fs * 2.4; P.s += `<rect x="${dx + r1 + P.fs * 1.6}" y="${ly - P.fs * 0.8}" width="${P.fs}" height="${P.fs}" rx="3" fill="${p[2]}" /><text x="${dx + r1 + P.fs * 3.2}" y="${ly + P.fs * 0.1}" font-size="${P.fs * 1.1}" fill="${th.ink}">${esc(p[0])} <tspan font-weight="700">${p[1]}%</tspan></text>`; });
-            } else if (d) {
-              P.s += `<text x="${b.x0 + W / 2}" y="${b.y1 - 4}" text-anchor="middle" font-size="${P.fs * 1.15}" fill="${th.ink}">BTC <tspan font-weight="800">${d.btc}%</tspan> · ETH <tspan font-weight="800">${d.eth}%</tspan> · Stablecoins <tspan font-weight="800">${d.stable}%</tspan></text>`;
+            P.yAxis(r, (x) => x, true);
+            P.xLabels(r, f.map((x) => ymShort(x[0])));
+            // aagga cabsida xad-dhaafka ah
+            P.s += `<rect x="${P.b.x0}" y="${r.y(25)}" width="${P.b.x1 - P.b.x0}" height="${r.y(0) - r.y(25)}" fill="${Z.xf}" opacity=".07" />`;
+            P.s += `<text x="${P.b.x1 - 10}" y="${r.y(8)}" text-anchor="end" font-size="${P.fs * 1.25}" font-weight="700" fill="${th.ink}" opacity=".75">${esc(T("Cabsi xad-dhaaf ah", "Extreme fear"))}</text>`;
+            // midabka u dhexeeya 50 iyo qiimaha (aag kasta midabkiisa)
+            for (let i = 0; i < n - 1; i++) {
+              const a = f[i][1], b = f[i + 1][1], col = zc((a + b) / 2);
+              P.s += `<path d="M${r.x(i)},${r.y(50)} L${r.x(i)},${r.y(a)} L${r.x(i + 1)},${r.y(b)} L${r.x(i + 1)},${r.y(50)} Z" fill="${col}" opacity=".32" />`;
             }
+            [[25, Z.xf], [45, Z.n], [55, Z.g], [75, Z.xg]].forEach((h) => { const y = r.y(h[0]); P.s += `<line x1="${P.b.x0}" x2="${P.b.x1}" y1="${y}" y2="${y}" stroke="${h[1]}" stroke-width="1.3" stroke-dasharray="5 5" />`; });
+            P.raw(r, f.map((x) => x[1]), C.pur, P.fs > 14 ? 1.8 : 1.3);
+            if (P._btc) P._btc();
+            P.dot(r, n - 1, v, C.pur, String(v));
           }
         };
       }
@@ -634,7 +648,7 @@
     st.hidden = st.hidden || new Set();
     if (st.chart) { try { st.chart.remove(); } catch (e) { /* ignore */ } st.chart = null; }
     box.innerHTML = "";
-    const W = Math.max(280, Math.round(box.clientWidth)), mob = W < 560, H = mob ? 280 : 340;
+    const W = Math.max(280, Math.round(box.clientWidth)), mob = W < 560, H = mob ? 300 : 400;
     const monthly = m.series[0].data.length > 1 && m.series[0].data.slice(0, 3).every((d) => d[0].slice(8) === "01");
     const hasLeft = m.series.some((x) => x.scale === "left"), hasRight = m.series.some((x) => (x.scale || "right") === "right");
     const chart = LW.createChart(box, {
@@ -656,10 +670,11 @@
         priceFormat: { type: "custom", formatter: sp.fmt, minMove: 0.01 }, crosshairMarkerRadius: 4, crosshairMarkerBorderColor: th.bg };
       let ser;
       if (sp.type === "hist") ser = chart.addHistogramSeries(Object.assign(base, { color: col }));
+      else if (sp.type === "fng") ser = chart.addBaselineSeries(Object.assign(base, { baseValue: { type: "price", price: 50 }, lineWidth: 1.5, topLineColor: col, bottomLineColor: col, topFillColor1: "rgba(245,165,74,.45)", topFillColor2: "rgba(245,165,74,.05)", bottomFillColor1: "rgba(59,130,246,.05)", bottomFillColor2: "rgba(59,130,246,.45)", autoscaleInfoProvider: () => ({ priceRange: { minValue: 0, maxValue: 100 } }) }));
       else if (sp.type === "area" || sp.type === "steparea") ser = chart.addAreaSeries(Object.assign(base, { lineColor: col, topColor: hexA(col, 0.28), bottomColor: hexA(col, 0.01), lineWidth: 2, lineType: sp.type === "steparea" ? 1 : 0 }));
-      else ser = chart.addLineSeries(Object.assign(base, { color: col, lineWidth: 2, lineType: sp.type === "step" ? 1 : 0, lineStyle: sp.type === "dash" ? 2 : 0 }));
+      else ser = chart.addLineSeries(Object.assign(base, { color: col, lineWidth: sp.type === "thin" ? 1.5 : 2, lineType: sp.type === "step" ? 1 : 0, lineStyle: sp.type === "dash" ? 2 : 0 }));
       ser.setData(sp.data.filter((d) => d[1] != null).map((d) => (d[2] ? { time: d[0], value: d[1], color: d[2] } : { time: d[0], value: d[1] })));
-      (sp.lines || []).forEach((l) => ser.createPriceLine({ price: l[0], color: l[1], lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: "" }));
+      (sp.lines || []).forEach((l) => ser.createPriceLine({ price: l[0], color: l[1], lineWidth: 1, lineStyle: 2, axisLabelVisible: sp.type !== "fng", title: "" }));
       if (sp.log) chart.priceScale(sp.scale || "right").applyOptions({ mode: 1 });
       const lastPt = sp.data.filter((d) => d[1] != null).slice(-1)[0];
       return { sp, ser, col, last: lastPt ? lastPt[1] : null };
@@ -733,6 +748,8 @@
   }
   function wrapTitle(t, max) {
     if (t.length <= max) return [t];
+    const dash = t.indexOf(" — ");
+    if (dash > 10 && dash < t.length - 6) return [t.slice(0, dash), t.slice(dash + 1)];
     const words = t.split(" "), lines = [""];
     words.forEach((w) => { if ((lines[lines.length - 1] + " " + w).trim().length > max && lines.length < 2) lines.push(w); else lines[lines.length - 1] = (lines[lines.length - 1] + " " + w).trim(); });
     return lines;
@@ -741,32 +758,33 @@
     const st = state[id], m = st.model, th = TH[theme()], W = 1200, H = 675;
     const [fonts, logo] = await Promise.all([embedFonts(), logoURI || toDataURI("logo.svg").then((u) => (logoURI = u))]);
     const F = "Inter, 'Helvetica Neue', Arial, sans-serif", FD = "'Inter Tight', Inter, Arial, sans-serif";
-    const tl = wrapTitle(m.title, 58), tfs = tl.length > 1 ? 30 : 34;
+    // Qaab ballaaran (sida CryptoQuant): cinwaan dhexda, legend dhexda, chart-ku wuxuu qaataa sawirka intiisa badan
+    const tl = wrapTitle(m.title, 54), tfs = tl.length > 1 ? 27 : 31;
     let s = `<rect width="${W}" height="${H}" fill="${th.bg}" />`;
-    s += `<text x="44" y="56" font-family="${F}" font-size="14" font-weight="700" letter-spacing="2.6" fill="#4C9AFF">${esc(m.kicker.toUpperCase())}</text>`;
-    tl.forEach((l, k) => { s += `<text x="44" y="${98 + k * (tfs + 6)}" font-family="${FD}" font-size="${tfs}" font-weight="700" fill="${th.ink}">${esc(l)}</text>`; });
-    let y = 98 + (tl.length - 1) * (tfs + 6) + 30;
-    s += `<text x="44" y="${y}" font-family="${F}" font-size="16" fill="${th.mut}">${esc(m.sub)}</text>`;
-    y += 32; let lx = 44;
+    tl.forEach((l, k) => { s += `<text x="${W / 2}" y="${54 + k * (tfs + 5)}" font-family="${FD}" font-size="${tfs}" font-weight="700" fill="${th.ink}" text-anchor="middle">${esc(l)}</text>`; });
+    let y = 54 + (tl.length - 1) * (tfs + 5) + 36;
     const hidCols = st.lw ? new Set(st.lw.filter((x) => st.hidden.has(x.sp.name)).map((x) => x.col)) : new Set();
-    m.legend.forEach((l) => {
+    const lg = m.legend.filter((l) => !(hidCols.has(l[1] === "alt" ? th.alt : l[1]) && l[2] !== "box"));
+    const lw = lg.reduce((a, l) => a + 26 + l[0].length * 7.9 + 28, -28);
+    let lx = (W - lw) / 2;
+    lg.forEach((l) => {
       const col = l[1] === "alt" ? th.alt : l[1];
-      if (hidCols.has(col) && l[2] !== "box") return;
-      s += l[2] === "box" ? `<rect x="${lx}" y="${y - 11}" width="18" height="12" rx="3" fill="${col}" opacity=".45" />` : `<rect x="${lx}" y="${y - 7}" width="22" height="4" rx="2" fill="${col}" />`;
-      s += `<text x="${lx + 30}" y="${y}" font-family="${F}" font-size="15" fill="${th.ink}">${esc(l[0])}</text>`;
-      lx += 30 + l[0].length * 8.2 + 30;
+      s += l[2] === "box" ? `<rect x="${lx}" y="${y - 10}" width="16" height="11" rx="3" fill="${col}" opacity=".45" />` : `<rect x="${lx}" y="${y - 6}" width="18" height="3.5" rx="2" fill="${col}" />`;
+      s += `<text x="${lx + 26}" y="${y}" font-family="${F}" font-size="14.5" fill="${th.ink}">${esc(l[0])}</text>`;
+      lx += 26 + l[0].length * 7.9 + 28;
     });
-    // badge
-    s += `<rect x="${W - 44 - (m.badge.length * 7.4 + 34)}" y="36" width="${m.badge.length * 7.4 + 34}" height="28" rx="14" fill="rgba(31,157,107,.12)" /><circle cx="${W - 44 - (m.badge.length * 7.4 + 34) + 16}" cy="50" r="4.5" fill="#1F9D6B" /><text x="${W - 44 - 12}" y="55" font-family="${F}" font-size="13.5" font-weight="700" fill="#1F9D6B" text-anchor="end">${esc(m.badge)}</text>`;
-    const box = { x0: 86, x1: W - 132, y0: y + 34, y1: H - 96 };
+    // badge (geeska sare)
+    const bw = m.badge.length * 6.8 + 30;
+    s += `<rect x="${W - 24 - bw}" y="18" width="${bw}" height="24" rx="12" fill="rgba(31,157,107,.12)" /><circle cx="${W - 24 - bw + 13}" cy="30" r="4" fill="#1F9D6B" /><text x="${W - 24 - 10}" y="34.5" font-family="${F}" font-size="12.5" font-weight="700" fill="#1F9D6B" text-anchor="end">${esc(m.badge)}</text>`;
+    const box = { x0: 74, x1: W - 118, y0: y + 26, y1: H - 84 };
     const P = new Plot(box, th, 15);
     P.s += `<text x="${(box.x0 + box.x1) / 2}" y="${(box.y0 + box.y1) / 2 + 36}" text-anchor="middle" font-family="${FD}" font-weight="800" font-size="96" fill="${th.ink}" opacity="${theme() === "dark" ? 0.05 : 0.045}">Xogta Crypto</text>`;
     if (st.lw) { P.hid = new Set(st.lw.filter((x) => st.hidden.has(x.sp.name)).map((x) => x.col)); }
     m.draw(P, th); P.finish();
     s += `<g font-family="${F}">${P.s}</g>`;
     // footer
-    s += `<text x="44" y="${H - 34}" font-family="${F}" font-size="14.5" fill="${th.mut}">© ${new Date().getFullYear()} Xogta Crypto 24/7</text>`;
-    s += `<image href="${logo}" x="${W - 44 - 274}" y="${H - 62}" width="38" height="38" /><text x="${W - 44}" y="${H - 34}" font-family="${FD}" font-size="25" font-weight="800" fill="${th.ink}" text-anchor="end">Xogta Crypto 24/7</text>`;
+    s += `<text x="28" y="${H - 16}" font-family="${F}" font-size="12.5" fill="${th.mut}">© ${new Date().getFullYear()} Xogta Crypto 24/7</text>`;
+    s += `<image href="${logo}" x="${W - 24 - 212}" y="${H - 38}" width="28" height="28" /><text x="${W - 24}" y="${H - 17}" font-family="${FD}" font-size="19" font-weight="800" fill="${th.ink}" text-anchor="end">Xogta Crypto 24/7</text>`;
     return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><style>${fonts}</style>${s}</svg>`;
   }
   async function exportPNG(id) {
@@ -867,7 +885,13 @@
     let j = null;
     try { const r = await fetch("/api/btc", { cache: "no-store" }); if (r.ok) j = await r.json(); } catch (e) { /* ignore */ }
     if (!j || !j.weeks) { try { j = await btcDirect(); } catch (e) { j = null; } }
-    if (j && j.weeks) { BTC = j; renderCard("btc-50-200"); renderCard("btc-fed"); } else if (!BTC) failMsg("btc");
+    if (j && j.weeks) {
+      try {
+        const rows = await (await fetch("https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=1000")).json();
+        if (Array.isArray(rows) && rows.length > 60) { j.daily = rows.map((k) => [new Date(k[0]).toISOString().slice(0, 10), Math.round(parseFloat(k[4]))]); if (j.live) j.daily[j.daily.length - 1][1] = Math.round(j.live); }
+      } catch (e) { /* maalinle ma jiro — toddobaadle ayaa la isticmaalayaa */ }
+      BTC = j; renderCard("btc-50-200"); renderCard("btc-fed"); if (SENT) renderCard("sentiment");
+    } else if (!BTC) failMsg("btc");
   }
 
   function failMsg(need) { Object.values(state).filter((s) => s.ch.need.indexOf(need) !== -1 && !s.model).forEach((s) => { s.el.querySelector(".xcc-plot").innerHTML = `<div class="xcc-load">${T("Xogta lama heli karo hadda. Isku day mar kale.", "Data unavailable. Please try again.")}</div>`; }); }
@@ -895,6 +919,9 @@
     let j = null;
     try { const r = await fetch("/api/sentiment", { cache: "no-store" }); if (r.ok) j = await r.json(); } catch (e) { /* ignore */ }
     if (!j || !(j.fng || j.dom)) { try { j = await sentDirect(); } catch (e) { j = null; } }
+    if (j && (!j.fng || j.fng.length < 300)) {
+      try { const r = await (await fetch("https://api.alternative.me/fng/?limit=400&format=json")).json(); if (r && Array.isArray(r.data) && r.data.length > 300) j.fng = r.data.map((x) => [new Date(+x.timestamp * 1000).toISOString().slice(0, 10), +x.value, x.value_classification]).reverse(); } catch (e) { /* 90 maalmood ayaa la isticmaalayaa */ }
+    }
     if (j) { SENT = j; renderCard("sentiment"); } else if (!SENT) failMsg("sent");
   }
   loadFed(); loadBtc(); loadMacro(); loadSent();
