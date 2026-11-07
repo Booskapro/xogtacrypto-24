@@ -71,21 +71,40 @@
       if (tz) $("ks-tz").textContent = tz.split("/").pop().replace(/_/g, " ");
     } catch (e) {}
 
-    // 7-da maalmood ee soo socda
+    renderWeek();
+  }
+
+  // 7 maalmood (fallaadhaha ‹ › ayaa toddobaad toddobaad u dhaqaajiya)
+  let kwOff = 0; // maalmo laga bilaabo maanta (0, 7, 14 …)
+  const KW_MIN = -28;
+  function kwMax() {
+    const last = allEvents().reduce(function (m, x) { return Math.max(m, new Date(x.time).getTime()); }, now());
+    return Math.max(0, Math.floor((last - now()) / 864e5 / 7) * 7);
+  }
+  function renderWeek() {
     const strip = $("k-week");
     const all = allEvents();
+    const start = new Date(); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() + kwOff);
+    const end = new Date(start); end.setDate(end.getDate() + 6);
+    const todayK = dayKey(new Date());
     let html = "";
     for (let i = 0; i < 7; i++) {
-      const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i);
-      const k = dayKey(d);
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      const k = dayKey(d), isToday = k === todayK, past = d.getTime() < new Date().setHours(0, 0, 0, 0);
       const items = all.filter(function (x) { return dayKey(new Date(x.time)) === k; });
       const top = items.reduce(function (m, x) { return Math.max(m, x.lvl); }, 0);
-      html += '<button type="button" class="kw-day' + (i === 0 ? " today" : "") + (items.length ? "" : " empty") + (top >= 3 ? " hot" : "") + '" data-day="' + k + '">' +
-        "<span>" + (i === 0 ? T("Maanta", "Today") : esc(F.DAYS[d.getDay()])) + "</span><b class=\"fnum\">" + d.getDate() + "</b>" +
+      html += '<button type="button" class="kw-day' + (isToday ? " today" : "") + (past ? " past" : "") + (items.length ? "" : " empty") + (top >= 3 ? " hot" : "") + (st.day === k ? " on" : "") + '" data-day="' + k + '">' +
+        "<span>" + (isToday ? T("Maanta", "Today") : esc(F.DAYS[d.getDay()])) + '</span><b class="fnum">' + d.getDate() + '</b><em class="kw-mo">' + esc(F.MONTHS[d.getMonth()]) + "</em>" +
         '<em class="kw-dots">' + items.slice(0, 5).map(function (x) { return '<i style="background:' + KCOL[x.kind] + '"></i>'; }).join("") + "</em>" +
         "<small>" + (items.length ? items.length + T(" xog", items.length === 1 ? " release" : " releases") : T("Xog ma jirto", "No data")) + "</small></button>";
     }
     strip.innerHTML = html;
+    const same = start.getMonth() === end.getMonth();
+    const range = start.getDate() + (same ? "" : " " + F.MONTHS[start.getMonth()]) + " – " + end.getDate() + " " + F.MONTHS[end.getMonth()] + " " + end.getFullYear();
+    $("kw-title").textContent = kwOff === 0 ? T("7-da maalmood ee soo socda", "Next 7 days") + " · " + range : range;
+    $("kw-prev").disabled = kwOff <= KW_MIN;
+    $("kw-next").disabled = kwOff >= kwMax();
+    $("kw-today").hidden = kwOff === 0;
     strip.querySelectorAll(".kw-day").forEach(function (b) {
       b.addEventListener("click", function () {
         st.day = st.day === b.dataset.day ? null : b.dataset.day;
@@ -95,6 +114,25 @@
       });
     });
   }
+  function moveWeek(delta) {
+    kwOff = delta === 0 ? 0 : Math.min(kwMax(), Math.max(KW_MIN, kwOff + delta));
+    const strip = $("k-week");
+    strip.classList.remove("slide-l", "slide-r"); void strip.offsetWidth;
+    strip.classList.add(delta < 0 ? "slide-r" : "slide-l");
+    renderWeek();
+  }
+  $("kw-prev").addEventListener("click", function () { moveWeek(-7); });
+  $("kw-next").addEventListener("click", function () { moveWeek(7); });
+  $("kw-today").addEventListener("click", function () { moveWeek(0); });
+  // telefoonka: farta ku jiid bidix/midig
+  (function swipe() {
+    const el = $("k-week"); let x0 = null;
+    el.addEventListener("touchstart", function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+    el.addEventListener("touchend", function (e) {
+      if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 70 && el.scrollWidth <= el.clientWidth + 4) moveWeek(dx < 0 ? 7 : -7);
+    }, { passive: true });
+  })();
 
   // ---------- 3. Kalandarka + shaandhaynta dhinaca ----------
   const st = { q: "", when: "month", day: null, lvl: { 1: true, 2: true, 3: true }, kind: { infl: true, jobs: true, growth: true, fed: true } };

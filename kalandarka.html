@@ -62,7 +62,14 @@
     </div>
 
     <div class="kw-wrap">
-      <div class="kw-head"><b data-en="Next 7 days">7-da maalmood ee soo socda</b><span class="small muted" data-en="Tap a day to see its releases">Riix maalin si aad u aragto xogteeda</span></div>
+      <div class="kw-head">
+        <div><b id="kw-title">7-da maalmood ee soo socda</b><span class="small muted kw-hint" data-en="Tap a day to see its releases">Riix maalin si aad u aragto xogteeda</span></div>
+        <div class="kw-nav">
+          <button type="button" class="kw-btn" id="kw-prev" aria-label="Toddobaadkii hore" data-en-label="Previous week"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button type="button" class="kw-today" id="kw-today" data-en="Today">Maanta</button>
+          <button type="button" class="kw-btn" id="kw-next" aria-label="Toddobaadka xiga" data-en-label="Next week"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+      </div>
       <div class="kw" id="k-week"></div>
     </div>
   </section>
