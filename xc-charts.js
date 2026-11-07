@@ -174,7 +174,7 @@
   // =========================================================
   const CHARTS = [
     {
-      id: "cpi-fed", cat: "infl", notePos: "tr", ranges: [[24, "2S", "2Y"], [60, "5S", "5Y"], [120, "10S", "10Y"]], def: 1, need: "fed",
+      id: "cpi-fed", cat: "infl", notePos: "tr", ranges: [[12, "1S", "1Y"], [24, "2S", "2Y"], [60, "5S", "5Y"], [120, "10S", "10Y"]], def: 2, need: "fed",
       build(range) {
         const all = monthsWith("cpi"), ms = all.slice(-range);
         const cpi = ms.map((m) => FED.monthly[m].cpi), ff = fedSeries(ms);
@@ -217,7 +217,7 @@
       }
     },
     {
-      id: "btc-50-200", cat: "crypto", notePos: "tl", ranges: [[104, "2S", "2Y"], [260, "5S", "5Y"], [9999, T("Dhammaan", "All"), "All"]], def: 1, need: "btc", log: true,
+      id: "btc-50-200", cat: "crypto", notePos: "tl", ranges: [[52, "1S", "1Y"], [104, "2S", "2Y"], [260, "5S", "5Y"], [9999, T("Dhammaan", "All"), "All"]], def: 2, need: "btc", log: true,
       build(range) {
         const w = BTC.weeks.slice(-range).filter((r) => r[2] != null || BTC.weeks.length <= range);
         const n = w.length, cl = w.map((r) => r[1]), a50 = w.map((r) => r[2]), a200 = w.map((r) => r[3]);
@@ -254,7 +254,7 @@
       }
     },
     {
-      id: "shaqo", cat: "jobs", notePos: "tr", ranges: [[24, "2S", "2Y"], [60, "5S", "5Y"]], def: 0, need: "fed",
+      id: "shaqo", cat: "jobs", notePos: "tr", ranges: [[12, "1S", "1Y"], [24, "2S", "2Y"], [60, "5S", "5Y"]], def: 1, need: "fed",
       build(range) {
         const all = monthsWith("nfp").filter((m) => FED.monthly[m].un !== undefined), ms = all.slice(-range);
         const nfp = ms.map((m) => FED.monthly[m].nfp), un = ms.map((m) => FED.monthly[m].un);
@@ -309,7 +309,7 @@
 
   const MORE = [
     {
-      id: "fed-rate", cat: "fed", ranges: [[60, "5S", "5Y"], [120, "10S", "10Y"], [300, "25S", "25Y"]], def: 0, need: "fed", notePos: "br",
+      id: "fed-rate", cat: "fed", ranges: [[12, "1S", "1Y"], [60, "5S", "5Y"], [120, "10S", "10Y"], [300, "25S", "25Y"]], def: 1, need: "fed", notePos: "br",
       build(range) {
         const ms = Object.keys(FED.monthly).sort().slice(-range), ff = fedSeries(ms), n = ms.length;
         const cyc = fedCycle(), cur = FED.target.current, d0 = cyc.first.date;
@@ -342,7 +342,7 @@
       }
     },
     {
-      id: "fed-bs", cat: "fed", ranges: [[60, "5S", "5Y"], [120, "10S", "10Y"]], def: 0, need: "macro", notePos: "bl",
+      id: "fed-bs", cat: "fed", ranges: [[12, "1S", "1Y"], [60, "5S", "5Y"], [120, "10S", "10Y"]], def: 1, need: "macro", notePos: "bl",
       build(range) {
         const wm = lastPerMonth(MACRO.walcl), m2 = new Map(MACRO.m2);
         const ms = [...wm.keys()].sort().slice(-range), n = ms.length;
@@ -375,7 +375,7 @@
       }
     },
     {
-      id: "core-pce", cat: "infl", ranges: [[24, "2S", "2Y"], [60, "5S", "5Y"], [120, "10S", "10Y"]], def: 1, need: "fed+macro", notePos: "tr",
+      id: "core-pce", cat: "infl", ranges: [[12, "1S", "1Y"], [24, "2S", "2Y"], [60, "5S", "5Y"], [120, "10S", "10Y"]], def: 2, need: "fed+macro", notePos: "tr",
       build(range) {
         const pce = new Map(MACRO.pce), cpce = new Map(MACRO.corePce);
         const ms = Object.keys(FED.monthly).sort().filter((m) => FED.monthly[m].core !== undefined || pce.has(m)).slice(-range), n = ms.length;
@@ -407,7 +407,7 @@
       }
     },
     {
-      id: "bonds", cat: "mkt", ranges: [[104, "2S", "2Y"], [260, "5S", "5Y"], [520, "10S", "10Y"]], def: 1, need: "macro", notePos: "br",
+      id: "bonds", cat: "mkt", ranges: [[13, "3B", "3M"], [52, "1S", "1Y"], [260, "5S", "5Y"], [520, "10S", "10Y"]], def: 2, need: "macro", notePos: "br",
       build(range) {
         const m2 = new Map(MACRO.y2), rows = MACRO.y10.filter(([d]) => m2.has(d)).slice(-range), n = rows.length;
         const a = rows.map((r) => r[1]), b = rows.map((r) => m2.get(r[0])), sp = a.map((v, i) => Math.round((v - b[i]) * 100) / 100);
@@ -440,7 +440,7 @@
       }
     },
     {
-      id: "dollar-oil", cat: "mkt", ranges: [[104, "2S", "2Y"], [260, "5S", "5Y"], [520, "10S", "10Y"]], def: 1, need: "macro", notePos: "tr",
+      id: "dollar-oil", cat: "mkt", ranges: [[13, "3B", "3M"], [52, "1S", "1Y"], [260, "5S", "5Y"], [520, "10S", "10Y"]], def: 2, need: "macro", notePos: "tr",
       build(range) {
         const om = new Map(MACRO.oil), rows = MACRO.dollar.filter(([d]) => om.has(d)).slice(-range), n = rows.length;
         const dx = rows.map((r) => r[1]), oil = rows.map((r) => om.get(r[0]));
@@ -469,7 +469,7 @@
       }
     },
     {
-      id: "btc-fed", cat: "crypto", ranges: [[60, "5S", "5Y"], [999, T("Dhammaan", "All"), "All"]], def: 0, need: "fed+btc", log: true, notePos: "br",
+      id: "btc-fed", cat: "crypto", ranges: [[12, "1S", "1Y"], [60, "5S", "5Y"], [999, T("Dhammaan", "All"), "All"]], def: 1, need: "fed+btc", log: true, notePos: "br",
       build(range) {
         const bm = lastPerMonth(BTC.weeks.map((w) => [w[0], w[1]]));
         const ms = [...bm.keys()].sort().slice(-range), n = ms.length, btc = ms.map((m) => bm.get(m)), ff = fedSeries(ms);
@@ -499,9 +499,9 @@
       }
     },
     {
-      id: "sentiment", cat: "crypto", ranges: [], def: 0, need: "sent", notePos: "none",
-      build() {
-        const f = SENT.fng || [], d = SENT.dom, v = f.length ? f[f.length - 1][1] : null;
+      id: "sentiment", cat: "crypto", ranges: [[7, "1T", "1W"], [30, "1B", "1M"], [90, "3B", "3M"]], def: 2, need: "sent", notePos: "none",
+      build(range) {
+        const f = SENT.fng || [], d = SENT.dom, cut = (arr) => arr.slice(-(range || 90)), v = f.length ? f[f.length - 1][1] : null;
         const cls = (x) => (x < 25 ? T("cabsi xad-dhaaf ah", "extreme fear") : x < 45 ? T("cabsi", "fear") : x <= 55 ? T("dhexdhexaad", "neutral") : x <= 75 ? T("hunguri", "greed") : T("hunguri xad-dhaaf ah", "extreme greed"));
         const ago = (k) => (f.length > k ? f[f.length - 1 - k][1] : null);
         const segs = [[0, 25, C.red], [25, 45, C.org], [45, 55, C.yel], [55, 75, "#84CC16"], [75, 100, C.grn]];
@@ -519,8 +519,8 @@
           ].filter(Boolean) },
           n: 0, tip: null,
           series: f.length > 7 ? [
-            { name: "Fear & Greed", color: C.org, type: "area", data: f.map((x) => [x[0], x[1]]), fmt: (x) => String(Math.round(x)), lines: [[25, C.red, ""], [75, C.grn, ""]] },
-            { name: T("Celcelis 7 maalmood", "7-day average"), color: "alt", type: "line", data: f.map((x, i) => [x[0], i >= 6 ? Math.round(f.slice(i - 6, i + 1).reduce((a, y) => a + y[1], 0) / 7) : null]), fmt: (x) => String(Math.round(x)) }
+            { name: "Fear & Greed", color: C.org, type: "area", data: cut(f.map((x) => [x[0], x[1]])), fmt: (x) => String(Math.round(x)), lines: [[25, C.red, ""], [75, C.grn, ""]] },
+            { name: T("Celcelis 7 maalmood", "7-day average"), color: "alt", type: "line", data: cut(f.map((x, i) => [x[0], i >= 6 ? Math.round(f.slice(i - 6, i + 1).reduce((a, y) => a + y[1], 0) / 7) : null])), fmt: (x) => String(Math.round(x)) }
           ] : null,
           draw(P, th) {
             const b = P.b, W = b.x1 - b.x0, H = b.y1 - b.y0, big = P.fs > 14, narrow = W < 520;
