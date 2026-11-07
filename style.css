@@ -1001,3 +1001,13 @@ body.xc-noscroll { overflow: hidden; }
 .xc-filter button { border: 1px solid var(--line-2); background: var(--card); color: var(--text-2); font: 600 .88rem Inter, sans-serif; padding: 9px 16px; border-radius: 999px; cursor: pointer; }
 .xc-filter button.on { background: var(--text); color: var(--bg); border-color: var(--text); }
 .xcc[hidden] { display: none !important; }
+/* Charts: laba-laba isbarbar yaal (desktop) */
+.xc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.xc-grid .xcc { padding: 18px 18px 16px; border-radius: 16px; }
+.xc-grid .xcc-t { font-size: clamp(1.05rem, 1.5vw, 1.22rem); margin: 8px 0 4px; }
+.xc-grid .xcc-s { font-size: .82rem; }
+.xc-grid .xcc-lg { font-size: .78rem; gap: 6px 14px; margin: 10px 0 2px; }
+.xc-grid .xcc-note { font-size: .8rem; padding: 10px 12px; margin-top: 10px; }
+.xc-grid .xcc-badge { font-size: .7rem; padding: 4px 8px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.xc-grid .xcc.full { padding: 24px 26px; }
+@media (max-width: 900px) { .xc-grid { grid-template-columns: 1fr; } }
