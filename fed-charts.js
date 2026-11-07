@@ -139,7 +139,7 @@
 
     root.innerHTML = '<div class="ft-grid big-row">' + tiles.filter(function (t) { return t.size === "big"; }).map(tile).join("") + "</div>" +
       '<div class="ft-grid mid-row">' + tiles.filter(function (t) { return t.size === "mid"; }).map(tile).join("") + "</div>" +
-      '<div class="ft-next" id="ft-next"></div>';
+      '';
     renderNext();
     applyFilter(current);
   }

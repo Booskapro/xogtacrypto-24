@@ -428,7 +428,7 @@
 
   // ---------- Bilow ----------
   document.addEventListener("DOMContentLoaded", function () {
-    renderFed();
+    if ($("dec-prev")) renderFed(); // naqshadda cusub: fed-hero.js
     buildTable();
     buildTicker();
     loadSnapshot();

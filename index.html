@@ -38,32 +38,38 @@
     <div class="section-head">
       <div>
         <span class="eyebrow" data-en="THE FED TODAY">FED-KA MAANTA</span>
-        <h1 class="h1" data-en="Fed decisions: previous, latest and next">Go'aannada FED-ka: kii hore, kii u dambeeyay iyo kan xiga</h1>
-        <p class="lead" data-en="Current Fed rate: &lt;b id=&quot;fed-range&quot;&gt;—&lt;/b&gt;">Dulsaarka FED-ka hadda: <b id="fed-range">—</b></p>
+        <h1 class="h1" data-en="Fed decisions">Go'aannada FED-ka</h1>
       </div>
-      <a href="taariikhda.html" class="small" data-en="See the full history →">Arag taariikhda oo dhan →</a>
+      <a href="taariikhda.html" class="small" data-en="Full history →">Taariikhda oo dhan →</a>
     </div>
 
-    <div class="grid dec-grid" style="--min: 260px">
-      <div class="decision" id="dec-prev"><span class="when" data-en="Previous">Kii hore</span><span class="what">—</span><span class="detail"></span></div>
-      <div class="decision" id="dec-last"><span class="when" data-en="Latest">Kii u dambeeyay</span><span class="what">—</span><span class="detail"></span></div>
-      <div class="decision next" id="dec-next">
-        <span class="when" data-en="Next">Kan xiga</span>
-        <span class="what" id="next-label">—</span>
-        <span class="detail" id="next-time"></span>
-        <div class="countdown" id="countdown" aria-label="Waqtiga ka hadhay go'aanka" data-en-label="Time left until the decision"></div>
+    <div class="fh" id="fed-hero">
+      <div class="fh-band">
+        <div class="fh-rate">
+          <span class="fh-eb" data-en="FED RATE NOW">DULSAARKA FED-KA HADDA</span>
+          <div class="fh-big fnum" id="fh-rate">—</div>
+          <p class="fh-last" id="fh-last"></p>
+          <a class="fh-chip" id="fh-statement" href="#" target="_blank" rel="noopener" hidden data-en="Official statement ↗">Bayaanka rasmiga ah ↗</a>
+        </div>
+        <div class="fh-rib" id="fh-ribwrap" hidden>
+          <span class="fh-eb2" data-en="RECENT DECISIONS">GO'AANNADII U DAMBEEYAY</span>
+          <div class="fh-ribbon" id="fh-ribbon"></div>
+          <div class="fh-legend"><span><i style="background:#5B9DFF"></i><span data-en="Cut">Dhimis</span></span><span><i style="background:#7C8A99"></i><span data-en="Hold">Hayn</span></span><span><i style="background:#F2A93B"></i><span data-en="Hike">Kor u qaadis</span></span></div>
+        </div>
+        <div class="fh-ring">
+          <svg viewBox="0 0 150 150" aria-hidden="true"><defs><linearGradient id="fh-rg" x1="0" x2="1"><stop offset="0" stop-color="#3FB8FF"/><stop offset="1" stop-color="#22E39A"/></linearGradient></defs>
+            <circle cx="75" cy="75" r="54" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="10"/>
+            <circle id="fh-arc" cx="75" cy="75" r="54" fill="none" stroke="url(#fh-rg)" stroke-width="10" stroke-linecap="round" transform="rotate(-90 75 75)"/></svg>
+          <div class="fh-ring-in"><b class="fnum" id="fh-days">—</b><span data-en="days">maalmood</span><em class="fnum" id="fh-hms"></em></div>
+          <p class="fh-nx"><span data-en="until the next decision">ilaa go'aanka xiga</span><br><b id="fh-next">—</b><br><span class="fh-sep" id="fh-sep" hidden data-en="+ projections (dot plot)">+ saadaasha xubnaha</span></p>
+        </div>
       </div>
-    </div>
 
-    <div class="grid" style="--min: 300px; margin-top: 14px">
-      <div class="card">
-        <h2 class="h3" data-en="Latest data">Xogtii u dambeysay</h2>
-        <div id="latest-data" style="display:flex;flex-direction:column;gap:10px"></div>
-      </div>
-      <div class="card">
-        <h2 class="h3" data-en="Upcoming data">Xogta soo socota</h2>
-        <div id="upcoming" style="display:flex;flex-direction:column;gap:10px"></div>
-        <p class="note" id="tz-note" data-en="Times are shown in your local time.">Waqtiyada waxaa lagu muujiyaa saacadda meesha aad joogto.</p>
+      <div class="fh-cards" id="fh-cards"></div>
+
+      <div class="fh-tlw card">
+        <div class="fh-tlh"><h2 class="h3" data-en="Upcoming data">Xogta soo socota</h2><span class="small muted" id="fh-tz"></span></div>
+        <div class="fh-tl" id="fh-timeline"></div>
       </div>
     </div>
     <p class="note" id="fed-updated"></p>
@@ -183,6 +189,7 @@
 <script src="fed-data.js"></script>
 <script src="fed-core.js"></script>
 <script src="home.js"></script>
+<script src="fed-hero.js"></script>
 <script src="fed-charts.js"></script>
 <script src="live-feed.js"></script>
 <script>
