@@ -114,8 +114,8 @@ async function buildPayload() {
     CPILFENS: fetchSeries("CPILFENS", "1956-01-01"),
     UNRATE: fetchSeries("UNRATE"),
     PAYEMS: fetchSeries("PAYEMS", "1953-12-01"),
-    DGS10: fetchSeries("DGS10", isoDaysAgo(30)),
-    DGS2: fetchSeries("DGS2", isoDaysAgo(30))
+    DGS10: fetchSeries("DGS10", isoDaysAgo(120)),
+    DGS2: fetchSeries("DGS2", isoDaysAgo(120))
   };
   const names = Object.keys(jobs);
   const settled = await Promise.allSettled(names.map((n) => jobs[n]));
@@ -171,6 +171,8 @@ async function buildPayload() {
       dgs10: lastTwo(S.DGS10),
       dgs2: lastTwo(S.DGS2)
     },
+    // Chart-ka bonds-ka: ~3 bilood oo maalin kasta ah
+    series: { dgs10: (S.DGS10 || []).slice(-66), dgs2: (S.DGS2 || []).slice(-66) },
     errors
   };
 }
