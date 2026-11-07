@@ -51,10 +51,10 @@
     <i class="ab2-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.94 4.3 18.8 19.13c-.24 1.05-.86 1.31-1.74.82l-4.8-3.54-2.32 2.23c-.26.26-.47.47-.96.47l.34-4.88 8.88-8.02c.39-.34-.08-.53-.6-.19L6.62 12.93 1.9 11.45c-1.03-.32-1.05-1.03.21-1.52l18.47-7.12c.86-.31 1.61.2 1.33 1.49z"/></svg></i>
   </a>
 
-  <a class="ab2-teamlink" href="kooxda.html">
-    <span><b data-en="Founders">Aasaasayaasha</b><em data-en="Meet the team behind Xogta Crypto 24/7">La kulan kooxda ka dambeysa Xogta Crypto 24/7</em></span>
-    <i aria-hidden="true">→</i>
-  </a>
+  <section class="ab2-team" id="aasaasaha">
+    <h2 class="ab2-tt" data-en="Our leadership team">Kooxdayada hoggaanka</h2>
+    <div class="ab2-grid" id="team-grid"></div>
+  </section>
 </main>
 <footer data-footer></footer>
 <script>
@@ -63,6 +63,20 @@ document.addEventListener("DOMContentLoaded", function () {
   var st = document.getElementById("ab2-stat");
   if (s.social && s.social.telegram) st.href = s.social.telegram;
   if (s.telegram_members) document.getElementById("ab2-num").textContent = s.telegram_members;
+  var xIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
+  var people = [{ name: f.name, role: f.role, role_en: f.role_en, photo: f.photo, handle: f.handle, x: f.x }].concat(s.team || []);
+  var grid = document.getElementById("team-grid");
+  people.forEach(function (m) {
+    var card = document.createElement("article"); card.className = "ex";
+    var ph = document.createElement("div"); ph.className = "ex-ph";
+    if (m.photo) { var img = document.createElement("img"); img.src = m.photo; img.alt = m.name; img.loading = "lazy"; ph.appendChild(img); }
+    else ph.textContent = m.name.charAt(0);
+    var nm = document.createElement("h3"); nm.className = "ex-nm"; nm.textContent = m.name;
+    var rl = document.createElement("p"); rl.className = "ex-rl"; rl.textContent = EN && m.role_en ? m.role_en : m.role;
+    card.appendChild(ph); card.appendChild(nm); card.appendChild(rl);
+    if (m.x) { var a = document.createElement("a"); a.className = "ex-x"; a.href = m.x; a.target = "_blank"; a.rel = "noopener"; a.setAttribute("aria-label", "X " + (m.handle || m.name)); a.innerHTML = xIcon + "<span></span>"; a.querySelector("span").textContent = m.handle || ""; card.appendChild(a); }
+    grid.appendChild(card);
+  });
 });
 </script>
 </body>
