@@ -98,16 +98,31 @@ function parseRss(xml) {
 }
 function hash(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36); }
 
-async function toSomali(text) {
-  const key = "xc:tr:" + hash(text);
-  try { const c = await kv(["GET", key]); if (c) return c; } catch (e) {}
+const BAD_SO = /xasan|sheekh|khayre|farmaajo|madaxweyne|ra'iisul|somaliland|puntland|muqdisho|al-shabaab|xamar/i;
+function trOk(src, so) {
+  if (!so) return false;
+  const r = so.length / Math.max(1, src.length);
+  if (r < 0.5 || r > 2.2) return false;
+  if (BAD_SO.test(so) && !BAD_SO.test(src) && !/somal/i.test(src)) return false;
+  const nums = (src.match(/\d+/g) || []);
+  for (const n of nums) if (so.indexOf(n) === -1) return false;
+  return true;
+}
+async function mtSomali(text) {
   try {
-    const r = await fetch("https://api.mymemory.translated.net/get?langpair=en|so&q=" + encodeURIComponent(text.slice(0, 450)));
+    const r = await fetch("https://api.mymemory.translated.net/get?mt=1&langpair=en|so&q=" + encodeURIComponent(text.slice(0, 450)));
     const j = await r.json();
-    const t = j && j.responseData && j.responseData.translatedText;
-    if (t && !/MYMEMORY WARNING|QUERY LENGTH|INVALID/i.test(t)) { const so = decode(t); try { await kv(["SET", key, so, "EX", 60 * 60 * 24 * 14]); } catch (e) {} return so; }
-  } catch (e) {}
-  return null;
+    const m = ((j && j.matches) || []).find((x) => /^MT/i.test(String(x["created-by"] || "")));
+    const so = m ? decode(m.translation) : null;
+    return trOk(text, so) ? so : null;
+  } catch (e) { return null; }
+}
+async function toSomali(text) {
+  const key = "xc:tr2:" + hash(text);
+  try { const c = await kv(["GET", key]); if (c) return c === "-" ? null : c; } catch (e) {}
+  const so = await mtSomali(text);
+  try { await kv(["SET", key, so || "-", "EX", 60 * 60 * 24 * 14]); } catch (e) {}
+  return so;
 }
 
 async function loadNews(live) {
