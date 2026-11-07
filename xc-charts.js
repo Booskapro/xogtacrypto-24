@@ -99,6 +99,12 @@
     this.s += `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".22" /><stop offset="1" stop-color="${col}" stop-opacity="0" /></linearGradient></defs>`;
     segments(sc, a).forEach((pts) => { this.s += `<path d="${smoothD(pts)} L${pts[pts.length - 1][0].toFixed(1)},${yb} L${pts[0][0].toFixed(1)},${yb} Z" fill="url(#${id})" />`; });
   };
+  Plot.prototype.stepArea = function (sc, a, col) {
+    if (this.hid && this.hid.has(col)) return;
+    const id = "xg" + (++gid); let d = "", lx = 0;
+    a.forEach((v, i) => { if (v == null) return; d += d ? ` H${sc.x(i).toFixed(1)} V${sc.y(v).toFixed(1)}` : `M${sc.x(i).toFixed(1)},${sc.y(sc.mn)} V${sc.y(v).toFixed(1)}`; lx = sc.x(i); });
+    if (d) this.s += `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".22" /><stop offset="1" stop-color="${col}" stop-opacity="0" /></linearGradient></defs><path d="${d} V${sc.y(sc.mn)} Z" fill="url(#${id})" />`;
+  };
   Plot.prototype.step = function (sc, a, col, w) {
     if (this.hid && this.hid.has(col)) return;
     let d = "";
@@ -190,7 +196,7 @@
           kicker: T("Sicir-barar", "Inflation"),
           title: head + " — " + fedTxt,
           sub: T(`CPI sanadle iyo sicir-dulsaarka FED (heerka sare) · bille · ${ymLabel(ms[0])} – ${ymLabel(lastM)}`, `CPI y/y and Fed funds target (upper) · monthly · ${ymLabel(ms[0])} – ${ymLabel(lastM)}`),
-          legend: [[T("CPI (sanadle)", "CPI (y/y)"), C.pur], [T("Sicir-dulsaarka FED", "Fed funds rate"), "alt"], [T("Ka sarreeya hadafka 2%", "Above 2% target"), C.red, "box"]],
+          legend: [[T("CPI (sanadle)", "CPI (y/y)"), C.pur], [T("Sicir-dulsaarka FED", "Fed funds rate"), "alt"]],
           source: "BLS, Federal Reserve, FRED", badge: T("Xogta: ", "Data: ") + ymLabel(lastM),
           note: { t: T("Fiiro gaar ah", "Key point"), lines },
           series: [{ name: "CPI", color: C.pur, type: "area", data: ms.map((m, i) => [m + "-01", cpi[i]]), fmt: F1, lines: [[2, C.grn, "2%"]] }, { name: "FED", color: "alt", type: "step", data: ms.map((m, i) => [m + "-01", ff[i]]), fmt: F2 }],
@@ -199,13 +205,13 @@
           draw(P, th) {
             const s = P.scale(n, 0, mx);
             P.yAxis(s, (v) => v + "%"); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
-            P.fillWhere(s, cpi, cpi.map(() => 2), th.red, (a, b) => a > b);
+            P.area(s, cpi, C.pur);
             P.hline(s, 2, C.grn, "2%");
             P.step(s, ff, th.alt, P.fs > 14 ? 3 : 2);
             P.line(s, cpi, C.pur, P.fs > 14 ? 3.6 : 2.4);
             if (pk > 1 && pk < n - 3) P.note(s, pk, cpi[pk], `${cpi[pk]}% — ${T("ugu sarreeyay", "peak")} (${ymShort(ms[pk])})`);
             if (ffL != null) P.tag(s.y(ffL), th.alt, "FED " + ffL + "%");
-            P.dot(s, n - 1, L, C.red, L + "%", ffL != null && ffL > L ? "below" : "above");
+            P.dot(s, n - 1, L, C.pur, L + "%");
           }
         };
       }
@@ -226,22 +232,22 @@
           kicker: "Crypto",
           title: above ? T("Bitcoin wuxuu ka sarreeyaa celceliska 50 toddobaad", "Bitcoin is above its 50-week average") : T("Bitcoin wuxuu ka hooseeyaa celceliska 50 toddobaad", "Bitcoin is below its 50-week average"),
           sub: T("BTC/USD xiritaanka toddobaadka (log) · celceliska 50 & 200 toddobaad", "BTC/USD weekly close (log) · 50- & 200-week averages"),
-          legend: [["BTC/USD", "alt"], [T("Celceliska 50T", "50-week avg"), C.pur], [T("Celceliska 200T", "200-week avg"), C.grn], [T("Ka hooseeya 50T", "Below 50W"), C.red, "box"]],
+          legend: [["BTC/USD", C.org], [T("Celceliska 50T", "50-week avg"), "alt"], [T("Celceliska 200T", "200-week avg"), C.grn]],
           source: BTC.source + ", Hyperliquid", badge: "Live", live: true,
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Qiimaha: ${fmtUSD(L)} · 50T: ${fmtUSD(m50)} (${d50 > 0 ? "+" : ""}${d50}%)`, `Price: ${fmtUSD(L)} · 50W: ${fmtUSD(m50)} (${d50 > 0 ? "+" : ""}${d50}%)`),
             T(`200T: ${fmtUSD(m200)} (${d200 > 0 ? "+" : ""}${d200}%) · ${run} toddobaad ${above ? "ka sarreeya" : "ka hooseeya"} 50T`, `200W: ${fmtUSD(m200)} (${d200 > 0 ? "+" : ""}${d200}%) · ${run} weeks ${above ? "above" : "below"} 50W`)
           ] },
-          series: [{ name: "BTC", color: "alt", type: "line", data: w.map((r, i) => [r[0], cl[i]]), fmt: FU, log: true }, { name: T("50T", "50W"), color: C.pur, type: "line", data: w.map((r, i) => [r[0], a50[i]]), fmt: FU }, { name: T("200T", "200W"), color: C.grn, type: "line", data: w.map((r, i) => [r[0], a200[i]]), fmt: FU }],
+          series: [{ name: "BTC", color: C.org, type: "area", data: w.map((r, i) => [r[0], cl[i]]), fmt: FU, log: true }, { name: T("50T", "50W"), color: "alt", type: "line", data: w.map((r, i) => [r[0], a50[i]]), fmt: FU }, { name: T("200T", "200W"), color: C.grn, type: "line", data: w.map((r, i) => [r[0], a200[i]]), fmt: FU }],
           labels: w.map((r) => yr(r[0])), n,
           tip: (i) => [[T("Toddobaadka ", "Week of ") + dLabel(w[i][0])], ["BTC", "alt", fmtUSD(cl[i])], ["50T", C.pur, a50[i] ? fmtUSD(a50[i]) : "—"], ["200T", C.grn, a200[i] ? fmtUSD(a200[i]) : "—"]],
           draw(P, th) {
             const s = P.scale(n, lo, hi, true);
             P.yAxis(s, (v) => (v >= 1000 ? "$" + v / 1000 + "k" : "$" + v)); P.xLabels(s, w.map((r) => yr(r[0])), P.fs > 14 ? 8 : 5);
-            P.fillWhere(s, cl, a50, th.red, (a, b) => a < b);
-            P.line(s, a200, C.grn, P.fs > 14 ? 3.5 : 2.4);
-            P.line(s, a50, C.pur, P.fs > 14 ? 3.5 : 2.4);
-            P.line(s, cl, th.alt, P.fs > 14 ? 2.4 : 1.6);
+            P.area(s, cl, C.org);
+            P.line(s, a200, C.grn, P.fs > 14 ? 2.6 : 1.8);
+            P.line(s, a50, th.alt, P.fs > 14 ? 2.6 : 1.8);
+            P.line(s, cl, C.org, P.fs > 14 ? 2.6 : 1.8);
             P.dot(s, n - 1, L, C.org, fmtUSD(L), "above");
           }
         };
@@ -261,13 +267,13 @@
           kicker: T("Shaqo", "Jobs"),
           title: T(`Shaqo la'aantu waa ${U}% — NFP celcelis 3 bilood: ${sign(avg3)}K`, `Unemployment at ${U}% — 3-month avg payrolls: ${sign(avg3)}K`),
           sub: T(`Shaqooyinka cusub (NFP, kun · bar-yo) iyo shaqo la'aanta (% · khad, dhinaca midig) · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`, `Nonfarm payrolls (K · bars) and unemployment rate (% · line, right) · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`),
-          legend: [[T("NFP (shaqooyin cusub)", "Payrolls (NFP)"), C.blu], [T("Hoos u dhac", "Job losses"), C.red], [T("Shaqo la'aanta", "Unemployment"), C.yel]],
+          legend: [[T("NFP (shaqooyin cusub)", "Payrolls (NFP)"), C.blu], [T("Hoos u dhac", "Job losses"), C.red], [T("Shaqo la'aanta", "Unemployment"), "alt"]],
           source: "BLS, FRED", badge: T("Xogta: ", "Data: ") + ymLabel(ms[n - 1]),
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`${ymLabel(ms[n - 1])}: NFP ${sign(N)}K · shaqo la'aan ${U}% (bishii hore ${Up}%)`, `${ymLabel(ms[n - 1])}: NFP ${sign(N)}K · unemployment ${U}% (prev ${Up}%)`),
             neg ? T(`${neg} bilood oo shaqooyin la waayay muddadan.`, `${neg} months of job losses in this period.`) : T("Bil kasta shaqooyin ayaa la abuuray muddadan.", "Jobs were added every month in this period.")
           ] },
-          series: [{ name: "NFP", color: C.blu, type: "hist", scale: "left", data: ms.map((m, i) => [m + "-01", nfp[i], nfp[i] < 0 ? C.red : C.blu]), fmt: (v) => sign(Math.round(v)) + "K" }, { name: T("Shaqo la'aan", "Unemployment"), color: C.yel, type: "line", data: ms.map((m, i) => [m + "-01", un[i]]), fmt: F1 }],
+          series: [{ name: "NFP", color: C.blu, type: "hist", scale: "left", data: ms.map((m, i) => [m + "-01", nfp[i], nfp[i] < 0 ? C.red : C.blu]), fmt: (v) => sign(Math.round(v)) + "K" }, { name: T("Shaqo la'aan", "Unemployment"), color: "alt", type: "line", data: ms.map((m, i) => [m + "-01", un[i]]), fmt: F1 }],
           labels: ms.map(ymShort), n,
           tip: (i) => [[ymLabel(ms[i])], ["NFP", nfp[i] < 0 ? C.red : C.blu, sign(nfp[i]) + "K"], [T("Shaqo la'aan", "Unemployment"), C.yel, un[i] + "%"]],
           draw(P, th) {
@@ -277,8 +283,8 @@
             P.yAxis(s, (v) => (v > 0 ? "+" : "") + Math.round(v) + "K"); P.yAxis(r, (v) => v + "%", true);
             P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
             P.bars(s, nfp, C.blu, C.red);
-            P.line(r, un, C.yel, P.fs > 14 ? 3.2 : 2.2);
-            P.dot(r, n - 1, U, C.yel, U + "%", "above");
+            P.line(r, un, th.alt, P.fs > 14 ? 3 : 2);
+            P.dot(r, n - 1, U, th.alt, U + "%");
           }
         };
       }
@@ -315,20 +321,19 @@
           title: cut ? T(`FED-ku wuxuu dhimay sicirka ${cyc.count} jeer tan iyo ${ymLabel(d0.slice(0, 7))}`, `The Fed has cut ${cyc.count} times since ${ymLabel(d0.slice(0, 7))}`)
                      : T(`FED-ku wuxuu kordhiyay sicirka ${cyc.count} jeer tan iyo ${ymLabel(d0.slice(0, 7))}`, `The Fed has hiked ${cyc.count} times since ${ymLabel(d0.slice(0, 7))}`),
           sub: T(`Sicir-dulsaarka FED (heerka sare) · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`, `Fed funds target (upper bound) · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`),
-          legend: [[T("Sicir-dulsaarka FED", "Fed funds target"), C.blu]],
+          legend: [[T("Hadafka FED", "Fed target"), C.blu], [T("Dhabta (EFFR)", "Effective (EFFR)"), "alt"]],
           source: "Federal Reserve, FRED", badge: T("Dhaqan galay: ", "Effective: ") + dLabel(cyc.last.date),
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Heerka hadda: ${rangeTxt(cur)}`, `Current range: ${rangeTxt(cur)}`),
             T(`Isbeddelkii u dambeeyay: ${cyc.last.change > 0 ? "+" : "−"}${Math.round(Math.abs(cyc.last.change) * 100)} dhibcood (bps), dhaqan galay ${dLabel(cyc.last.date)}`, `Last move: ${cyc.last.change > 0 ? "+" : "−"}${Math.round(Math.abs(cyc.last.change) * 100)} bps, effective ${dLabel(cyc.last.date)}`)
           ] },
-          series: [{ name: T("Hadafka FED", "Fed target"), color: C.blu, type: "steparea", data: ms.map((m, i) => [m + "-01", ff[i]]), fmt: F2 }, { name: T("Dhabta (EFFR)", "Effective (EFFR)"), color: C.org, type: "line", data: ms.map((m) => [m + "-01", FED.monthly[m].ff !== undefined ? FED.monthly[m].ff : null]), fmt: F2 }],
+          series: [{ name: T("Hadafka FED", "Fed target"), color: C.blu, type: "steparea", data: ms.map((m, i) => [m + "-01", ff[i]]), fmt: F2 }, { name: T("Dhabta (EFFR)", "Effective (EFFR)"), color: "alt", type: "line", data: ms.map((m) => [m + "-01", FED.monthly[m].ff !== undefined ? FED.monthly[m].ff : null]), fmt: F2 }],
           n, tip: (i) => [[ymLabel(ms[i])], ["FED", C.blu, ff[i] != null ? ff[i].toFixed(2) + "%" : "—"]],
           draw(P, th) {
             const mx = Math.max(6, Math.ceil(Math.max(...ff.filter((v) => v != null)) + 0.5)), s = P.scale(n, 0, mx);
             P.yAxis(s, (v) => v + "%"); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
-            let d = ""; ff.forEach((v, i) => { if (v == null) return; d += d ? ` H${s.x(i)} V${s.y(v)}` : `M${s.x(i)},${s.y(0)} V${s.y(v)}`; });
-            if (d) P.s += `<path d="${d} V${s.y(0)} Z" fill="${C.blu}" opacity=".10" />`;
-            P.step(s, ff, C.blu, P.fs > 14 ? 4 : 2.6);
+            const ef = ms.map((m) => (FED.monthly[m].ff !== undefined ? FED.monthly[m].ff : null));
+            P.stepArea(s, ff, C.blu); P.step(s, ff, C.blu, P.fs > 14 ? 3.2 : 2.2); P.line(s, ef, th.alt, P.fs > 14 ? 2.2 : 1.5);
             if (pk > 0 && pk < n - 6) P.note(s, pk, ff[pk], `${ff[pk].toFixed(2)}% — ${T("ugu sarreeyay", "peak")} (${ymShort(ms[pk])})`);
             if (fi > 0 && fi < n - 2 && fi !== pk) P.note(s, fi, ff[fi], cut ? T("Dhimistii 1aad", "First cut") : T("Kordhintii 1aad", "First hike"));
             P.dot(s, n - 1, ff[n - 1], C.blu, cur.hi.toFixed(2) + "%");
@@ -350,20 +355,20 @@
           kicker: "FED",
           title: drop >= 0.3 ? T(`Xaashida FED waxay dhacday $${drop}T tan iyo ${ymLabel(ms[pk])}`, `Fed balance sheet down $${drop}T since ${ymLabel(ms[pk])}`) : T(`Xaashida hantida FED waa $${B}T`, `Fed balance sheet at $${B}T`),
           sub: T(`Xaashida hantida FED (WALCL) iyo lacagta M2 · $ tiriliyan · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`, `Fed balance sheet (WALCL) and M2 money supply · $ trillions · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`),
-          legend: [[T("Xaashida FED", "Fed balance sheet"), C.blu], [T("M2 (dhinaca midig)", "M2 (right axis)"), C.yel]],
+          legend: [[T("Xaashida FED", "Fed balance sheet"), C.blu], [T("M2 (dhinaca midig)", "M2 (right axis)"), "alt"]],
           source: "Federal Reserve, FRED", badge: T("Xogta: ", "Data: ") + dLabel(MACRO.asOf.walcl || ms[n - 1] + "-01"),
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Xaashida FED: $${B}T (ugu sarreeyay $${bs[pk]}T, ${ymShort(ms[pk])})`, `Balance sheet: $${B}T (peak $${bs[pk]}T, ${ymShort(ms[pk])})`),
             my != null ? T(`M2: $${M}T · ${pctTxt(my)} sanadle (${ymShort(ms[mI])})`, `M2: $${M}T · ${pctTxt(my)} y/y (${ymShort(ms[mI])})`) : ""
           ].filter(Boolean) },
-          series: [{ name: T("Xaashida FED", "Fed balance sheet"), color: C.blu, type: "area", scale: "left", data: ms.map((m, i) => [m + "-01", bs[i]]), fmt: FT }, { name: "M2", color: C.yel, type: "line", data: ms.map((m, i) => [m + "-01", mm[i]]), fmt: FT }],
+          series: [{ name: T("Xaashida FED", "Fed balance sheet"), color: C.blu, type: "area", scale: "left", data: ms.map((m, i) => [m + "-01", bs[i]]), fmt: FT }, { name: "M2", color: "alt", type: "line", data: ms.map((m, i) => [m + "-01", mm[i]]), fmt: FT }],
           n, tip: (i) => [[ymLabel(ms[i])], ["FED", C.blu, "$" + bs[i] + "T"], ["M2", C.yel, mm[i] != null ? "$" + mm[i] + "T" : "—"]],
           draw(P, th) {
             const lo = Math.floor(Math.min(...bs) - 0.5), hi = Math.ceil(Math.max(...bs) + 0.5), s = P.scale(n, lo, hi);
             const mv = mm.filter((v) => v != null), r = P.scale(n, Math.floor(Math.min(...mv) - 0.5), Math.ceil(Math.max(...mv) + 0.5));
             P.yAxis(s, (v) => "$" + v + "T"); P.yAxis(r, (v) => "$" + v + "T", true); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
-            let d = `M${s.x(0)},${s.y(lo)}`; bs.forEach((v, i) => { d += ` L${s.x(i)},${s.y(v)}`; }); P.s += `<path d="${d} L${s.x(n - 1)},${s.y(lo)} Z" fill="${C.blu}" opacity=".14" />`;
-            P.line(s, bs, C.blu, P.fs > 14 ? 4 : 2.6); P.line(r, mm, C.yel, P.fs > 14 ? 4 : 2.6);
+            P.area(s, bs, C.blu); P.line(s, bs, C.blu, P.fs > 14 ? 3.2 : 2.2); P.line(r, mm, th.alt, P.fs > 14 ? 2.6 : 1.8);
+            const mI2 = mm.reduce((a, v, i) => (v != null ? i : a), 0); P.dot(r, mI2, mm[mI2], th.alt, "$" + mm[mI2] + "T");
             P.dot(s, n - 1, B, C.blu, "$" + B + "T", "below");
           }
         };
@@ -383,19 +388,19 @@
           kicker: T("Sicir-barar", "Inflation"),
           title: T(`PCE waa ${P1}%, Core PCE ${CP}% — ${both ? "weli way ka sarreeyaan 2%" : "waxay u dhow yihiin hadafka 2%"}`, `PCE at ${P1}%, core PCE ${CP}% — ${both ? "still above 2%" : "near the 2% target"}`),
           sub: T(`Core CPI, PCE iyo Core PCE (cabbirka FED) · sanadle · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`, `Core CPI, PCE and core PCE (the Fed's gauge) · y/y · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`),
-          legend: [["Core CPI", C.pur], ["PCE", C.grn], ["Core PCE", C.org]],
+          legend: [["PCE", C.grn], ["Core PCE", "alt"], ["Core CPI", C.pur]],
           source: "BLS, BEA, FRED", badge: T("PCE: ", "PCE: ") + ymLabel(ms[iP]),
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             (iC >= 0 ? `Core CPI ${CC}% (${ymShort(ms[iC])}) · ` : "") + `PCE ${P1}% · Core PCE ${CP}% (${ymShort(ms[iP])})`,
             T("FED-ku wuxuu hadaf ka dhigtaa PCE 2%.", "The Fed targets 2% PCE inflation.")
           ] },
-          series: [{ name: "Core CPI", color: C.pur, type: "line", data: ms.map((m, i) => [m + "-01", cc[i]]), fmt: F1 }, { name: "PCE", color: C.grn, type: "line", data: ms.map((m, i) => [m + "-01", pp[i]]), fmt: F1, lines: [[2, C.grn, "2%"]] }, { name: "Core PCE", color: C.org, type: "dash", data: ms.map((m, i) => [m + "-01", cp[i]]), fmt: F1 }],
+          series: [{ name: "Core CPI", color: C.pur, type: "line", data: ms.map((m, i) => [m + "-01", cc[i]]), fmt: F1 }, { name: "PCE", color: C.grn, type: "line", data: ms.map((m, i) => [m + "-01", pp[i]]), fmt: F1, lines: [[2, C.grn, "2%"]] }, { name: "Core PCE", color: "alt", type: "dash", data: ms.map((m, i) => [m + "-01", cp[i]]), fmt: F1 }],
           n, tip: (i) => [[ymLabel(ms[i])], ["Core CPI", C.pur, cc[i] != null ? cc[i] + "%" : "—"], ["PCE", C.grn, pp[i] != null ? pp[i] + "%" : "—"], ["Core PCE", C.org, cp[i] != null ? cp[i] + "%" : "—"]],
           draw(P, th) {
             const all = cc.concat(pp, cp).filter((v) => v != null), s = P.scale(n, Math.min(0, Math.floor(Math.min(...all))), Math.ceil(Math.max(...all) + 1));
             P.yAxis(s, (v) => v + "%"); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
             P.hline(s, 2, C.grn, "2%");
-            P.line(s, cc, C.pur, P.fs > 14 ? 3.5 : 2.4); P.line(s, pp, C.grn, P.fs > 14 ? 3.5 : 2.4); P.line(s, cp, C.org, P.fs > 14 ? 3.5 : 2.4, "7 5");
+            P.area(s, pp, C.grn); P.line(s, pp, C.grn, P.fs > 14 ? 3.2 : 2.2); P.line(s, cp, th.alt, P.fs > 14 ? 2.4 : 1.6, "7 5"); P.line(s, cc, C.pur, P.fs > 14 ? 2.2 : 1.5);
             P.dot(s, iP, P1, C.grn, P1 + "%");
           }
         };
@@ -416,20 +421,20 @@
                         : inv ? (weeksInv >= 9 ? T(`Curve-ku wuu rogmanaa ${Math.round(weeksInv / 4.35)} bilood — hadda waa caadi`, `The curve was inverted for ${Math.round(weeksInv / 4.35)} months — now normal`) : T(`Curve-ku wuu rogmanaa ${weeksInv} toddobaad — hadda waa caadi`, `The curve was inverted for ${weeksInv} weeks — now normal`))
                               : T(`Bond 10 sano ${A}% · 2 sano ${Bv}%`, `10-year ${A}% · 2-year ${Bv}%`),
           sub: T(`Bond-yada dowladda Mareykanka 10 sano iyo 2 sano · toddobaadle · meesha cas = 2Y > 10Y`, `US Treasury 10-year and 2-year yields · weekly · red = 2Y above 10Y`),
-          legend: [[T("10 sano", "10-year"), C.blu], [T("2 sano", "2-year"), C.red], [T("Rogmasho (inversion)", "Inversion"), C.red, "box"]],
+          legend: [[T("10 sano", "10-year"), C.blu], [T("2 sano", "2-year"), "alt"], [T("Rogmasho (inversion)", "Inversion"), C.red, "box"]],
           source: "US Treasury, FRED", badge: T("Xogta: ", "Data: ") + dLabel(MACRO.asOf.y10 || rows[n - 1][0]),
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Farqiga 10Y − 2Y: ${S > 0 ? "+" : ""}${S.toFixed(2)} dhibcood`, `10Y − 2Y spread: ${S > 0 ? "+" : ""}${S.toFixed(2)} pts`),
             inv ? T(`Rogmashadii u dambeysay: ${dLabel(rows[st0][0])} – ${nowInv ? "hadda" : dLabel(rows[e][0])}`, `Last inversion: ${dLabel(rows[st0][0])} – ${nowInv ? "now" : dLabel(rows[e][0])}`) : T("Muddadan curve-ku ma rogmanin.", "No inversion in this period.")
           ] },
-          series: [{ name: T("10 sano", "10-year"), color: C.blu, type: "area", data: rows.map((r, i) => [r[0], a[i]]), fmt: F2 }, { name: T("2 sano", "2-year"), color: C.red, type: "line", data: rows.map((r, i) => [r[0], b[i]]), fmt: F2 }],
+          series: [{ name: T("10 sano", "10-year"), color: C.blu, type: "area", data: rows.map((r, i) => [r[0], a[i]]), fmt: F2 }, { name: T("2 sano", "2-year"), color: "alt", type: "line", data: rows.map((r, i) => [r[0], b[i]]), fmt: F2 }],
           n, tip: (i) => [[T("Toddobaadka ", "Week of ") + dLabel(rows[i][0])], ["10Y", C.blu, a[i] + "%"], ["2Y", C.red, b[i] + "%"], ["10Y−2Y", "alt", (sp[i] > 0 ? "+" : "") + sp[i].toFixed(2)]],
           draw(P, th) {
             const all = a.concat(b), s = P.scale(n, Math.floor(Math.min(...all)), Math.ceil(Math.max(...all) + 0.5));
             P.yAxis(s, (v) => v + "%"); P.xLabels(s, rows.map((r) => ymShort(r[0])), P.fs > 14 ? 8 : 5);
             P.fillWhere(s, b, a, th.red, (x, y) => x > y);
-            P.area(s, a, C.blu); P.line(s, a, C.blu, P.fs > 14 ? 3.2 : 2.2); P.line(s, b, C.red, P.fs > 14 ? 2.8 : 1.8);
-            P.dot(s, n - 1, A, C.blu, A + "%", A >= Bv ? "above" : "below"); P.dot(s, n - 1, Bv, C.red, Bv + "%", A >= Bv ? "below" : "above");
+            P.area(s, a, C.blu); P.line(s, a, C.blu, P.fs > 14 ? 3.2 : 2.2); P.line(s, b, th.alt, P.fs > 14 ? 2.4 : 1.6);
+            P.dot(s, n - 1, A, C.blu, A + "%"); P.dot(s, n - 1, Bv, th.alt, Bv + "%");
           }
         };
       }
@@ -475,20 +480,19 @@
           kicker: "Crypto",
           title: since != null ? T(`Bitcoin ${pctTxt(since)} tan iyo markii FED-ku bilaabay dhimista (${ymShort(ms[ei])})`, `Bitcoin ${pctTxt(since)} since the Fed started cutting (${ymShort(ms[ei])})`) : T("Bitcoin iyo sicir-dulsaarka FED", "Bitcoin and the Fed funds rate"),
           sub: T("BTC/USD (log, bille) iyo sicir-dulsaarka FED (heerka sare, dhinaca midig)", "BTC/USD (log, monthly) and Fed funds target (upper, right axis)"),
-          legend: [["Bitcoin", C.org], [T("Sicir-dulsaarka FED", "Fed funds rate"), C.blu]].concat(ei >= 0 ? [[T("Wareegga dhimista", "Cutting cycle"), C.blu, "box"]] : []),
+          legend: [["Bitcoin", C.org], [T("Sicir-dulsaarka FED", "Fed funds rate"), "alt"]],
           source: BTC.source + ", Federal Reserve, FRED", badge: "Live", live: true,
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Bitcoin: ${fmtUSD(L)} · FED: ${ff[n - 1] != null ? ff[n - 1].toFixed(2) + "%" : "—"}`, `Bitcoin: ${fmtUSD(L)} · Fed: ${ff[n - 1] != null ? ff[n - 1].toFixed(2) + "%" : "—"}`),
             T("Isku xirnaanshuhu ma aha sabab — xogta ayaa la isbarbar dhigay.", "Correlation is not causation — data shown side by side.")
           ] },
-          series: [{ name: "Bitcoin", color: C.org, type: "area", scale: "left", log: true, data: ms.map((m, i) => [m + "-01", btc[i]]), fmt: FU }, { name: "FED", color: C.blu, type: "step", data: ms.map((m, i) => [m + "-01", ff[i]]), fmt: F2 }],
+          series: [{ name: "Bitcoin", color: C.org, type: "area", scale: "left", log: true, data: ms.map((m, i) => [m + "-01", btc[i]]), fmt: FU }, { name: "FED", color: "alt", type: "step", data: ms.map((m, i) => [m + "-01", ff[i]]), fmt: F2 }],
           n, tip: (i) => [[ymLabel(ms[i])], ["BTC", C.org, fmtUSD(btc[i])], ["FED", C.blu, ff[i] != null ? ff[i].toFixed(2) + "%" : "—"]],
           draw(P, th) {
             const s = P.scale(n, lo, hi, true), r = P.scale(n, 0, Math.max(6, Math.ceil(Math.max(...ff.filter((v) => v != null)) + 0.5)));
             P.yAxis(s, (v) => (v >= 1000 ? "$" + v / 1000 + "k" : "$" + v)); P.yAxis(r, (v) => v + "%", true); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
-            if (ei >= 0) { const x0 = s.x(ei); P.s += `<rect x="${x0}" y="${P.b.y0}" width="${s.x(n - 1) - x0}" height="${P.b.y1 - P.b.y0}" fill="${C.blu}" opacity=".07" />`; }
-            P.step(r, ff, C.blu, P.fs > 14 ? 2.6 : 1.8); P.area(s, btc, C.org); P.line(s, btc, C.org, P.fs > 14 ? 3.2 : 2.2);
-            P.tag(r.y(ff[n - 1]), C.blu, ff[n - 1].toFixed(2) + "%");
+            P.area(s, btc, C.org); P.line(s, btc, C.org, P.fs > 14 ? 3.2 : 2.2); P.step(r, ff, th.alt, P.fs > 14 ? 2.4 : 1.6);
+            P.tag(r.y(ff[n - 1]), th.alt, ff[n - 1].toFixed(2) + "%");
             P.dot(s, n - 1, L, C.org, fmtUSD(L), "above");
           }
         };
@@ -516,7 +520,7 @@
           n: 0, tip: null,
           series: f.length > 7 ? [
             { name: "Fear & Greed", color: C.org, type: "area", data: f.map((x) => [x[0], x[1]]), fmt: (x) => String(Math.round(x)), lines: [[25, C.red, ""], [75, C.grn, ""]] },
-            { name: T("Celcelis 7 maalmood", "7-day average"), color: C.blu, type: "line", data: f.map((x, i) => [x[0], i >= 6 ? Math.round(f.slice(i - 6, i + 1).reduce((a, y) => a + y[1], 0) / 7) : null]), fmt: (x) => String(Math.round(x)) }
+            { name: T("Celcelis 7 maalmood", "7-day average"), color: "alt", type: "line", data: f.map((x, i) => [x[0], i >= 6 ? Math.round(f.slice(i - 6, i + 1).reduce((a, y) => a + y[1], 0) / 7) : null]), fmt: (x) => String(Math.round(x)) }
           ] : null,
           draw(P, th) {
             const b = P.b, W = b.x1 - b.x0, H = b.y1 - b.y0, big = P.fs > 14, narrow = W < 520;

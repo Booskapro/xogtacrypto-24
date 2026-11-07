@@ -1032,3 +1032,4 @@ body.xc-noscroll { overflow: hidden; }
 .xcc-li.tg.off i::after { display: none; }
 .xcc-li.tg { padding: 6px 11px 6px 8px; }
 .xcc-li.tg:not(.off) { border-color: var(--line-2); }
+.xcc-li.tg i::after { border-color: var(--bg) !important; }
