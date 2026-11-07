@@ -724,14 +724,52 @@
     try { const r = await fetch("/api/fed", { cache: "no-store" }); const j = await r.json(); if (j && j.monthly) { FED = j; renderAll(); } else throw 0; }
     catch (e) { if (!FED) failMsg("fed"); }
   }
-  async function loadBtc() {
-    try { const r = await fetch("/api/btc", { cache: "no-store" }); const j = await r.json(); if (j && j.weeks) { BTC = j; renderCard("btc-50-200"); renderCard("btc-fed"); } else throw 0; }
-    catch (e) { if (!BTC) failMsg("btc"); }
+  // Bitcoin: /api/btc, haddii kale si toos ah Binance + Hyperliquid (browser-ka)
+  function smaArr(a, n) { const o = new Array(a.length).fill(null); let sum = 0; for (let i = 0; i < a.length; i++) { sum += a[i]; if (i >= n) sum -= a[i - n]; if (i >= n - 1) o[i] = Math.round(sum / n); } return o; }
+  async function btcDirect() {
+    const rows = await (await fetch("https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1w&limit=1000")).json();
+    if (!Array.isArray(rows) || rows.length < 210) throw 0;
+    const weeks = rows.map((k) => [new Date(k[0]).toISOString().slice(0, 10), parseFloat(k[4])]);
+    let live = null;
+    try { const m = await (await fetch("https://api.hyperliquid.xyz/info", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "allMids" }) })).json(); live = parseFloat(m.BTC) || null; } catch (e) { /* ignore */ }
+    if (live) weeks[weeks.length - 1][1] = live;
+    const cl = weeks.map((w) => w[1]), a50 = smaArr(cl, 50), a200 = smaArr(cl, 200), from = weeks.findIndex((w) => w[0] >= "2019-01-01");
+    return { source: "Binance", live, weeks: weeks.slice(from).map((w, i) => [w[0], Math.round(w[1]), a50[from + i], a200[from + i]]) };
   }
+  async function loadBtc() {
+    let j = null;
+    try { const r = await fetch("/api/btc", { cache: "no-store" }); if (r.ok) j = await r.json(); } catch (e) { /* ignore */ }
+    if (!j || !j.weeks) { try { j = await btcDirect(); } catch (e) { j = null; } }
+    if (j && j.weeks) { BTC = j; renderCard("btc-50-200"); renderCard("btc-fed"); } else if (!BTC) failMsg("btc");
+  }
+
   function failMsg(need) { Object.values(state).filter((s) => s.ch.need.indexOf(need) !== -1 && !s.model).forEach((s) => { s.el.querySelector(".xcc-plot").innerHTML = `<div class="xcc-load">${T("Xogta lama heli karo hadda. Isku day mar kale.", "Data unavailable. Please try again.")}</div>`; }); }
   async function loadJSON(url, ok, need) { try { const r = await fetch(url, { cache: "no-store" }); const j = await r.json(); if (!ok(j)) throw 0; return j; } catch (e) { failMsg(need); return null; } }
-  async function loadMacro() { const j = await loadJSON("/api/macro", (x) => x && (x.walcl || x.y10), "macro"); if (j) { MACRO = j; renderAll(); } }
-  async function loadSent() { const j = await loadJSON("/api/sentiment", (x) => x && (x.fng || x.dom), "sent"); if (j) { SENT = j; renderCard("sentiment"); } }
+  // Suuqyada (FRED): haddii /api/macro aanu jirin, kaararkaas waa la qarinayaa (bogga ma jabo)
+  async function loadMacro() {
+    let j = null;
+    try { const r = await fetch("/api/macro", { cache: "no-store" }); if (r.ok) j = await r.json(); } catch (e) { /* ignore */ }
+    const cards = Object.values(state).filter((s) => s.ch.need.indexOf("macro") !== -1);
+    if (j && (j.walcl || j.y10)) { MACRO = j; cards.forEach((s) => s.el.classList.remove("xcc-off")); renderAll(); }
+    else if (!MACRO) cards.forEach((s) => s.el.classList.add("xcc-off"));
+  }
+  async function sentDirect() {
+    const out = { fng: null, dom: null };
+    const [f, g] = await Promise.allSettled([fetch("https://api.alternative.me/fng/?limit=90&format=json").then((r) => r.json()), fetch("https://api.coingecko.com/api/v3/global").then((r) => r.json())]);
+    if (f.status === "fulfilled" && f.value && Array.isArray(f.value.data)) out.fng = f.value.data.map((d) => [new Date(+d.timestamp * 1000).toISOString().slice(0, 10), +d.value, d.value_classification]).reverse();
+    if (g.status === "fulfilled" && g.value && g.value.data) {
+      const p = g.value.data.market_cap_percentage || {}, btc = p.btc || 0, eth = p.eth || 0, st = (p.usdt || 0) + (p.usdc || 0) + (p.dai || 0), r1 = (v) => Math.round(v * 10) / 10;
+      out.dom = { btc: r1(btc), eth: r1(eth), stable: r1(st), other: r1(100 - btc - eth - st), mcap: g.value.data.total_market_cap ? g.value.data.total_market_cap.usd : null, mcapChange: g.value.data.market_cap_change_percentage_24h_usd };
+    }
+    if (!out.fng && !out.dom) throw 0;
+    return out;
+  }
+  async function loadSent() {
+    let j = null;
+    try { const r = await fetch("/api/sentiment", { cache: "no-store" }); if (r.ok) j = await r.json(); } catch (e) { /* ignore */ }
+    if (!j || !(j.fng || j.dom)) { try { j = await sentDirect(); } catch (e) { j = null; } }
+    if (j) { SENT = j; renderCard("sentiment"); } else if (!SENT) failMsg("sent");
+  }
   loadFed(); loadBtc(); loadMacro(); loadSent();
   setInterval(loadSent, 10 * 60 * 1000);   // Fear & Greed: 10 daqiiqo kasta
   setInterval(loadMacro, 60 * 60 * 1000);  // Suuqyada (FRED): saac kasta

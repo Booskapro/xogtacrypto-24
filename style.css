@@ -1011,3 +1011,4 @@ body.xc-noscroll { overflow: hidden; }
 .xc-grid .xcc-badge { font-size: .7rem; padding: 4px 8px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
 .xc-grid .xcc.full { padding: 24px 26px; }
 @media (max-width: 900px) { .xc-grid { grid-template-columns: 1fr; } }
+.xcc.xcc-off { display: none !important; }
