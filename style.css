@@ -1012,3 +1012,23 @@ body.xc-noscroll { overflow: hidden; }
 .xc-grid .xcc.full { padding: 24px 26px; }
 @media (max-width: 900px) { .xc-grid { grid-template-columns: 1fr; } }
 .xcc.xcc-off { display: none !important; }
+/* Legend: riix si aad u qariso / u muujiso (TradingView style) */
+.xcc-lg { align-items: center; }
+.xcc-li { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: var(--card-2); color: var(--text-2); font: 500 .8rem Inter, sans-serif; padding: 5px 10px; border-radius: 8px; cursor: pointer; transition: opacity .15s, border-color .15s; }
+.xcc-li:hover { border-color: var(--line-2); }
+.xcc-li i { width: 10px !important; height: 10px !important; border-radius: 3px !important; }
+.xcc-li em { font-style: normal; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.xcc-li.off { opacity: .45; }
+.xcc-li.off i { background: var(--muted) !important; }
+.xcc-li.off em { text-decoration: line-through; color: var(--muted); }
+.xcc-ld { color: var(--muted); font-size: .78rem; margin-left: auto; font-variant-numeric: tabular-nums; }
+.xcc-plot .tv-lightweight-charts { border-radius: 8px; }
+.xch-disc a { color: inherit; }
+/* Filter khadadka: checkbox */
+.xcc-lgl { font-size: .78rem; font-weight: 600; color: var(--muted); margin-right: 2px; }
+.xcc-li.tg i { position: relative; width: 16px !important; height: 16px !important; border-radius: 4px !important; }
+.xcc-li.tg i::after { content: ""; position: absolute; left: 5px; top: 2px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.xcc-li.tg.off i { background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--muted); }
+.xcc-li.tg.off i::after { display: none; }
+.xcc-li.tg { padding: 6px 11px 6px 8px; }
+.xcc-li.tg:not(.off) { border-color: var(--line-2); }

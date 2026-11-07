@@ -26,6 +26,7 @@
   const ymLabel = (ym) => MO[+ym.slice(5, 7) - 1] + " " + ym.slice(0, 4);
   const ymShort = (ym) => MO[+ym.slice(5, 7) - 1] + " '" + ym.slice(2, 4);
   const dLabel = (iso) => +iso.slice(8, 10) + " " + MO[+iso.slice(5, 7) - 1] + " " + iso.slice(0, 4);
+  const F1 = (v) => v.toFixed(1) + "%", F2 = (v) => v.toFixed(2) + "%", FT = (v) => "$" + v.toFixed(2) + "T", FU = (v) => "$" + Math.round(v).toLocaleString("en-US");
   const sign = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v);
 
   // ---------- Icons (khad) ----------
@@ -70,12 +71,33 @@
     const th = this.th, fs = this.fs, y = this.b.y1 + fs * 1.8;
     for (let i = 0; i < n; i += step) this.s += `<text x="${sc.x(i)}" y="${y}" fill="${th.mut}" font-size="${fs}" text-anchor="middle">${esc(labels[i])}</text>`;
   };
+  // Khad jilicsan (monotone cubic) — ma dhaafo qiimaha dhabta ah
+  function smoothD(pts) {
+    if (pts.length < 3) return pts.map((p, k) => (k ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+    const n = pts.length, dx = [], m = [], t = [];
+    for (let k = 0; k < n - 1; k++) { dx[k] = pts[k + 1][0] - pts[k][0]; m[k] = (pts[k + 1][1] - pts[k][1]) / (dx[k] || 1); }
+    t[0] = m[0]; t[n - 1] = m[n - 2];
+    for (let k = 1; k < n - 1; k++) t[k] = m[k - 1] * m[k] <= 0 ? 0 : (m[k - 1] + m[k]) / 2;
+    for (let k = 0; k < n - 1; k++) { if (m[k] === 0) { t[k] = 0; t[k + 1] = 0; continue; } const a = t[k] / m[k], b = t[k + 1] / m[k], h = a * a + b * b; if (h > 9) { const q = 3 / Math.sqrt(h); t[k] = q * a * m[k]; t[k + 1] = q * b * m[k]; } }
+    let d = "M" + pts[0][0].toFixed(1) + "," + pts[0][1].toFixed(1);
+    for (let k = 0; k < n - 1; k++) { const h = dx[k] / 3; d += ` C${(pts[k][0] + h).toFixed(1)},${(pts[k][1] + t[k] * h).toFixed(1)} ${(pts[k + 1][0] - h).toFixed(1)},${(pts[k + 1][1] - t[k + 1] * h).toFixed(1)} ${pts[k + 1][0].toFixed(1)},${pts[k + 1][1].toFixed(1)}`; }
+    return d;
+  }
+  function segments(sc, a) { const out = []; let cur = []; a.forEach((v, i) => { if (v == null) { if (cur.length) out.push(cur); cur = []; } else cur.push([sc.x(i), sc.y(v)]); }); if (cur.length) out.push(cur); return out; }
+  let gid = 0;
   Plot.prototype.line = function (sc, a, col, w, dash) {
-    let d = "", pen = false;
-    a.forEach((v, i) => { if (v == null) { pen = false; return; } d += (pen ? " L" : " M") + sc.x(i).toFixed(1) + "," + sc.y(v).toFixed(1); pen = true; });
-    if (d) this.s += `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"${dash ? ` stroke-dasharray="${dash}"` : ""} />`;
+    if (this.hid && this.hid.has(col)) return;
+    segments(sc, a).forEach((pts) => { this.s += `<path d="${smoothD(pts)}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"${dash ? ` stroke-dasharray="${dash}"` : ""} />`; });
+  };
+  // Midab hoose oo gradient ah (jilicsan)
+  Plot.prototype.area = function (sc, a, col, base) {
+    if (this.hid && this.hid.has(col)) return;
+    const id = "xg" + (++gid), yb = sc.y(base == null ? sc.mn : base);
+    this.s += `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".22" /><stop offset="1" stop-color="${col}" stop-opacity="0" /></linearGradient></defs>`;
+    segments(sc, a).forEach((pts) => { this.s += `<path d="${smoothD(pts)} L${pts[pts.length - 1][0].toFixed(1)},${yb} L${pts[0][0].toFixed(1)},${yb} Z" fill="url(#${id})" />`; });
   };
   Plot.prototype.step = function (sc, a, col, w) {
+    if (this.hid && this.hid.has(col)) return;
     let d = "";
     a.forEach((v, i) => { if (v == null) return; d += d ? ` H${sc.x(i).toFixed(1)} V${sc.y(v).toFixed(1)}` : `M${sc.x(i).toFixed(1)},${sc.y(v).toFixed(1)}`; });
     if (d) this.s += `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" />`;
@@ -90,27 +112,40 @@
   Plot.prototype.bars = function (sc, a, pos, neg) {
     const bw = Math.max(1.5, (this.b.x1 - this.b.x0) / a.length * 0.66), y0 = sc.y(0);
     a.forEach((v, i) => {
-      if (v == null) return;
+      if (v == null || (this.hid && this.hid.has(v >= 0 ? pos : neg))) return;
       const y = sc.y(v);
       this.s += `<rect x="${(sc.x(i) - bw / 2).toFixed(1)}" y="${Math.min(y, y0).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1, Math.abs(y - y0)).toFixed(1)}" rx="${Math.min(2, bw / 4)}" fill="${v >= 0 ? pos : neg}" />`;
     });
   };
   Plot.prototype.hline = function (sc, v, col, label) {
-    const y = sc.y(v), fs = this.fs;
-    this.s += `<line x1="${this.b.x0}" x2="${this.b.x1}" y1="${y}" y2="${y}" stroke="${col}" stroke-width="1.6" stroke-dasharray="6 6" />`;
-    if (label) this.s += `<text x="${this.b.x0 + 6}" y="${y - fs * 0.6}" fill="${col}" font-size="${fs}" font-weight="600">${esc(label)}</text>`;
+    const y = sc.y(v);
+    this.s += `<line x1="${this.b.x0}" x2="${this.b.x1}" y1="${y}" y2="${y}" stroke="${col}" stroke-width="1.2" stroke-dasharray="4 5" opacity=".9" />`;
+    if (label) this.tag(y, col, label, true);
   };
-  Plot.prototype.dot = function (sc, i, v, col, label, side) {
+  // Calaamadda qiimaha (dhinaca midig, sida TradingView)
+  Plot.prototype.tag = function (y, col, text, soft) { if (this.hid && this.hid.has(col)) return; (this.tags = this.tags || []).push({ y, col, text: String(text), soft }); };
+  Plot.prototype.dot = function (sc, i, v, col, label) {
+    if (this.hid && this.hid.has(col)) return;
     const x = sc.x(i), y = sc.y(v), fs = this.fs;
-    this.s += `<circle cx="${x}" cy="${y}" r="${fs * 0.75}" fill="${col}" opacity=".22" /><circle cx="${x}" cy="${y}" r="${fs * 0.36}" fill="${col}" stroke="${this.th.bg}" stroke-width="2" />`;
-    if (label) {
-      const anc = side === "below" ? "end" : "end", dy = side === "below" ? fs * 2.1 : -fs * 1.1;
-      this.s += `<text x="${x - fs * 0.6}" y="${y + dy}" fill="${col}" font-size="${fs * 1.45}" font-weight="800" text-anchor="${anc}">${esc(label)}</text>`;
-    }
+    this.s += `<circle cx="${x}" cy="${y}" r="${fs * 0.62}" fill="${col}" opacity=".18" /><circle cx="${x}" cy="${y}" r="${fs * 0.3}" fill="${col}" stroke="${this.th.bg}" stroke-width="1.6" />`;
+    if (label) this.tag(y, col, label);
   };
-  Plot.prototype.note = function (sc, i, v, txt) {
-    const x = sc.x(i), y = sc.y(v), fs = this.fs, right = i < sc.n * 0.6;
-    this.s += `<circle cx="${x}" cy="${y}" r="${fs * 0.32}" fill="${this.th.ink}" /><text x="${x + (right ? fs * 0.7 : -fs * 0.7)}" y="${y - fs * 0.7}" fill="${this.th.ink}" font-size="${fs * 1.05}" font-weight="700" text-anchor="${right ? "start" : "end"}">${esc(txt)}</text>`;
+  Plot.prototype.note = function () { /* qoraallada chart-ka dushiisa waa la saaray (nadiif) */ };
+  Plot.prototype.finish = function () {
+    const tg = (this.tags || []).slice().sort((a, b) => a.y - b.y), fs = this.fs, h = fs * 1.65, gap = 3, b = this.b;
+    for (let k = 1; k < tg.length; k++) if (tg[k].y - tg[k - 1].y < h + gap) tg[k].y = tg[k - 1].y + h + gap;
+    const over = tg.length ? tg[tg.length - 1].y + h / 2 - (b.y1 + h / 2) : 0;
+    if (over > 0) tg.forEach((t) => { t.y -= over; });
+    for (let k = tg.length - 2; k >= 0; k--) if (tg[k + 1].y - tg[k].y < h + gap) tg[k].y = tg[k + 1].y - h - gap;
+    const x = (b.gx1 || b.x1) + 6;
+    tg.forEach((t) => {
+      const w = t.text.length * fs * 0.62 + fs * 1.1, light = /^#(F5B700|FFFFFF|E8EEF4|84CC16)/i.test(t.col);
+      const fg = t.soft ? t.col : light || t.col === this.th.ink ? this.th.bg : "#FFFFFF";
+      this.s += t.soft
+        ? `<rect x="${x}" y="${t.y - h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="${this.th.bg}" stroke="${t.col}" stroke-width="1" />`
+        : `<rect x="${x}" y="${t.y - h / 2}" width="${w}" height="${h}" rx="4" fill="${t.col}" />`;
+      this.s += `<text x="${x + w / 2}" y="${t.y + fs * 0.36}" fill="${fg}" font-size="${fs * 0.95}" font-weight="700" text-anchor="middle">${esc(t.text)}</text>`;
+    });
   };
 
   // =========================================================
@@ -155,17 +190,18 @@
           legend: [[T("CPI (sanadle)", "CPI (y/y)"), C.pur], [T("Sicir-dulsaarka FED", "Fed funds rate"), "alt"], [T("Ka sarreeya hadafka 2%", "Above 2% target"), C.red, "box"]],
           source: "BLS, Federal Reserve, FRED", badge: T("Xogta: ", "Data: ") + ymLabel(lastM),
           note: { t: T("Fiiro gaar ah", "Key point"), lines },
+          series: [{ name: "CPI", color: C.pur, type: "area", data: ms.map((m, i) => [m + "-01", cpi[i]]), fmt: F1, lines: [[2, C.grn, "2%"]] }, { name: "FED", color: "alt", type: "step", data: ms.map((m, i) => [m + "-01", ff[i]]), fmt: F2 }],
           labels: ms.map(ymShort), n,
           tip: (i) => [[ymLabel(ms[i])], [T("CPI", "CPI"), C.pur, cpi[i] + "%"], ["FED", "alt", ff[i] != null ? ff[i] + "%" : "—"]],
           draw(P, th) {
             const s = P.scale(n, 0, mx);
             P.yAxis(s, (v) => v + "%"); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
             P.fillWhere(s, cpi, cpi.map(() => 2), th.red, (a, b) => a > b);
-            P.hline(s, 2, C.grn, T("Hadafka 2%", "2% target"));
+            P.hline(s, 2, C.grn, "2%");
             P.step(s, ff, th.alt, P.fs > 14 ? 3 : 2);
-            P.line(s, cpi, C.pur, P.fs > 14 ? 4.5 : 3);
+            P.line(s, cpi, C.pur, P.fs > 14 ? 3.6 : 2.4);
             if (pk > 1 && pk < n - 3) P.note(s, pk, cpi[pk], `${cpi[pk]}% — ${T("ugu sarreeyay", "peak")} (${ymShort(ms[pk])})`);
-            if (ffL != null) P.s += `<text x="${s.x(n - 1)}" y="${s.y(ffL) + (ffL > L ? -P.fs * 0.8 : P.fs * 1.6)}" fill="${th.ink}" font-size="${P.fs}" font-weight="700" text-anchor="end">FED ${ffL}%</text>`;
+            if (ffL != null) P.tag(s.y(ffL), th.alt, "FED " + ffL + "%");
             P.dot(s, n - 1, L, C.red, L + "%", ffL != null && ffL > L ? "below" : "above");
           }
         };
@@ -193,6 +229,7 @@
             T(`Qiimaha: ${fmtUSD(L)} · 50T: ${fmtUSD(m50)} (${d50 > 0 ? "+" : ""}${d50}%)`, `Price: ${fmtUSD(L)} · 50W: ${fmtUSD(m50)} (${d50 > 0 ? "+" : ""}${d50}%)`),
             T(`200T: ${fmtUSD(m200)} (${d200 > 0 ? "+" : ""}${d200}%) · ${run} toddobaad ${above ? "ka sarreeya" : "ka hooseeya"} 50T`, `200W: ${fmtUSD(m200)} (${d200 > 0 ? "+" : ""}${d200}%) · ${run} weeks ${above ? "above" : "below"} 50W`)
           ] },
+          series: [{ name: "BTC", color: "alt", type: "line", data: w.map((r, i) => [r[0], cl[i]]), fmt: FU, log: true }, { name: T("50T", "50W"), color: C.pur, type: "line", data: w.map((r, i) => [r[0], a50[i]]), fmt: FU }, { name: T("200T", "200W"), color: C.grn, type: "line", data: w.map((r, i) => [r[0], a200[i]]), fmt: FU }],
           labels: w.map((r) => yr(r[0])), n,
           tip: (i) => [[T("Toddobaadka ", "Week of ") + dLabel(w[i][0])], ["BTC", "alt", fmtUSD(cl[i])], ["50T", C.pur, a50[i] ? fmtUSD(a50[i]) : "—"], ["200T", C.grn, a200[i] ? fmtUSD(a200[i]) : "—"]],
           draw(P, th) {
@@ -201,7 +238,7 @@
             P.fillWhere(s, cl, a50, th.red, (a, b) => a < b);
             P.line(s, a200, C.grn, P.fs > 14 ? 3.5 : 2.4);
             P.line(s, a50, C.pur, P.fs > 14 ? 3.5 : 2.4);
-            P.line(s, cl, th.alt, P.fs > 14 ? 2.6 : 1.8);
+            P.line(s, cl, th.alt, P.fs > 14 ? 2.4 : 1.6);
             P.dot(s, n - 1, L, C.org, fmtUSD(L), "above");
           }
         };
@@ -227,6 +264,7 @@
             T(`${ymLabel(ms[n - 1])}: NFP ${sign(N)}K · shaqo la'aan ${U}% (bishii hore ${Up}%)`, `${ymLabel(ms[n - 1])}: NFP ${sign(N)}K · unemployment ${U}% (prev ${Up}%)`),
             neg ? T(`${neg} bilood oo shaqooyin la waayay muddadan.`, `${neg} months of job losses in this period.`) : T("Bil kasta shaqooyin ayaa la abuuray muddadan.", "Jobs were added every month in this period.")
           ] },
+          series: [{ name: "NFP", color: C.blu, type: "hist", scale: "left", data: ms.map((m, i) => [m + "-01", nfp[i], nfp[i] < 0 ? C.red : C.blu]), fmt: (v) => sign(Math.round(v)) + "K" }, { name: T("Shaqo la'aan", "Unemployment"), color: C.yel, type: "line", data: ms.map((m, i) => [m + "-01", un[i]]), fmt: F1 }],
           labels: ms.map(ymShort), n,
           tip: (i) => [[ymLabel(ms[i])], ["NFP", nfp[i] < 0 ? C.red : C.blu, sign(nfp[i]) + "K"], [T("Shaqo la'aan", "Unemployment"), C.yel, un[i] + "%"]],
           draw(P, th) {
@@ -236,7 +274,7 @@
             P.yAxis(s, (v) => (v > 0 ? "+" : "") + Math.round(v) + "K"); P.yAxis(r, (v) => v + "%", true);
             P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
             P.bars(s, nfp, C.blu, C.red);
-            P.line(r, un, C.yel, P.fs > 14 ? 4 : 2.6);
+            P.line(r, un, C.yel, P.fs > 14 ? 3.2 : 2.2);
             P.dot(r, n - 1, U, C.yel, U + "%", "above");
           }
         };
@@ -280,6 +318,7 @@
             T(`Heerka hadda: ${rangeTxt(cur)}`, `Current range: ${rangeTxt(cur)}`),
             T(`Go'aankii u dambeeyay (${dLabel(cyc.last.date)}): ${cyc.last.change > 0 ? "+" : "−"}${Math.round(Math.abs(cyc.last.change) * 100)} dhibcood (bps)`, `Last move (${dLabel(cyc.last.date)}): ${cyc.last.change > 0 ? "+" : "−"}${Math.round(Math.abs(cyc.last.change) * 100)} bps`)
           ] },
+          series: [{ name: T("Hadafka FED", "Fed target"), color: C.blu, type: "steparea", data: ms.map((m, i) => [m + "-01", ff[i]]), fmt: F2 }, { name: T("Dhabta (EFFR)", "Effective (EFFR)"), color: C.org, type: "line", data: ms.map((m) => [m + "-01", FED.monthly[m].ff !== undefined ? FED.monthly[m].ff : null]), fmt: F2 }],
           n, tip: (i) => [[ymLabel(ms[i])], ["FED", C.blu, ff[i] != null ? ff[i].toFixed(2) + "%" : "—"]],
           draw(P, th) {
             const mx = Math.max(6, Math.ceil(Math.max(...ff.filter((v) => v != null)) + 0.5)), s = P.scale(n, 0, mx);
@@ -289,7 +328,7 @@
             P.step(s, ff, C.blu, P.fs > 14 ? 4 : 2.6);
             if (pk > 0 && pk < n - 6) P.note(s, pk, ff[pk], `${ff[pk].toFixed(2)}% — ${T("ugu sarreeyay", "peak")} (${ymShort(ms[pk])})`);
             if (fi > 0 && fi < n - 2 && fi !== pk) P.note(s, fi, ff[fi], cut ? T("Dhimistii 1aad", "First cut") : T("Kordhintii 1aad", "First hike"));
-            P.dot(s, n - 1, ff[n - 1], C.blu, rangeTxt(cur), "above");
+            P.dot(s, n - 1, ff[n - 1], C.blu, cur.hi.toFixed(2) + "%");
           }
         };
       }
@@ -314,6 +353,7 @@
             T(`Xaashida FED: $${B}T (ugu sarreeyay $${bs[pk]}T, ${ymShort(ms[pk])})`, `Balance sheet: $${B}T (peak $${bs[pk]}T, ${ymShort(ms[pk])})`),
             my != null ? T(`M2: $${M}T · ${pctTxt(my)} sanadle (${ymShort(ms[mI])})`, `M2: $${M}T · ${pctTxt(my)} y/y (${ymShort(ms[mI])})`) : ""
           ].filter(Boolean) },
+          series: [{ name: T("Xaashida FED", "Fed balance sheet"), color: C.blu, type: "area", scale: "left", data: ms.map((m, i) => [m + "-01", bs[i]]), fmt: FT }, { name: "M2", color: C.yel, type: "line", data: ms.map((m, i) => [m + "-01", mm[i]]), fmt: FT }],
           n, tip: (i) => [[ymLabel(ms[i])], ["FED", C.blu, "$" + bs[i] + "T"], ["M2", C.yel, mm[i] != null ? "$" + mm[i] + "T" : "—"]],
           draw(P, th) {
             const lo = Math.floor(Math.min(...bs) - 0.5), hi = Math.ceil(Math.max(...bs) + 0.5), s = P.scale(n, lo, hi);
@@ -346,13 +386,14 @@
             (iC >= 0 ? `Core CPI ${CC}% (${ymShort(ms[iC])}) · ` : "") + `PCE ${P1}% · Core PCE ${CP}% (${ymShort(ms[iP])})`,
             T("FED-ku wuxuu hadaf ka dhigtaa PCE 2%.", "The Fed targets 2% PCE inflation.")
           ] },
+          series: [{ name: "Core CPI", color: C.pur, type: "line", data: ms.map((m, i) => [m + "-01", cc[i]]), fmt: F1 }, { name: "PCE", color: C.grn, type: "line", data: ms.map((m, i) => [m + "-01", pp[i]]), fmt: F1, lines: [[2, C.grn, "2%"]] }, { name: "Core PCE", color: C.org, type: "dash", data: ms.map((m, i) => [m + "-01", cp[i]]), fmt: F1 }],
           n, tip: (i) => [[ymLabel(ms[i])], ["Core CPI", C.pur, cc[i] != null ? cc[i] + "%" : "—"], ["PCE", C.grn, pp[i] != null ? pp[i] + "%" : "—"], ["Core PCE", C.org, cp[i] != null ? cp[i] + "%" : "—"]],
           draw(P, th) {
             const all = cc.concat(pp, cp).filter((v) => v != null), s = P.scale(n, Math.min(0, Math.floor(Math.min(...all))), Math.ceil(Math.max(...all) + 1));
             P.yAxis(s, (v) => v + "%"); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
-            P.hline(s, 2, C.grn, T("Hadafka 2%", "2% target"));
+            P.hline(s, 2, C.grn, "2%");
             P.line(s, cc, C.pur, P.fs > 14 ? 3.5 : 2.4); P.line(s, pp, C.grn, P.fs > 14 ? 3.5 : 2.4); P.line(s, cp, C.org, P.fs > 14 ? 3.5 : 2.4, "7 5");
-            P.dot(s, iP, P1, C.grn, "PCE " + P1 + "%", "below");
+            P.dot(s, iP, P1, C.grn, P1 + "%");
           }
         };
       }
@@ -378,12 +419,13 @@
             T(`Farqiga 10Y − 2Y: ${S > 0 ? "+" : ""}${S.toFixed(2)} dhibcood`, `10Y − 2Y spread: ${S > 0 ? "+" : ""}${S.toFixed(2)} pts`),
             inv ? T(`Rogmashadii u dambeysay: ${dLabel(rows[st0][0])} – ${nowInv ? "hadda" : dLabel(rows[e][0])}`, `Last inversion: ${dLabel(rows[st0][0])} – ${nowInv ? "now" : dLabel(rows[e][0])}`) : T("Muddadan curve-ku ma rogmanin.", "No inversion in this period.")
           ] },
+          series: [{ name: T("10 sano", "10-year"), color: C.blu, type: "area", data: rows.map((r, i) => [r[0], a[i]]), fmt: F2 }, { name: T("2 sano", "2-year"), color: C.red, type: "line", data: rows.map((r, i) => [r[0], b[i]]), fmt: F2 }],
           n, tip: (i) => [[T("Toddobaadka ", "Week of ") + dLabel(rows[i][0])], ["10Y", C.blu, a[i] + "%"], ["2Y", C.red, b[i] + "%"], ["10Y−2Y", "alt", (sp[i] > 0 ? "+" : "") + sp[i].toFixed(2)]],
           draw(P, th) {
             const all = a.concat(b), s = P.scale(n, Math.floor(Math.min(...all)), Math.ceil(Math.max(...all) + 0.5));
             P.yAxis(s, (v) => v + "%"); P.xLabels(s, rows.map((r) => ymShort(r[0])), P.fs > 14 ? 8 : 5);
             P.fillWhere(s, b, a, th.red, (x, y) => x > y);
-            P.line(s, a, C.blu, P.fs > 14 ? 3.5 : 2.4); P.line(s, b, C.red, P.fs > 14 ? 3 : 2);
+            P.area(s, a, C.blu); P.line(s, a, C.blu, P.fs > 14 ? 3.2 : 2.2); P.line(s, b, C.red, P.fs > 14 ? 2.8 : 1.8);
             P.dot(s, n - 1, A, C.blu, A + "%", A >= Bv ? "above" : "below"); P.dot(s, n - 1, Bv, C.red, Bv + "%", A >= Bv ? "below" : "above");
           }
         };
@@ -407,12 +449,13 @@
             T(`Dollar: ${D.toFixed(1)} (${pctTxt(dch)} sanadle) · Saliid: $${O.toFixed(1)} (${pctTxt(och)})`, `Dollar: ${D.toFixed(1)} (${pctTxt(dch)} y/y) · Oil: $${O.toFixed(1)} (${pctTxt(och)})`),
             T(`Saliidda ugu sarreysay muddadan: $${oil[pk].toFixed(0)} (${ymShort(rows[pk][0])})`, `Oil high in this period: $${oil[pk].toFixed(0)} (${ymShort(rows[pk][0])})`)
           ] },
+          series: [{ name: "Dollar", color: "alt", type: "line", scale: "left", data: rows.map((r, i) => [r[0], dx[i]]), fmt: (v) => v.toFixed(1) }, { name: T("Saliid WTI", "WTI oil"), color: C.org, type: "area", data: rows.map((r, i) => [r[0], oil[i]]), fmt: (v) => "$" + v.toFixed(1) }],
           n, tip: (i) => [[T("Toddobaadka ", "Week of ") + dLabel(rows[i][0])], ["Dollar", "alt", dx[i].toFixed(1)], [T("Saliid", "Oil"), C.org, "$" + oil[i].toFixed(1)]],
           draw(P, th) {
             const s = P.scale(n, Math.floor(Math.min(...dx) - 2), Math.ceil(Math.max(...dx) + 2)), r = P.scale(n, Math.max(0, Math.floor(Math.min(...oil) / 10) * 10 - 10), Math.ceil(Math.max(...oil) / 10) * 10 + 10);
             P.yAxis(s, (v) => v); P.yAxis(r, (v) => "$" + v, true); P.xLabels(s, rows.map((x) => ymShort(x[0])), P.fs > 14 ? 8 : 5);
-            P.line(s, dx, th.alt, P.fs > 14 ? 3.5 : 2.4); P.line(r, oil, C.org, P.fs > 14 ? 3.5 : 2.4);
-            P.dot(r, n - 1, O, C.org, "$" + Math.round(O), "below");
+            P.line(s, dx, th.alt, P.fs > 14 ? 3 : 2); P.area(r, oil, C.org); P.line(r, oil, C.org, P.fs > 14 ? 3 : 2);
+            P.dot(s, n - 1, D, th.alt, D.toFixed(1)); P.dot(r, n - 1, O, C.org, "$" + Math.round(O));
           }
         };
       }
@@ -435,12 +478,14 @@
             T(`Bitcoin: ${fmtUSD(L)} · FED: ${ff[n - 1] != null ? ff[n - 1].toFixed(2) + "%" : "—"}`, `Bitcoin: ${fmtUSD(L)} · Fed: ${ff[n - 1] != null ? ff[n - 1].toFixed(2) + "%" : "—"}`),
             T("Isku xirnaanshuhu ma aha sabab — xogta ayaa la isbarbar dhigay.", "Correlation is not causation — data shown side by side.")
           ] },
+          series: [{ name: "Bitcoin", color: C.org, type: "area", scale: "left", log: true, data: ms.map((m, i) => [m + "-01", btc[i]]), fmt: FU }, { name: "FED", color: C.blu, type: "step", data: ms.map((m, i) => [m + "-01", ff[i]]), fmt: F2 }],
           n, tip: (i) => [[ymLabel(ms[i])], ["BTC", C.org, fmtUSD(btc[i])], ["FED", C.blu, ff[i] != null ? ff[i].toFixed(2) + "%" : "—"]],
           draw(P, th) {
             const s = P.scale(n, lo, hi, true), r = P.scale(n, 0, Math.max(6, Math.ceil(Math.max(...ff.filter((v) => v != null)) + 0.5)));
             P.yAxis(s, (v) => (v >= 1000 ? "$" + v / 1000 + "k" : "$" + v)); P.yAxis(r, (v) => v + "%", true); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
             if (ei >= 0) { const x0 = s.x(ei); P.s += `<rect x="${x0}" y="${P.b.y0}" width="${s.x(n - 1) - x0}" height="${P.b.y1 - P.b.y0}" fill="${C.blu}" opacity=".07" />`; }
-            P.step(r, ff, C.blu, P.fs > 14 ? 3 : 2); P.line(s, btc, C.org, P.fs > 14 ? 4 : 2.6);
+            P.step(r, ff, C.blu, P.fs > 14 ? 2.6 : 1.8); P.area(s, btc, C.org); P.line(s, btc, C.org, P.fs > 14 ? 3.2 : 2.2);
+            P.tag(r.y(ff[n - 1]), C.blu, ff[n - 1].toFixed(2) + "%");
             P.dot(s, n - 1, L, C.org, fmtUSD(L), "above");
           }
         };
@@ -462,9 +507,14 @@
           source: "alternative.me, CoinGecko", badge: "Live", live: true,
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Shalay: ${ago(1)} · Toddobaad kahor: ${ago(7)} · Bil kahor: ${ago(30)}`, `Yesterday: ${ago(1)} · Last week: ${ago(7)} · Last month: ${ago(30)}`),
+            d ? `BTC ${d.btc}% · ETH ${d.eth}% · Stablecoins ${d.stable}% · ${T("Kuwa kale", "Others")} ${d.other}%` : "",
             d && d.mcap ? T(`Suuqa crypto oo dhan: $${(d.mcap / 1e12).toFixed(2)}T (${pctTxt(d.mcapChange || 0)} 24 saac)`, `Total crypto market: $${(d.mcap / 1e12).toFixed(2)}T (${pctTxt(d.mcapChange || 0)} 24h)`) : ""
           ].filter(Boolean) },
           n: 0, tip: null,
+          series: f.length > 7 ? [
+            { name: "Fear & Greed", color: C.org, type: "area", data: f.map((x) => [x[0], x[1]]), fmt: (x) => String(Math.round(x)), lines: [[25, C.red, ""], [75, C.grn, ""]] },
+            { name: T("Celcelis 7 maalmood", "7-day average"), color: C.blu, type: "line", data: f.map((x, i) => [x[0], i >= 6 ? Math.round(f.slice(i - 6, i + 1).reduce((a, y) => a + y[1], 0) / 7) : null]), fmt: (x) => String(Math.round(x)) }
+          ] : null,
           draw(P, th) {
             const b = P.b, W = b.x1 - b.x0, H = b.y1 - b.y0, big = P.fs > 14, narrow = W < 520;
             // Gauge
@@ -545,14 +595,79 @@
     el.querySelector(".xcc-src").textContent = T("Isha: ", "Source: ") + m.source;
     el.querySelector(".xcc-badge").innerHTML = (m.live ? '<b class="pulse"></b>' : "<b></b>") + esc(m.badge);
     el.querySelector(".xcc-note").innerHTML = `<b>${esc(m.note.t)}</b>${m.note.lines.map((l) => `<span>${esc(l)}</span>`).join("")}`;
+    if (m.series && window.LightweightCharts) { lwRender(st, m); return; }
     const box = el.querySelector(".xcc-plot"), W = Math.max(280, Math.round(box.clientWidth)), mob = W < 560;
     const H = mob ? 260 : Math.round(Math.min(420, W * 0.46));
     const th = TH[theme()], fs = mob ? 10.5 : 12;
-    const P = new Plot({ x0: mob ? 44 : 54, x1: W - (RIGHTAX[ch.id] ? (mob ? 40 : 50) : 12), y0: 14, y1: H - 28 }, th, fs);
-    try { m.draw(P, th); } catch (e) { box.innerHTML = `<div class="xcc-load">${T("Xogta lama heli karo hadda.", "Data unavailable right now.")}</div>`; return; }
+    const P = new Plot({ x0: mob ? 42 : 52, x1: W - (mob ? 66 : 80), y0: 16, y1: H - 28 }, th, fs);
+    try { m.draw(P, th); P.finish(); } catch (e) { box.innerHTML = `<div class="xcc-load">${T("Xogta lama heli karo hadda.", "Data unavailable right now.")}</div>`; return; }
     box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(m.title)}">${P.s}<g class="xh"></g></svg><div class="xcc-tip" hidden></div>`;
     st.P = P; st.W = W; st.H = H;
   }
+
+  // =========================================================
+  // TradingView Lightweight Charts™ (bogga) — sida website-yada crypto
+  // =========================================================
+  function hexA(c, a) { const h = c.replace("#", ""); return `rgba(${parseInt(h.slice(0, 2), 16)},${parseInt(h.slice(2, 4), 16)},${parseInt(h.slice(4, 6), 16)},${a})`; }
+  const tParts = (t) => (typeof t === "string" ? { y: +t.slice(0, 4), m: +t.slice(5, 7), d: +t.slice(8, 10) } : typeof t === "object" ? { y: t.year, m: t.month, d: t.day } : (() => { const d = new Date(t * 1000); return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate() }; })());
+  function lwRender(st, m) {
+    const LW = window.LightweightCharts, el = st.el, box = el.querySelector(".xcc-plot"), th = TH[theme()];
+    st.hidden = st.hidden || new Set();
+    if (st.chart) { try { st.chart.remove(); } catch (e) { /* ignore */ } st.chart = null; }
+    box.innerHTML = "";
+    const W = Math.max(280, Math.round(box.clientWidth)), mob = W < 560, H = mob ? 280 : 340;
+    const monthly = m.series[0].data.length > 1 && m.series[0].data.slice(0, 3).every((d) => d[0].slice(8) === "01");
+    const hasLeft = m.series.some((x) => x.scale === "left"), hasRight = m.series.some((x) => (x.scale || "right") === "right");
+    const chart = LW.createChart(box, {
+      width: W, height: H,
+      layout: { attributionLogo: false, background: { type: "solid", color: "transparent" }, textColor: th.mut, fontFamily: "Inter, -apple-system, sans-serif", fontSize: mob ? 10 : 11 },
+      grid: { vertLines: { visible: false }, horzLines: { color: th.grid, style: 0 } },
+      rightPriceScale: { visible: hasRight, borderVisible: false, scaleMargins: { top: 0.12, bottom: 0.08 } },
+      leftPriceScale: { visible: hasLeft, borderVisible: false, scaleMargins: { top: 0.12, bottom: 0.08 } },
+      timeScale: { borderVisible: false, fixLeftEdge: true, fixRightEdge: true, lockVisibleTimeRangeOnResize: true, rightOffset: 2,
+        tickMarkFormatter: (t, type) => { const p = tParts(t); return type === 0 ? String(p.y) : type === 1 ? MO[p.m - 1] + (p.m === 1 ? " " + p.y : "") : p.d + " " + MO[p.m - 1]; } },
+      localization: { locale: EN ? "en-US" : "en-GB", timeFormatter: (t) => { const p = tParts(t); return monthly ? MO[p.m - 1] + " " + p.y : p.d + " " + MO[p.m - 1] + " " + p.y; } },
+      crosshair: { mode: 0, vertLine: { color: th.mut, width: 1, style: 3, labelBackgroundColor: th.ink }, horzLine: { color: th.mut, width: 1, style: 3, labelBackgroundColor: th.ink } },
+      handleScroll: { mouseWheel: false, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+      handleScale: { mouseWheel: false, pinch: true, axisPressedMouseMove: { time: true, price: false }, axisDoubleClickReset: true }
+    });
+    const made = m.series.map((sp) => {
+      const col = sp.color === "alt" ? th.alt : sp.color;
+      const base = { priceScaleId: sp.scale || "right", lastValueVisible: true, priceLineVisible: false, visible: !st.hidden.has(sp.name),
+        priceFormat: { type: "custom", formatter: sp.fmt, minMove: 0.01 }, crosshairMarkerRadius: 4, crosshairMarkerBorderColor: th.bg };
+      let ser;
+      if (sp.type === "hist") ser = chart.addHistogramSeries(Object.assign(base, { color: col }));
+      else if (sp.type === "area" || sp.type === "steparea") ser = chart.addAreaSeries(Object.assign(base, { lineColor: col, topColor: hexA(col, 0.28), bottomColor: hexA(col, 0.01), lineWidth: 2, lineType: sp.type === "steparea" ? 1 : 0 }));
+      else ser = chart.addLineSeries(Object.assign(base, { color: col, lineWidth: 2, lineType: sp.type === "step" ? 1 : 0, lineStyle: sp.type === "dash" ? 2 : 0 }));
+      ser.setData(sp.data.filter((d) => d[1] != null).map((d) => (d[2] ? { time: d[0], value: d[1], color: d[2] } : { time: d[0], value: d[1] })));
+      (sp.lines || []).forEach((l) => ser.createPriceLine({ price: l[0], color: l[1], lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: "" }));
+      if (sp.log) chart.priceScale(sp.scale || "right").applyOptions({ mode: 1 });
+      const lastPt = sp.data.filter((d) => d[1] != null).slice(-1)[0];
+      return { sp, ser, col, last: lastPt ? lastPt[1] : null };
+    });
+    chart.timeScale().fitContent();
+    st.chart = chart; st.lw = made; st.P = null;
+    // Legend: riix si aad u qariso / u muujiso khad kasta + qiimaha marka la mariyo
+    const lg = el.querySelector(".xcc-lg");
+    lg.innerHTML = (made.length > 1 ? `<span class="xcc-lgl">${T("Muuji:", "Show:")}</span>` : "") + made.map((x, k) => `<button class="xcc-li${made.length > 1 ? " tg" : ""}${st.hidden.has(x.sp.name) ? " off" : ""}" data-li="${k}" role="checkbox" aria-checked="${!st.hidden.has(x.sp.name)}" title="${esc(T("Riix si aad u qariso / u muujiso", "Click to hide / show"))}"><i style="background:${x.col}"></i>${esc(x.sp.name)}<em>${x.last != null ? esc(x.sp.fmt(x.last)) : "—"}</em></button>`).join("") + `<span class="xcc-ld"></span>`;
+    const ld = lg.querySelector(".xcc-ld");
+    chart.subscribeCrosshairMove((param) => {
+      made.forEach((x, k) => {
+        const d = param && param.seriesData ? param.seriesData.get(x.ser) : null;
+        const v = d && d.value != null ? d.value : x.last;
+        const em = lg.querySelector(`[data-li="${k}"] em`); if (em) em.textContent = v != null ? x.sp.fmt(v) : "—";
+      });
+      ld.textContent = param && param.time ? (() => { const p = tParts(param.time); return monthly ? MO[p.m - 1] + " " + p.y : p.d + " " + MO[p.m - 1] + " " + p.y; })() : "";
+    });
+  }
+  grid.addEventListener("click", (e) => {
+    const b = e.target.closest(".xcc-li"); if (!b) return;
+    const st = state[b.closest(".xcc").id], x = st.lw && st.lw[+b.dataset.li]; if (!x) return;
+    const on = st.hidden.has(x.sp.name);
+    if (!on && st.lw.filter((y) => !st.hidden.has(y.sp.name)).length <= 1) return; // ugu yaraan hal khad
+    if (on) st.hidden.delete(x.sp.name); else st.hidden.add(x.sp.name);
+    x.ser.applyOptions({ visible: on }); b.classList.toggle("off", !on); b.setAttribute("aria-checked", on);
+  });
 
   // Tooltip (mouse / farta)
   function onMove(e) {
@@ -614,18 +729,21 @@
     let y = 98 + (tl.length - 1) * (tfs + 6) + 30;
     s += `<text x="44" y="${y}" font-family="${F}" font-size="16" fill="${th.mut}">${esc(m.sub)}</text>`;
     y += 32; let lx = 44;
+    const hidCols = st.lw ? new Set(st.lw.filter((x) => st.hidden.has(x.sp.name)).map((x) => x.col)) : new Set();
     m.legend.forEach((l) => {
       const col = l[1] === "alt" ? th.alt : l[1];
+      if (hidCols.has(col) && l[2] !== "box") return;
       s += l[2] === "box" ? `<rect x="${lx}" y="${y - 11}" width="18" height="12" rx="3" fill="${col}" opacity=".45" />` : `<rect x="${lx}" y="${y - 7}" width="22" height="4" rx="2" fill="${col}" />`;
       s += `<text x="${lx + 30}" y="${y}" font-family="${F}" font-size="15" fill="${th.ink}">${esc(l[0])}</text>`;
       lx += 30 + l[0].length * 8.2 + 30;
     });
     // badge
     s += `<rect x="${W - 44 - (m.badge.length * 8 + 34)}" y="36" width="${m.badge.length * 8 + 34}" height="28" rx="14" fill="rgba(31,157,107,.12)" /><circle cx="${W - 44 - (m.badge.length * 8 + 34) + 16}" cy="50" r="4.5" fill="#1F9D6B" /><text x="${W - 44 - 12}" y="55" font-family="${F}" font-size="13.5" font-weight="700" fill="#1F9D6B" text-anchor="end">${esc(m.badge)}</text>`;
-    const box = { x0: 86, x1: W - (RIGHTAX[st.ch.id] ? 84 : 60), y0: y + 34, y1: H - 96 };
+    const box = { x0: 86, x1: W - 132, y0: y + 34, y1: H - 96 };
     const P = new Plot(box, th, 15);
     P.s += `<text x="${(box.x0 + box.x1) / 2}" y="${(box.y0 + box.y1) / 2 + 36}" text-anchor="middle" font-family="${FD}" font-weight="800" font-size="96" fill="${th.ink}" opacity="${theme() === "dark" ? 0.05 : 0.045}">Xogta Crypto</text>`;
-    m.draw(P, th);
+    if (st.lw) { P.hid = new Set(st.lw.filter((x) => st.hidden.has(x.sp.name)).map((x) => x.col)); }
+    m.draw(P, th); P.finish();
     s += `<g font-family="${F}">${P.s}</g>`;
     // Fiiro gaar ah
     if (m.note && st.ch.notePos !== "none") {
