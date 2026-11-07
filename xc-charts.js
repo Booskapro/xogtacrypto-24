@@ -471,28 +471,31 @@
     {
       id: "dollar-oil", cat: "mkt", ranges: [[13, "3B", "3M"], [52, "1S", "1Y"], [260, "5S", "5Y"], [520, "10S", "10Y"]], def: 2, need: "macro", notePos: "tr",
       build(range) {
-        const om = new Map(MACRO.oil), rows = MACRO.dollar.filter(([d]) => om.has(d)).slice(-range), n = rows.length;
-        const dx = rows.map((r) => r[1]), oil = rows.map((r) => om.get(r[0]));
-        const D = dx[n - 1], O = oil[n - 1], y1 = Math.max(0, n - 53);
-        const dch = (D / dx[y1] - 1) * 100, och = (O / oil[y1] - 1) * 100;
+        const om = new Map(MACRO.oil), rows = MACRO.dollar.filter(([d]) => om.has(d)).slice(-range).map((r) => [r[0], r[1], om.get(r[0])]);
+        // Qiimaha saliidda ee hadda (live, Hyperliquid) — FRED/EIA waxay dib u dhacaan ~1 toddobaad
+        const liveOil = MACRO.oilLive && rows.length && MACRO.oilLive.date > rows[rows.length - 1][0];
+        if (liveOil) rows.push([MACRO.oilLive.date, null, MACRO.oilLive.px]);
+        const n = rows.length, dx = rows.map((r) => r[1]), oil = rows.map((r) => r[2]);
+        const iD = dx.reduce((a, v, i) => (v != null ? i : a), 0), D = dx[iD], O = oil[n - 1], y1 = Math.max(0, iD - 52), o1 = Math.max(0, n - 53);
+        const dch = (D / dx[y1] - 1) * 100, och = (O / oil[o1] - 1) * 100;
         let pk = 0; oil.forEach((v, i) => { if (v > oil[pk]) pk = i; });
         return {
           kicker: T("Suuqyada", "Markets"),
           title: T(`Dollar-ku wuu ${dch >= 0 ? "xoogaystay" : "daciifay"} ${Math.abs(dch).toFixed(1)}% sanadkii — saliiddu waa $${Math.round(O)}`, `The dollar is ${dch >= 0 ? "up" : "down"} ${Math.abs(dch).toFixed(1)}% in a year — oil at $${Math.round(O)}`),
           sub: T("Dollar index (Broad, Federal Reserve) iyo saliidda WTI ($/barmiil, dhinaca midig) · toddobaadle", "Dollar index (Broad, Federal Reserve) and WTI crude ($/bbl, right axis) · weekly"),
           legend: [[T("Dollar index (Broad)", "Dollar index (Broad)"), "alt"], [T("Saliidda WTI", "WTI crude"), C.org]],
-          source: "Federal Reserve, EIA, FRED", badge: T("Xogta: ", "Data: ") + dLabel(MACRO.asOf.dollar || rows[n - 1][0]),
+          source: "Federal Reserve, EIA, FRED" + (liveOil ? ", Hyperliquid" : ""), badge: liveOil ? T("Saliid: live", "Oil: live") : T("Xogta: ", "Data: ") + dLabel(MACRO.asOf.dollar || rows[n - 1][0]), live: !!liveOil,
           note: { t: T("Fiiro gaar ah", "Key point"), lines: [
             T(`Dollar: ${D.toFixed(1)} (${pctTxt(dch)} sanadle) · Saliid: $${O.toFixed(1)} (${pctTxt(och)})`, `Dollar: ${D.toFixed(1)} (${pctTxt(dch)} y/y) · Oil: $${O.toFixed(1)} (${pctTxt(och)})`),
             T(`Saliidda ugu sarreysay muddadan: $${oil[pk].toFixed(0)} (${ymShort(rows[pk][0])})`, `Oil high in this period: $${oil[pk].toFixed(0)} (${ymShort(rows[pk][0])})`)
           ] },
           series: [{ name: "Dollar", color: "alt", type: "line", scale: "left", data: rows.map((r, i) => [r[0], dx[i]]), fmt: (v) => v.toFixed(1) }, { name: T("Saliid WTI", "WTI oil"), color: C.org, type: "area", data: rows.map((r, i) => [r[0], oil[i]]), fmt: (v) => "$" + v.toFixed(1) }],
-          n, tip: (i) => [[T("Toddobaadka ", "Week of ") + dLabel(rows[i][0])], ["Dollar", "alt", dx[i].toFixed(1)], [T("Saliid", "Oil"), C.org, "$" + oil[i].toFixed(1)]],
+          n, tip: (i) => [[(liveOil && i === n - 1 ? T("Hadda · ", "Now · ") : T("Toddobaadka ", "Week of ")) + dLabel(rows[i][0])], ["Dollar", "alt", dx[i] != null ? dx[i].toFixed(1) : "—"], [T("Saliid", "Oil"), C.org, "$" + oil[i].toFixed(1)]],
           draw(P, th) {
-            const s = P.scale(n, Math.floor(Math.min(...dx) - 2), Math.ceil(Math.max(...dx) + 2)), r = P.scale(n, Math.max(0, Math.floor(Math.min(...oil) / 10) * 10 - 10), Math.ceil(Math.max(...oil) / 10) * 10 + 10);
+            const dv = dx.filter((v) => v != null), s = P.scale(n, Math.floor(Math.min(...dv) - 2), Math.ceil(Math.max(...dv) + 2)), r = P.scale(n, Math.max(0, Math.floor(Math.min(...oil) / 10) * 10 - 10), Math.ceil(Math.max(...oil) / 10) * 10 + 10);
             P.yAxis(s, (v) => v); P.yAxis(r, (v) => "$" + v, true); P.xLabels(s, rows.map((x) => ymShort(x[0])), P.fs > 14 ? 8 : 5);
             P.line(s, dx, th.alt, P.fs > 14 ? 3 : 2); P.area(r, oil, C.org); P.line(r, oil, C.org, P.fs > 14 ? 3 : 2);
-            P.dot(s, n - 1, D, th.alt, D.toFixed(1)); P.dot(r, n - 1, O, C.org, "$" + Math.round(O));
+            P.dot(s, iD, D, th.alt, D.toFixed(1)); P.dot(r, n - 1, O, C.org, "$" + Math.round(O));
           }
         };
       }
@@ -901,7 +904,9 @@
     let j = null;
     try { const r = await fetch("/api/macro", { cache: "no-store" }); if (r.ok) j = await r.json(); } catch (e) { /* ignore */ }
     const cards = Object.values(state).filter((s) => s.ch.need.indexOf("macro") !== -1);
-    if (j && (j.walcl || j.y10)) { MACRO = j; cards.forEach((s) => s.el.classList.remove("xcc-off")); renderAll(); }
+    if (j && (j.walcl || j.y10)) {
+      try { const mk = await (await fetch("/api/markets", { cache: "no-store" })).json(); const cl = mk && mk.data && mk.data["xyz:CL"]; if (cl && cl.px > 0) j.oilLive = { date: new Date().toISOString().slice(0, 10), px: Math.round(cl.px * 100) / 100 }; } catch (e) { /* FRED keliya */ }
+      MACRO = j; cards.forEach((s) => s.el.classList.remove("xcc-off")); renderAll(); }
     else if (!MACRO) cards.forEach((s) => s.el.classList.add("xcc-off"));
   }
   async function sentDirect() {
