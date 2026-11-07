@@ -130,7 +130,7 @@
   // =========================================================
   const CHARTS = [
     {
-      id: "cpi-fed", ranges: [[24, "2S", "2Y"], [60, "5S", "5Y"], [120, "10S", "10Y"]], def: 1, need: "fed",
+      id: "cpi-fed", cat: "infl", notePos: "tr", ranges: [[24, "2S", "2Y"], [60, "5S", "5Y"], [120, "10S", "10Y"]], def: 1, need: "fed",
       build(range) {
         const all = monthsWith("cpi"), ms = all.slice(-range);
         const cpi = ms.map((m) => FED.monthly[m].cpi), ff = fedSeries(ms);
@@ -172,7 +172,7 @@
       }
     },
     {
-      id: "btc-50-200", ranges: [[104, "2S", "2Y"], [260, "5S", "5Y"], [9999, T("Dhammaan", "All"), "All"]], def: 1, need: "btc", log: true,
+      id: "btc-50-200", cat: "crypto", notePos: "tl", ranges: [[104, "2S", "2Y"], [260, "5S", "5Y"], [9999, T("Dhammaan", "All"), "All"]], def: 1, need: "btc", log: true,
       build(range) {
         const w = BTC.weeks.slice(-range).filter((r) => r[2] != null || BTC.weeks.length <= range);
         const n = w.length, cl = w.map((r) => r[1]), a50 = w.map((r) => r[2]), a200 = w.map((r) => r[3]);
@@ -208,7 +208,7 @@
       }
     },
     {
-      id: "shaqo", ranges: [[24, "2S", "2Y"], [60, "5S", "5Y"]], def: 0, need: "fed",
+      id: "shaqo", cat: "jobs", notePos: "tr", ranges: [[24, "2S", "2Y"], [60, "5S", "5Y"]], def: 0, need: "fed",
       build(range) {
         const all = monthsWith("nfp").filter((m) => FED.monthly[m].un !== undefined), ms = all.slice(-range);
         const nfp = ms.map((m) => FED.monthly[m].nfp), un = ms.map((m) => FED.monthly[m].un);
@@ -244,16 +244,271 @@
     }
   ];
 
+
+  // =========================================================
+  // 7-da chart ee kale
+  // =========================================================
+  let MACRO = null, SENT = null;
+  const monthKey = (iso) => iso.slice(0, 7);
+  const lastPerMonth = (arr) => { const m = new Map(); arr.forEach(([d, v]) => m.set(monthKey(d), v)); return m; };
+  const pctTxt = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "%";
+  function easingStart(ev) {               // dhimistii 1aad ee wareegga hadda (haddii FED-ku dhimayo)
+    let k = ev.length - 1; if (k < 0 || ev[k].kind !== "cut") return null;
+    while (k > 0 && ev[k - 1].kind === "cut") k--;
+    return ev[k];
+  }
+  const fedCycle = () => { const ev = FED.target.events, last = ev[ev.length - 1]; let k = ev.length - 1, c = 0; while (k >= 0 && ev[k].kind === last.kind) { c++; k--; } return { kind: last.kind, count: c, first: ev[k + 1], last }; };
+  const rangeTxt = (t) => (t.lo === t.hi ? t.hi.toFixed(2) + "%" : t.lo.toFixed(2) + "–" + t.hi.toFixed(2) + "%");
+
+  const MORE = [
+    {
+      id: "fed-rate", cat: "fed", ranges: [[60, "5S", "5Y"], [120, "10S", "10Y"], [300, "25S", "25Y"]], def: 0, need: "fed", notePos: "br",
+      build(range) {
+        const ms = Object.keys(FED.monthly).sort().slice(-range), ff = fedSeries(ms), n = ms.length;
+        const cyc = fedCycle(), cur = FED.target.current, d0 = cyc.first.date;
+        const cut = cyc.kind === "cut";
+        let pk = 0; ff.forEach((v, i) => { if (v != null && v > (ff[pk] || 0)) pk = i; });
+        const fi = ms.indexOf(d0.slice(0, 7));
+        return {
+          kicker: "FED",
+          title: cut ? T(`FED-ku wuxuu dhimay sicirka ${cyc.count} jeer tan iyo ${ymLabel(d0.slice(0, 7))}`, `The Fed has cut ${cyc.count} times since ${ymLabel(d0.slice(0, 7))}`)
+                     : T(`FED-ku wuxuu kordhiyay sicirka ${cyc.count} jeer tan iyo ${ymLabel(d0.slice(0, 7))}`, `The Fed has hiked ${cyc.count} times since ${ymLabel(d0.slice(0, 7))}`),
+          sub: T(`Sicir-dulsaarka FED (heerka sare) · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`, `Fed funds target (upper bound) · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`),
+          legend: [[T("Sicir-dulsaarka FED", "Fed funds target"), C.blu]],
+          source: "Federal Reserve, FRED", badge: T("Go'aankii u dambeeyay: ", "Last decision: ") + dLabel(cyc.last.date),
+          note: { t: T("Fiiro gaar ah", "Key point"), lines: [
+            T(`Heerka hadda: ${rangeTxt(cur)}`, `Current range: ${rangeTxt(cur)}`),
+            T(`Go'aankii u dambeeyay (${dLabel(cyc.last.date)}): ${cyc.last.change > 0 ? "+" : "−"}${Math.round(Math.abs(cyc.last.change) * 100)} dhibcood (bps)`, `Last move (${dLabel(cyc.last.date)}): ${cyc.last.change > 0 ? "+" : "−"}${Math.round(Math.abs(cyc.last.change) * 100)} bps`)
+          ] },
+          n, tip: (i) => [[ymLabel(ms[i])], ["FED", C.blu, ff[i] != null ? ff[i].toFixed(2) + "%" : "—"]],
+          draw(P, th) {
+            const mx = Math.max(6, Math.ceil(Math.max(...ff.filter((v) => v != null)) + 0.5)), s = P.scale(n, 0, mx);
+            P.yAxis(s, (v) => v + "%"); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
+            let d = ""; ff.forEach((v, i) => { if (v == null) return; d += d ? ` H${s.x(i)} V${s.y(v)}` : `M${s.x(i)},${s.y(0)} V${s.y(v)}`; });
+            if (d) P.s += `<path d="${d} V${s.y(0)} Z" fill="${C.blu}" opacity=".10" />`;
+            P.step(s, ff, C.blu, P.fs > 14 ? 4 : 2.6);
+            if (pk > 0 && pk < n - 6) P.note(s, pk, ff[pk], `${ff[pk].toFixed(2)}% — ${T("ugu sarreeyay", "peak")} (${ymShort(ms[pk])})`);
+            if (fi > 0 && fi < n - 2 && fi !== pk) P.note(s, fi, ff[fi], cut ? T("Dhimistii 1aad", "First cut") : T("Kordhintii 1aad", "First hike"));
+            P.dot(s, n - 1, ff[n - 1], C.blu, rangeTxt(cur), "above");
+          }
+        };
+      }
+    },
+    {
+      id: "fed-bs", cat: "fed", ranges: [[60, "5S", "5Y"], [120, "10S", "10Y"]], def: 0, need: "macro", notePos: "bl",
+      build(range) {
+        const wm = lastPerMonth(MACRO.walcl), m2 = new Map(MACRO.m2);
+        const ms = [...wm.keys()].sort().slice(-range), n = ms.length;
+        const bs = ms.map((m) => wm.get(m)), mm = ms.map((m) => (m2.has(m) ? m2.get(m) : null));
+        const B = bs[n - 1]; let pk = 0; bs.forEach((v, i) => { if (v > bs[pk]) pk = i; });
+        const mI = mm.reduce((a, v, i) => (v != null ? i : a), 0), M = mm[mI];
+        const m12 = m2.get((+ms[mI].slice(0, 4) - 1) + ms[mI].slice(4)), my = m12 ? (M / m12 - 1) * 100 : null;
+        const drop = Math.round((bs[pk] - B) * 10) / 10;
+        return {
+          kicker: "FED",
+          title: drop >= 0.3 ? T(`Xaashida FED waxay dhacday $${drop}T tan iyo ${ymLabel(ms[pk])}`, `Fed balance sheet down $${drop}T since ${ymLabel(ms[pk])}`) : T(`Xaashida hantida FED waa $${B}T`, `Fed balance sheet at $${B}T`),
+          sub: T(`Xaashida hantida FED (WALCL) iyo lacagta M2 · $ tiriliyan · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`, `Fed balance sheet (WALCL) and M2 money supply · $ trillions · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`),
+          legend: [[T("Xaashida FED", "Fed balance sheet"), C.blu], [T("M2 (dhinaca midig)", "M2 (right axis)"), C.yel]],
+          source: "Federal Reserve, FRED", badge: T("Xogta: ", "Data: ") + dLabel(MACRO.asOf.walcl || ms[n - 1] + "-01"),
+          note: { t: T("Fiiro gaar ah", "Key point"), lines: [
+            T(`Xaashida FED: $${B}T (ugu sarreeyay $${bs[pk]}T, ${ymShort(ms[pk])})`, `Balance sheet: $${B}T (peak $${bs[pk]}T, ${ymShort(ms[pk])})`),
+            my != null ? T(`M2: $${M}T · ${pctTxt(my)} sanadle (${ymShort(ms[mI])})`, `M2: $${M}T · ${pctTxt(my)} y/y (${ymShort(ms[mI])})`) : ""
+          ].filter(Boolean) },
+          n, tip: (i) => [[ymLabel(ms[i])], ["FED", C.blu, "$" + bs[i] + "T"], ["M2", C.yel, mm[i] != null ? "$" + mm[i] + "T" : "—"]],
+          draw(P, th) {
+            const lo = Math.floor(Math.min(...bs) - 0.5), hi = Math.ceil(Math.max(...bs) + 0.5), s = P.scale(n, lo, hi);
+            const mv = mm.filter((v) => v != null), r = P.scale(n, Math.floor(Math.min(...mv) - 0.5), Math.ceil(Math.max(...mv) + 0.5));
+            P.yAxis(s, (v) => "$" + v + "T"); P.yAxis(r, (v) => "$" + v + "T", true); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
+            let d = `M${s.x(0)},${s.y(lo)}`; bs.forEach((v, i) => { d += ` L${s.x(i)},${s.y(v)}`; }); P.s += `<path d="${d} L${s.x(n - 1)},${s.y(lo)} Z" fill="${C.blu}" opacity=".14" />`;
+            P.line(s, bs, C.blu, P.fs > 14 ? 4 : 2.6); P.line(r, mm, C.yel, P.fs > 14 ? 4 : 2.6);
+            P.dot(s, n - 1, B, C.blu, "$" + B + "T", "below");
+          }
+        };
+      }
+    },
+    {
+      id: "core-pce", cat: "infl", ranges: [[24, "2S", "2Y"], [60, "5S", "5Y"], [120, "10S", "10Y"]], def: 1, need: "fed+macro", notePos: "tr",
+      build(range) {
+        const pce = new Map(MACRO.pce), cpce = new Map(MACRO.corePce);
+        const ms = Object.keys(FED.monthly).sort().filter((m) => FED.monthly[m].core !== undefined || pce.has(m)).slice(-range), n = ms.length;
+        const cc = ms.map((m) => (FED.monthly[m].core !== undefined ? FED.monthly[m].core : null)), pp = ms.map((m) => (pce.has(m) ? pce.get(m) : null)), cp = ms.map((m) => (cpce.has(m) ? cpce.get(m) : null));
+        const li = (a) => a.reduce((x, v, i) => (v != null ? i : x), -1);
+        const iP = li(pp), iC = li(cc), iCP = li(cp);
+        const P1 = pp[iP], CP = cp[iCP], CC = cc[iC];
+        const both = P1 > 2 && CP > 2;
+        return {
+          kicker: T("Sicir-barar", "Inflation"),
+          title: T(`PCE waa ${P1}%, Core PCE ${CP}% — ${both ? "weli way ka sarreeyaan 2%" : "waxay u dhow yihiin hadafka 2%"}`, `PCE at ${P1}%, core PCE ${CP}% — ${both ? "still above 2%" : "near the 2% target"}`),
+          sub: T(`Core CPI, PCE iyo Core PCE (cabbirka FED) · sanadle · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`, `Core CPI, PCE and core PCE (the Fed's gauge) · y/y · ${ymLabel(ms[0])} – ${ymLabel(ms[n - 1])}`),
+          legend: [["Core CPI", C.pur], ["PCE", C.grn], ["Core PCE", C.org]],
+          source: "BLS, BEA, FRED", badge: T("PCE: ", "PCE: ") + ymLabel(ms[iP]),
+          note: { t: T("Fiiro gaar ah", "Key point"), lines: [
+            (iC >= 0 ? `Core CPI ${CC}% (${ymShort(ms[iC])}) · ` : "") + `PCE ${P1}% · Core PCE ${CP}% (${ymShort(ms[iP])})`,
+            T("FED-ku wuxuu hadaf ka dhigtaa PCE 2%.", "The Fed targets 2% PCE inflation.")
+          ] },
+          n, tip: (i) => [[ymLabel(ms[i])], ["Core CPI", C.pur, cc[i] != null ? cc[i] + "%" : "—"], ["PCE", C.grn, pp[i] != null ? pp[i] + "%" : "—"], ["Core PCE", C.org, cp[i] != null ? cp[i] + "%" : "—"]],
+          draw(P, th) {
+            const all = cc.concat(pp, cp).filter((v) => v != null), s = P.scale(n, Math.min(0, Math.floor(Math.min(...all))), Math.ceil(Math.max(...all) + 1));
+            P.yAxis(s, (v) => v + "%"); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
+            P.hline(s, 2, C.grn, T("Hadafka 2%", "2% target"));
+            P.line(s, cc, C.pur, P.fs > 14 ? 3.5 : 2.4); P.line(s, pp, C.grn, P.fs > 14 ? 3.5 : 2.4); P.line(s, cp, C.org, P.fs > 14 ? 3.5 : 2.4, "7 5");
+            P.dot(s, iP, P1, C.grn, "PCE " + P1 + "%", "below");
+          }
+        };
+      }
+    },
+    {
+      id: "bonds", cat: "mkt", ranges: [[104, "2S", "2Y"], [260, "5S", "5Y"], [520, "10S", "10Y"]], def: 1, need: "macro", notePos: "br",
+      build(range) {
+        const m2 = new Map(MACRO.y2), rows = MACRO.y10.filter(([d]) => m2.has(d)).slice(-range), n = rows.length;
+        const a = rows.map((r) => r[1]), b = rows.map((r) => m2.get(r[0])), sp = a.map((v, i) => Math.round((v - b[i]) * 100) / 100);
+        const A = a[n - 1], Bv = b[n - 1], S = sp[n - 1];
+        // rogmashadii u dambeysay (2Y > 10Y)
+        let e = n - 1; while (e >= 0 && sp[e] >= 0) e--; let st0 = e; while (st0 > 0 && sp[st0 - 1] < 0) st0--;
+        const inv = e >= 0, weeksInv = inv ? e - st0 + 1 : 0, nowInv = S < 0;
+        return {
+          kicker: T("Suuqyada", "Markets"),
+          title: nowInv ? T(`Curve-ku waa rogan yahay: 2Y ${Bv}% > 10Y ${A}%`, `The curve is inverted: 2Y ${Bv}% > 10Y ${A}%`)
+                        : inv ? (weeksInv >= 9 ? T(`Curve-ku wuu rogmanaa ${Math.round(weeksInv / 4.35)} bilood — hadda waa caadi`, `The curve was inverted for ${Math.round(weeksInv / 4.35)} months — now normal`) : T(`Curve-ku wuu rogmanaa ${weeksInv} toddobaad — hadda waa caadi`, `The curve was inverted for ${weeksInv} weeks — now normal`))
+                              : T(`Bond 10 sano ${A}% · 2 sano ${Bv}%`, `10-year ${A}% · 2-year ${Bv}%`),
+          sub: T(`Bond-yada dowladda Mareykanka 10 sano iyo 2 sano · toddobaadle · meesha cas = 2Y > 10Y`, `US Treasury 10-year and 2-year yields · weekly · red = 2Y above 10Y`),
+          legend: [[T("10 sano", "10-year"), C.blu], [T("2 sano", "2-year"), C.red], [T("Rogmasho (inversion)", "Inversion"), C.red, "box"]],
+          source: "US Treasury, FRED", badge: T("Xogta: ", "Data: ") + dLabel(MACRO.asOf.y10 || rows[n - 1][0]),
+          note: { t: T("Fiiro gaar ah", "Key point"), lines: [
+            T(`Farqiga 10Y − 2Y: ${S > 0 ? "+" : ""}${S.toFixed(2)} dhibcood`, `10Y − 2Y spread: ${S > 0 ? "+" : ""}${S.toFixed(2)} pts`),
+            inv ? T(`Rogmashadii u dambeysay: ${dLabel(rows[st0][0])} – ${nowInv ? "hadda" : dLabel(rows[e][0])}`, `Last inversion: ${dLabel(rows[st0][0])} – ${nowInv ? "now" : dLabel(rows[e][0])}`) : T("Muddadan curve-ku ma rogmanin.", "No inversion in this period.")
+          ] },
+          n, tip: (i) => [[T("Toddobaadka ", "Week of ") + dLabel(rows[i][0])], ["10Y", C.blu, a[i] + "%"], ["2Y", C.red, b[i] + "%"], ["10Y−2Y", "alt", (sp[i] > 0 ? "+" : "") + sp[i].toFixed(2)]],
+          draw(P, th) {
+            const all = a.concat(b), s = P.scale(n, Math.floor(Math.min(...all)), Math.ceil(Math.max(...all) + 0.5));
+            P.yAxis(s, (v) => v + "%"); P.xLabels(s, rows.map((r) => ymShort(r[0])), P.fs > 14 ? 8 : 5);
+            P.fillWhere(s, b, a, th.red, (x, y) => x > y);
+            P.line(s, a, C.blu, P.fs > 14 ? 3.5 : 2.4); P.line(s, b, C.red, P.fs > 14 ? 3 : 2);
+            P.dot(s, n - 1, A, C.blu, A + "%", A >= Bv ? "above" : "below"); P.dot(s, n - 1, Bv, C.red, Bv + "%", A >= Bv ? "below" : "above");
+          }
+        };
+      }
+    },
+    {
+      id: "dollar-oil", cat: "mkt", ranges: [[104, "2S", "2Y"], [260, "5S", "5Y"], [520, "10S", "10Y"]], def: 1, need: "macro", notePos: "tr",
+      build(range) {
+        const om = new Map(MACRO.oil), rows = MACRO.dollar.filter(([d]) => om.has(d)).slice(-range), n = rows.length;
+        const dx = rows.map((r) => r[1]), oil = rows.map((r) => om.get(r[0]));
+        const D = dx[n - 1], O = oil[n - 1], y1 = Math.max(0, n - 53);
+        const dch = (D / dx[y1] - 1) * 100, och = (O / oil[y1] - 1) * 100;
+        let pk = 0; oil.forEach((v, i) => { if (v > oil[pk]) pk = i; });
+        return {
+          kicker: T("Suuqyada", "Markets"),
+          title: T(`Dollar-ku wuu ${dch >= 0 ? "xoogaystay" : "daciifay"} ${Math.abs(dch).toFixed(1)}% sanadkii — saliiddu waa $${Math.round(O)}`, `The dollar is ${dch >= 0 ? "up" : "down"} ${Math.abs(dch).toFixed(1)}% in a year — oil at $${Math.round(O)}`),
+          sub: T("Dollar index (Broad, Federal Reserve) iyo saliidda WTI ($/barmiil, dhinaca midig) · toddobaadle", "Dollar index (Broad, Federal Reserve) and WTI crude ($/bbl, right axis) · weekly"),
+          legend: [[T("Dollar index (Broad)", "Dollar index (Broad)"), "alt"], [T("Saliidda WTI", "WTI crude"), C.org]],
+          source: "Federal Reserve, EIA, FRED", badge: T("Xogta: ", "Data: ") + dLabel(MACRO.asOf.dollar || rows[n - 1][0]),
+          note: { t: T("Fiiro gaar ah", "Key point"), lines: [
+            T(`Dollar: ${D.toFixed(1)} (${pctTxt(dch)} sanadle) · Saliid: $${O.toFixed(1)} (${pctTxt(och)})`, `Dollar: ${D.toFixed(1)} (${pctTxt(dch)} y/y) · Oil: $${O.toFixed(1)} (${pctTxt(och)})`),
+            T(`Saliidda ugu sarreysay muddadan: $${oil[pk].toFixed(0)} (${ymShort(rows[pk][0])})`, `Oil high in this period: $${oil[pk].toFixed(0)} (${ymShort(rows[pk][0])})`)
+          ] },
+          n, tip: (i) => [[T("Toddobaadka ", "Week of ") + dLabel(rows[i][0])], ["Dollar", "alt", dx[i].toFixed(1)], [T("Saliid", "Oil"), C.org, "$" + oil[i].toFixed(1)]],
+          draw(P, th) {
+            const s = P.scale(n, Math.floor(Math.min(...dx) - 2), Math.ceil(Math.max(...dx) + 2)), r = P.scale(n, Math.max(0, Math.floor(Math.min(...oil) / 10) * 10 - 10), Math.ceil(Math.max(...oil) / 10) * 10 + 10);
+            P.yAxis(s, (v) => v); P.yAxis(r, (v) => "$" + v, true); P.xLabels(s, rows.map((x) => ymShort(x[0])), P.fs > 14 ? 8 : 5);
+            P.line(s, dx, th.alt, P.fs > 14 ? 3.5 : 2.4); P.line(r, oil, C.org, P.fs > 14 ? 3.5 : 2.4);
+            P.dot(r, n - 1, O, C.org, "$" + Math.round(O), "below");
+          }
+        };
+      }
+    },
+    {
+      id: "btc-fed", cat: "crypto", ranges: [[60, "5S", "5Y"], [999, T("Dhammaan", "All"), "All"]], def: 0, need: "fed+btc", log: true, notePos: "br",
+      build(range) {
+        const bm = lastPerMonth(BTC.weeks.map((w) => [w[0], w[1]]));
+        const ms = [...bm.keys()].sort().slice(-range), n = ms.length, btc = ms.map((m) => bm.get(m)), ff = fedSeries(ms);
+        const es = easingStart(FED.target.events), ei = es ? ms.indexOf(es.date.slice(0, 7)) : -1;
+        const L = btc[n - 1], since = ei >= 0 ? (L / btc[ei] - 1) * 100 : null;
+        const lo = Math.pow(10, Math.floor(Math.log10(Math.min(...btc)) * 4) / 4), hi = Math.pow(10, Math.ceil(Math.log10(Math.max(...btc)) * 4) / 4);
+        return {
+          kicker: "Crypto",
+          title: since != null ? T(`Bitcoin ${pctTxt(since)} tan iyo markii FED-ku bilaabay dhimista (${ymShort(ms[ei])})`, `Bitcoin ${pctTxt(since)} since the Fed started cutting (${ymShort(ms[ei])})`) : T("Bitcoin iyo sicir-dulsaarka FED", "Bitcoin and the Fed funds rate"),
+          sub: T("BTC/USD (log, bille) iyo sicir-dulsaarka FED (heerka sare, dhinaca midig)", "BTC/USD (log, monthly) and Fed funds target (upper, right axis)"),
+          legend: [["Bitcoin", C.org], [T("Sicir-dulsaarka FED", "Fed funds rate"), C.blu]].concat(ei >= 0 ? [[T("Wareegga dhimista", "Cutting cycle"), C.blu, "box"]] : []),
+          source: BTC.source + ", Federal Reserve, FRED", badge: "Live", live: true,
+          note: { t: T("Fiiro gaar ah", "Key point"), lines: [
+            T(`Bitcoin: ${fmtUSD(L)} · FED: ${ff[n - 1] != null ? ff[n - 1].toFixed(2) + "%" : "—"}`, `Bitcoin: ${fmtUSD(L)} · Fed: ${ff[n - 1] != null ? ff[n - 1].toFixed(2) + "%" : "—"}`),
+            T("Isku xirnaanshuhu ma aha sabab — xogta ayaa la isbarbar dhigay.", "Correlation is not causation — data shown side by side.")
+          ] },
+          n, tip: (i) => [[ymLabel(ms[i])], ["BTC", C.org, fmtUSD(btc[i])], ["FED", C.blu, ff[i] != null ? ff[i].toFixed(2) + "%" : "—"]],
+          draw(P, th) {
+            const s = P.scale(n, lo, hi, true), r = P.scale(n, 0, Math.max(6, Math.ceil(Math.max(...ff.filter((v) => v != null)) + 0.5)));
+            P.yAxis(s, (v) => (v >= 1000 ? "$" + v / 1000 + "k" : "$" + v)); P.yAxis(r, (v) => v + "%", true); P.xLabels(s, ms.map(ymShort), P.fs > 14 ? 8 : 5);
+            if (ei >= 0) { const x0 = s.x(ei); P.s += `<rect x="${x0}" y="${P.b.y0}" width="${s.x(n - 1) - x0}" height="${P.b.y1 - P.b.y0}" fill="${C.blu}" opacity=".07" />`; }
+            P.step(r, ff, C.blu, P.fs > 14 ? 3 : 2); P.line(s, btc, C.org, P.fs > 14 ? 4 : 2.6);
+            P.dot(s, n - 1, L, C.org, fmtUSD(L), "above");
+          }
+        };
+      }
+    },
+    {
+      id: "sentiment", cat: "crypto", ranges: [], def: 0, need: "sent", notePos: "none",
+      build() {
+        const f = SENT.fng || [], d = SENT.dom, v = f.length ? f[f.length - 1][1] : null;
+        const cls = (x) => (x < 25 ? T("cabsi xad-dhaaf ah", "extreme fear") : x < 45 ? T("cabsi", "fear") : x <= 55 ? T("dhexdhexaad", "neutral") : x <= 75 ? T("hunguri", "greed") : T("hunguri xad-dhaaf ah", "extreme greed"));
+        const ago = (k) => (f.length > k ? f[f.length - 1 - k][1] : null);
+        const segs = [[0, 25, C.red], [25, 45, C.org], [45, 55, C.yel], [55, 75, "#84CC16"], [75, 100, C.grn]];
+        const colOf = (x) => segs.find((s) => x >= s[0] && x <= s[1])[2];
+        return {
+          kicker: "Crypto",
+          title: v != null ? T(`Suuqu wuxuu ku jiraa ${cls(v)} (${v})`, `The market is in ${cls(v)} (${v})`) + (d ? T(` — BTC wuxuu haystaa ${d.btc}%`, ` — BTC holds ${d.btc}%`) : "") : T("Dareenka suuqa crypto", "Crypto market sentiment"),
+          sub: T("Fear & Greed Index (0 = cabsi, 100 = hunguri) iyo saamiga suuqa crypto (dominance)", "Fear & Greed Index (0 = fear, 100 = greed) and crypto market share (dominance)"),
+          legend: [],
+          source: "alternative.me, CoinGecko", badge: "Live", live: true,
+          note: { t: T("Fiiro gaar ah", "Key point"), lines: [
+            T(`Shalay: ${ago(1)} · Toddobaad kahor: ${ago(7)} · Bil kahor: ${ago(30)}`, `Yesterday: ${ago(1)} · Last week: ${ago(7)} · Last month: ${ago(30)}`),
+            d && d.mcap ? T(`Suuqa crypto oo dhan: $${(d.mcap / 1e12).toFixed(2)}T (${pctTxt(d.mcapChange || 0)} 24 saac)`, `Total crypto market: $${(d.mcap / 1e12).toFixed(2)}T (${pctTxt(d.mcapChange || 0)} 24h)`) : ""
+          ].filter(Boolean) },
+          n: 0, tip: null,
+          draw(P, th) {
+            const b = P.b, W = b.x1 - b.x0, H = b.y1 - b.y0, big = P.fs > 14, narrow = W < 520;
+            // Gauge
+            if (v != null) {
+              const cx = narrow ? b.x0 + W / 2 : b.x0 + W * 0.27, R = Math.min(narrow ? W * 0.36 : W * 0.21, (narrow ? H * 0.42 : H * 0.62)), cy = narrow ? b.y0 + R + 10 : b.y0 + H * 0.70, sw = R * 0.18;
+              const pt = (x, r) => { const a = Math.PI * (1 - x / 100); return [cx + r * Math.cos(a), cy - r * Math.sin(a)]; };
+              segs.forEach((sg) => { const [a1, b1] = pt(sg[0] + 0.6, R), [a2, b2] = pt(sg[1] - 0.6, R); P.s += `<path d="M${a1},${b1} A${R},${R} 0 0 1 ${a2},${b2}" stroke="${sg[2]}" stroke-width="${sw}" fill="none" />`; });
+              const [nx, ny] = pt(v, R - sw * 1.2);
+              P.s += `<line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="${th.ink}" stroke-width="${big ? 6 : 4}" stroke-linecap="round" /><circle cx="${cx}" cy="${cy}" r="${big ? 11 : 7}" fill="${th.ink}" />`;
+              P.s += `<text x="${cx}" y="${cy + R * 0.42}" text-anchor="middle" font-size="${R * 0.38}" font-weight="800" fill="${colOf(v)}">${v}</text>`;
+              P.s += `<text x="${cx}" y="${cy + R * 0.42 + P.fs * 1.7}" text-anchor="middle" font-size="${P.fs * 1.25}" font-weight="700" fill="${th.ink}">${esc(cls(v).charAt(0).toUpperCase() + cls(v).slice(1))}</text>`;
+            }
+            // Donut
+            if (d && !narrow) {
+              const dx = b.x0 + W * 0.66, dy = b.y0 + H * 0.5, r1 = Math.min(W * 0.14, H * 0.42), r0 = r1 * 0.62;
+              const parts = [["Bitcoin", d.btc, "#F7931A"], ["Ethereum", d.eth, C.pur], ["Stablecoins", d.stable, C.grn], [T("Kuwa kale", "Others"), d.other, "#8A97AD"]];
+              let a0 = -Math.PI / 2;
+              parts.forEach((p) => {
+                const a = a0 + p[1] / 100 * Math.PI * 2, lg = p[1] > 50 ? 1 : 0, q = (r, t) => [dx + r * Math.cos(t), dy + r * Math.sin(t)];
+                const [x1, y1] = q(r1, a0), [x2, y2] = q(r1, a - 0.012), [x3, y3] = q(r0, a - 0.012), [x4, y4] = q(r0, a0);
+                P.s += `<path d="M${x1},${y1} A${r1},${r1} 0 ${lg} 1 ${x2},${y2} L${x3},${y3} A${r0},${r0} 0 ${lg} 0 ${x4},${y4} Z" fill="${p[2]}" />`; a0 = a;
+              });
+              P.s += `<text x="${dx}" y="${dy + r0 * 0.12}" text-anchor="middle" font-size="${r0 * 0.42}" font-weight="800" fill="${th.ink}">${d.btc}%</text><text x="${dx}" y="${dy + r0 * 0.12 + P.fs * 1.6}" text-anchor="middle" font-size="${P.fs}" fill="${th.mut}">BTC dominance</text>`;
+              parts.forEach((p, k) => { const ly = dy - r1 * 0.55 + k * P.fs * 2.4; P.s += `<rect x="${dx + r1 + P.fs * 1.6}" y="${ly - P.fs * 0.8}" width="${P.fs}" height="${P.fs}" rx="3" fill="${p[2]}" /><text x="${dx + r1 + P.fs * 3.2}" y="${ly + P.fs * 0.1}" font-size="${P.fs * 1.1}" fill="${th.ink}">${esc(p[0])} <tspan font-weight="700">${p[1]}%</tspan></text>`; });
+            } else if (d) {
+              P.s += `<text x="${b.x0 + W / 2}" y="${b.y1 - 4}" text-anchor="middle" font-size="${P.fs * 1.15}" fill="${th.ink}">BTC <tspan font-weight="800">${d.btc}%</tspan> · ETH <tspan font-weight="800">${d.eth}%</tspan> · Stablecoins <tspan font-weight="800">${d.stable}%</tspan></text>`;
+            }
+          }
+        };
+      }
+    }
+  ];
+
   // =========================================================
   // Render bogga
   // =========================================================
   const state = {};
+  const RIGHTAX = { "shaqo": 1, "fed-bs": 1, "dollar-oil": 1, "btc-fed": 1 };
   function legendHTML(m) {
     return m.legend.map((l) => `<span><i class="${l[2] === "box" ? "bx" : ""}" style="background:${l[1] === "alt" ? "var(--text)" : l[1]}"></i>${esc(l[0])}</span>`).join("");
   }
   function cardShell(ch) {
     const el = document.createElement("article");
-    el.className = "xcc"; el.id = ch.id;
+    el.className = "xcc"; el.id = ch.id; el.dataset.cat = ch.cat;
     el.innerHTML = `<div class="xcc-top"><div class="xcc-k"></div><div class="xcc-act">
         <span class="xcc-badge"></span>
         <button class="xcc-ib" data-act="menu" aria-label="${T("Sawir", "Image")}" aria-haspopup="true">${I.cam}</button>
@@ -269,15 +524,17 @@
       <div class="xcc-bot"><div class="xcc-rg"></div><div class="xcc-src"></div></div>
       <div class="xcc-note"></div>`;
     grid.appendChild(el);
-    state[ch.id] = { ch, el, range: ch.ranges[ch.def][0], model: null };
+    state[ch.id] = { ch, el, range: ch.ranges.length ? ch.ranges[ch.def][0] : 0, model: null };
     const rg = el.querySelector(".xcc-rg");
+    if (!ch.ranges.length) rg.style.visibility = "hidden";
     rg.innerHTML = ch.ranges.map((r, k) => `<button data-r="${r[0]}" class="${k === ch.def ? "on" : ""}">${esc(EN ? r[2] : r[1])}</button>`).join("");
     return el;
   }
 
   function renderCard(id) {
     const st = state[id], ch = st.ch, el = st.el;
-    if ((ch.need === "fed" && !FED) || (ch.need === "btc" && !BTC)) return;
+    const have = { fed: !!FED, btc: !!BTC, macro: !!MACRO, sent: !!SENT };
+    if (ch.need.split("+").some((k) => !have[k])) return;
     let m;
     try { m = ch.build(st.range); } catch (e) { el.querySelector(".xcc-plot").innerHTML = `<div class="xcc-load">${T("Xogta lama heli karo hadda.", "Data unavailable right now.")}</div>`; return; }
     st.model = m;
@@ -291,8 +548,8 @@
     const box = el.querySelector(".xcc-plot"), W = Math.max(280, Math.round(box.clientWidth)), mob = W < 560;
     const H = mob ? 260 : Math.round(Math.min(420, W * 0.46));
     const th = TH[theme()], fs = mob ? 10.5 : 12;
-    const P = new Plot({ x0: mob ? 44 : 54, x1: W - (ch.id === "shaqo" ? (mob ? 38 : 48) : 12), y0: 14, y1: H - 28 }, th, fs);
-    m.draw(P, th);
+    const P = new Plot({ x0: mob ? 44 : 54, x1: W - (RIGHTAX[ch.id] ? (mob ? 40 : 50) : 12), y0: 14, y1: H - 28 }, th, fs);
+    try { m.draw(P, th); } catch (e) { box.innerHTML = `<div class="xcc-load">${T("Xogta lama heli karo hadda.", "Data unavailable right now.")}</div>`; return; }
     box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(m.title)}">${P.s}<g class="xh"></g></svg><div class="xcc-tip" hidden></div>`;
     st.P = P; st.W = W; st.H = H;
   }
@@ -300,7 +557,7 @@
   // Tooltip (mouse / farta)
   function onMove(e) {
     const box = e.target.closest(".xcc-plot"); if (!box) return;
-    const el = box.closest(".xcc"), st = state[el.id]; if (!st || !st.model || !st.P) return;
+    const el = box.closest(".xcc"), st = state[el.id]; if (!st || !st.model || !st.P || !st.model.tip) return;
     const svg = box.querySelector("svg"), r = svg.getBoundingClientRect();
     const pt = e.touches ? e.touches[0] : e, x = (pt.clientX - r.left) * (st.W / r.width);
     const b = st.P.b, n = st.model.n, i = Math.max(0, Math.min(n - 1, Math.round((x - b.x0) / (b.x1 - b.x0) * (n - 1))));
@@ -365,15 +622,16 @@
     });
     // badge
     s += `<rect x="${W - 44 - (m.badge.length * 8 + 34)}" y="36" width="${m.badge.length * 8 + 34}" height="28" rx="14" fill="rgba(31,157,107,.12)" /><circle cx="${W - 44 - (m.badge.length * 8 + 34) + 16}" cy="50" r="4.5" fill="#1F9D6B" /><text x="${W - 44 - 12}" y="55" font-family="${F}" font-size="13.5" font-weight="700" fill="#1F9D6B" text-anchor="end">${esc(m.badge)}</text>`;
-    const box = { x0: 86, x1: W - (st.ch.id === "shaqo" ? 84 : 60), y0: y + 34, y1: H - 96 };
+    const box = { x0: 86, x1: W - (RIGHTAX[st.ch.id] ? 84 : 60), y0: y + 34, y1: H - 96 };
     const P = new Plot(box, th, 15);
     P.s += `<text x="${(box.x0 + box.x1) / 2}" y="${(box.y0 + box.y1) / 2 + 36}" text-anchor="middle" font-family="${FD}" font-weight="800" font-size="96" fill="${th.ink}" opacity="${theme() === "dark" ? 0.05 : 0.045}">Xogta Crypto</text>`;
     m.draw(P, th);
     s += `<g font-family="${F}">${P.s}</g>`;
     // Fiiro gaar ah
-    if (m.note) {
+    if (m.note && st.ch.notePos !== "none") {
       const nw = Math.max(...m.note.lines.map((l) => l.length)) * 7.6 + 36, nh = 44 + m.note.lines.length * 23;
-      const nx = st.ch.id === "btc-50-200" ? box.x0 + 16 : box.x1 - nw - 16, ny = box.y0 + 4;
+      const pos = st.ch.notePos || "tr";
+      const nx = pos[1] === "l" ? box.x0 + 16 : box.x1 - nw - 16, ny = pos[0] === "t" ? box.y0 + 4 : box.y1 - nh - 10;
       s += `<rect x="${nx}" y="${ny}" width="${nw}" height="${nh}" rx="12" fill="${th.box}" stroke="${th.grid}" stroke-width="1.5" opacity=".96" />`;
       s += `<text x="${nx + 16}" y="${ny + 28}" font-family="${F}" font-size="15.5" font-weight="700" fill="${th.ink}">${esc(m.note.t)}</text>`;
       m.note.lines.forEach((l, k) => { s += `<text x="${nx + 16}" y="${ny + 52 + k * 23}" font-family="${F}" font-size="14.5" fill="${th.mut}">${esc(l)}</text>`; });
@@ -459,21 +717,36 @@
   // =========================================================
   // Bilow + cusboonaysiin
   // =========================================================
-  CHARTS.forEach(cardShell);
+  const BYID = {}; CHARTS.concat(MORE).forEach((c) => { BYID[c.id] = c; });
+  ["fed-rate", "fed-bs", "cpi-fed", "core-pce", "shaqo", "bonds", "dollar-oil", "btc-50-200", "btc-fed", "sentiment"].forEach((id) => cardShell(BYID[id]));
   const renderAll = () => Object.keys(state).forEach(renderCard);
   async function loadFed() {
     try { const r = await fetch("/api/fed", { cache: "no-store" }); const j = await r.json(); if (j && j.monthly) { FED = j; renderAll(); } else throw 0; }
-    catch (e) { if (!FED) Object.values(state).filter((s) => s.ch.need === "fed").forEach((s) => { s.el.querySelector(".xcc-plot").innerHTML = `<div class="xcc-load">${T("Xogta lama heli karo hadda. Isku day mar kale.", "Data unavailable. Please try again.")}</div>`; }); }
+    catch (e) { if (!FED) failMsg("fed"); }
   }
   async function loadBtc() {
-    try { const r = await fetch("/api/btc", { cache: "no-store" }); const j = await r.json(); if (j && j.weeks) { BTC = j; renderCard("btc-50-200"); } else throw 0; }
-    catch (e) { if (!BTC) state["btc-50-200"].el.querySelector(".xcc-plot").innerHTML = `<div class="xcc-load">${T("Xogta lama heli karo hadda. Isku day mar kale.", "Data unavailable. Please try again.")}</div>`; }
+    try { const r = await fetch("/api/btc", { cache: "no-store" }); const j = await r.json(); if (j && j.weeks) { BTC = j; renderCard("btc-50-200"); renderCard("btc-fed"); } else throw 0; }
+    catch (e) { if (!BTC) failMsg("btc"); }
   }
-  loadFed(); loadBtc();
+  function failMsg(need) { Object.values(state).filter((s) => s.ch.need.indexOf(need) !== -1 && !s.model).forEach((s) => { s.el.querySelector(".xcc-plot").innerHTML = `<div class="xcc-load">${T("Xogta lama heli karo hadda. Isku day mar kale.", "Data unavailable. Please try again.")}</div>`; }); }
+  async function loadJSON(url, ok, need) { try { const r = await fetch(url, { cache: "no-store" }); const j = await r.json(); if (!ok(j)) throw 0; return j; } catch (e) { failMsg(need); return null; } }
+  async function loadMacro() { const j = await loadJSON("/api/macro", (x) => x && (x.walcl || x.y10), "macro"); if (j) { MACRO = j; renderAll(); } }
+  async function loadSent() { const j = await loadJSON("/api/sentiment", (x) => x && (x.fng || x.dom), "sent"); if (j) { SENT = j; renderCard("sentiment"); } }
+  loadFed(); loadBtc(); loadMacro(); loadSent();
+  setInterval(loadSent, 10 * 60 * 1000);   // Fear & Greed: 10 daqiiqo kasta
+  setInterval(loadMacro, 60 * 60 * 1000);  // Suuqyada (FRED): saac kasta
   setInterval(loadBtc, 5 * 60 * 1000);     // Bitcoin: 5 daqiiqo kasta
   setInterval(loadFed, 30 * 60 * 1000);    // FED/BLS: 30 daqiiqo kasta
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderAll, 150); });
   new MutationObserver(renderAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  // Filter-ka kooxaha
+  const fb = document.getElementById("xc-filter");
+  if (fb) fb.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-cat]"); if (!b) return;
+    fb.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+    Object.values(state).forEach((s) => { s.el.hidden = b.dataset.cat !== "all" && s.ch.cat !== b.dataset.cat; });
+    renderAll();
+  });
   // Link gaar ah: charts#btc-50-200
   if (location.hash) setTimeout(() => { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }, 600);
 

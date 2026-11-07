@@ -997,3 +997,7 @@ body.xc-noscroll { overflow: hidden; }
   .xcc-badge { display: none; }
   .xcc-plot { margin-left: -4px; margin-right: -4px; }
 }
+.xc-filter { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 20px; }
+.xc-filter button { border: 1px solid var(--line-2); background: var(--card); color: var(--text-2); font: 600 .88rem Inter, sans-serif; padding: 9px 16px; border-radius: 999px; cursor: pointer; }
+.xc-filter button.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.xcc[hidden] { display: none !important; }
