@@ -231,7 +231,7 @@
       }
     },
     {
-      id: "btc-50-200", cat: "crypto", notePos: "tl", ranges: [[52, "1S", "1Y"], [104, "2S", "2Y"], [260, "5S", "5Y"], [9999, T("Dhammaan", "All"), "All"]], def: 2, need: "btc", log: true,
+      id: "btc-50-200", cat: "crypto", notePos: "tl", ranges: [[1, "1T", "1W"], [4, "1B", "1M"], [13, "3B", "3M"], [52, "1S", "1Y"], [104, "2S", "2Y"], [260, "5S", "5Y"], [9999, T("Dhammaan", "All"), "All"]], def: 4, need: "btc", log: true,
       build(range) {
         let w = BTC.weeks.slice(-range).filter((r) => r[2] != null || BTC.weeks.length <= range), daily = false;
         if (BTC.daily && BTC.daily.length > 60 && range < 9999) {
@@ -244,7 +244,7 @@
             const lerp = (x, y) => (x == null || y == null ? x : Math.round(x + (y - x) * f));
             return [d[0], d[1], lerp(a[2], b[2]), lerp(a[3], b[3])];
           });
-          if (rows.length > 30) { w = rows; daily = true; }
+          if (rows.length > 5) { w = rows; daily = true; }
         }
         const n = w.length, cl = w.map((r) => r[1]), a50 = w.map((r) => r[2]), a200 = w.map((r) => r[3]);
         const L = cl[n - 1], m50 = a50[n - 1], m200 = a200[n - 1];
@@ -531,7 +531,7 @@
       }
     },
     {
-      id: "sentiment", cat: "crypto", ranges: [[30, "1B", "1M"], [90, "3B", "3M"], [365, "1S", "1Y"]], def: 2, need: "sent", notePos: "none",
+      id: "sentiment", cat: "crypto", ranges: [[7, "1T", "1W"], [30, "1B", "1M"], [90, "3B", "3M"], [365, "1S", "1Y"]], def: 3, need: "sent", notePos: "none",
       build(range) {
         const fAll = SENT.fng || [], d = SENT.dom, f = fAll.slice(-(range || 365)), n = f.length, v = n ? f[n - 1][1] : null;
         const Z = { xf: "#3B82F6", f: "#7DB6E8", n: "#8CC97A", g: "#F5A54A", xg: "#E5484D" };
@@ -554,7 +554,7 @@
           ].filter(Boolean) },
           n, labels: f.map((x) => ymShort(x[0])),
           tip: (i) => [[dLabel(f[i][0])], ["F&G", zc(f[i][1]), f[i][1] + " · " + cls(f[i][1])]].concat(hasBtc ? [["BTC", "alt", btc[i] ? fmtUSD(btc[i]) : "—"]] : []),
-          series: n > 7 ? (hasBtc ? [{ name: T("BTC", "BTC"), color: "alt", type: "thin", scale: "left", log: true, data: f.map((x, i) => [x[0], btc[i]]), fmt: FU }] : []).concat([
+          series: n > 2 ? (hasBtc ? [{ name: T("BTC", "BTC"), color: "alt", type: "thin", scale: "left", log: true, data: f.map((x, i) => [x[0], btc[i]]), fmt: FU }] : []).concat([
             { name: "Fear & Greed", color: C.pur, type: "fng", data: f.map((x) => [x[0], x[1]]), fmt: (x) => String(Math.round(x)), lines: [[25, Z.xf, ""], [45, Z.n, ""], [55, Z.g, ""], [75, Z.xg, ""]] }
           ]) : null,
           draw(P, th) {
@@ -614,7 +614,7 @@
   }
   const NEW4 = [
     {
-      id: "net-liq", cat: "fed", ranges: [[52, "1S", "1Y"], [104, "2S", "2Y"], [260, "5S", "5Y"], [9999, T("Dhammaan", "All"), "All"]], def: 1, need: "liq+btc", hide: ["M2"],
+      id: "net-liq", cat: "fed", ranges: [[13, "3B", "3M"], [26, "6B", "6M"], [52, "1S", "1Y"], [104, "2S", "2Y"], [260, "5S", "5Y"], [9999, T("Dhammaan", "All"), "All"]], def: 3, need: "liq+btc", hide: ["M2"],
       build(range) {
         const all = LIQ.net, rows = all.slice(-range), n = rows.length, nl = rows.map((r) => r[1]);
         const gB = asOfFn(btcSeries()), btc = rows.map((r) => gB(r[0]));
@@ -650,7 +650,7 @@
       }
     },
     {
-      id: "stables", cat: "crypto", ranges: [[365, "1S", "1Y"], [730, "2S", "2Y"], [1825, "5S", "5Y"]], def: 1, need: "stab",
+      id: "stables", cat: "crypto", ranges: [[7, "1T", "1W"], [30, "1B", "1M"], [90, "3B", "3M"], [365, "1S", "1Y"], [730, "2S", "2Y"], [1825, "5S", "5Y"]], def: 4, need: "stab",
       build(range) {
         const all = STAB.days, chAll = all.map((r, i) => (i >= 90 ? Math.round((r[1] / all[i - 90][1] - 1) * 1000) / 10 : null));
         const off = Math.max(0, all.length - range), rows = all.slice(off), ch = chAll.slice(off), n = rows.length, cap = rows.map((r) => r[1]);
@@ -689,7 +689,7 @@
       }
     },
     {
-      id: "btc-spx", cat: "stock", ranges: [[252, "1S", "1Y"], [504, "2S", "2Y"]], def: 1, need: "liq+btc", hide: ["S&P 500"],
+      id: "btc-spx", cat: "stock", ranges: [[21, "1B", "1M"], [63, "3B", "3M"], [126, "6B", "6M"], [252, "1S", "1Y"], [504, "2S", "2Y"]], def: 4, need: "liq+btc", hide: ["S&P 500"],
       build(range) {
         // Isbeddelka maalinlaha (log) ee maalmaha ganacsiga — correlation 63 maalmood (~90 maalmood kalandar)
         const bm = new Map(BTC.daily || []), pts = LIQ.spx.filter((r) => bm.has(r[0])).map((r) => [r[0], r[1], bm.get(r[0])]), W = 63, corr = [];
@@ -732,7 +732,7 @@
       }
     },
     {
-      id: "alts", cat: "crypto", ranges: [[90, "3B", "3M"], [365, "1S", "1Y"], [730, "2S", "2Y"]], def: 1, need: "alts",
+      id: "alts", cat: "crypto", ranges: [[7, "1T", "1W"], [30, "1B", "1M"], [90, "3B", "3M"], [365, "1S", "1Y"], [730, "2S", "2Y"]], def: 3, need: "alts",
       build(range) {
         const all = ALTS.days, rows = all.slice(-range), n = rows.length, pv = rows.map((r) => r[1]);
         const bm = new Map((BTC && BTC.daily) || []), btc = rows.map((r) => (bm.has(r[0]) ? bm.get(r[0]) : null)), hasB = btc.filter((v) => v != null).length > n * 0.5;
@@ -793,7 +793,8 @@
     state[ch.id] = { ch, el, range: ch.ranges.length ? ch.ranges[ch.def][0] : 0, model: null, hidden: new Set(ch.hide || []) };
     const rg = el.querySelector(".xcc-rg");
     if (!ch.ranges.length) rg.style.visibility = "hidden";
-    rg.innerHTML = ch.ranges.map((r, k) => `<button data-r="${r[0]}" class="${k === ch.def ? "on" : ""}">${esc(EN ? r[2] : r[1])}</button>`).join("");
+    const rgTitle = (l) => { const m = String(l).match(/^(\d+)([TBS])$/); return m ? m[1] + " " + ({ T: T("toddobaad", "week"), B: T("bil", "month"), S: T("sano", "year") })[m[2]] : l; };
+    rg.innerHTML = ch.ranges.map((r, k) => `<button data-r="${r[0]}" class="${k === ch.def ? "on" : ""}" title="${esc(rgTitle(r[1]))}">${esc(EN ? r[2] : r[1])}</button>`).join("");
     return el;
   }
 
