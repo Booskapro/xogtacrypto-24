@@ -1077,3 +1077,5 @@ body.xc-noscroll { overflow: hidden; }
   .ms-grid .ms-c { flex: 0 0 86%; scroll-snap-align: start; }
   .ms-head { flex-wrap: wrap; }
 }
+.xcc-rg { flex-wrap: wrap; max-width: 100%; }
+.xcc-rg button { white-space: nowrap; padding: 6px 10px; }

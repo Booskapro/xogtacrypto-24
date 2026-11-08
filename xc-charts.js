@@ -256,17 +256,19 @@
         const yr = (iso) => (EN ? MO[+iso.slice(5, 7) - 1] + " '" : MO[+iso.slice(5, 7) - 1] + " '") + iso.slice(2, 4);
         return {
           kicker: "Crypto",
-          title: above ? T("Bitcoin wuxuu ka sarreeyaa celceliska 50 toddobaad", "Bitcoin is above its 50-week average") : T("Bitcoin wuxuu ka hooseeyaa celceliska 50 toddobaad", "Bitcoin is below its 50-week average"),
-          sub: daily ? T("BTC/USD maalinle (log) · celceliska 50 & 200 toddobaad", "BTC/USD daily (log) · 50- & 200-week averages") : T("BTC/USD xiritaanka toddobaadka (log) · celceliska 50 & 200 toddobaad", "BTC/USD weekly close (log) · 50- & 200-week averages"),
-          legend: [[T("Qiimaha", "Price"), "alt"], [T("Celceliska 50T", "50-week avg"), C.org], [T("Celceliska 200T", "200-week avg"), C.grn]],
+          title: above ? T("Bitcoin wuxuu ka sarreeyaa celceliskiisa 1 sano", "Bitcoin is above its 1-year average") : T("Bitcoin wuxuu ka hooseeyaa celceliskiisa 1 sano", "Bitcoin is below its 1-year average"),
+          sub: T("Qiimaha BTC iyo celceliskiisa 1 sano (50 toddobaad) iyo 4 sano (200 toddobaad)", "BTC price with its 1-year (50-week) and 4-year (200-week) averages"),
+          legend: [[T("Qiimaha", "Price"), "alt"], [T("Celcelis 1 sano", "1-year avg"), C.org], [T("Celcelis 4 sano", "4-year avg"), C.grn]],
           source: BTC.source + ", Hyperliquid", badge: "Live", live: true,
-          note: { t: T("Fiiro gaar ah", "Key point"), lines: [
-            T(`Qiimaha: ${fmtUSD(L)} · 50T: ${fmtUSD(m50)} (${d50 > 0 ? "+" : ""}${d50}%)`, `Price: ${fmtUSD(L)} · 50W: ${fmtUSD(m50)} (${d50 > 0 ? "+" : ""}${d50}%)`),
-            T(`200T: ${fmtUSD(m200)} (${d200 > 0 ? "+" : ""}${d200}%) · ${run} toddobaad ${above ? "ka sarreeya" : "ka hooseeya"} 50T`, `200W: ${fmtUSD(m200)} (${d200 > 0 ? "+" : ""}${d200}%) · ${run} weeks ${above ? "above" : "below"} 50W`)
+          note: { t: T("Maxay ka dhigan tahay hadda?", "What does it mean now?"), lines: [
+            Math.abs(d50) < 3 ? T(`BTC wuxuu taagan yahay xad muhiim ah (${fmtUSD(m50)}). Haddii uu ka hoos dhaco → cadaadis.`, `BTC is sitting on a key level (${fmtUSD(m50)}). A break below → pressure.`)
+              : above ? T(`BTC wuxuu ${d50}% ka sarreeyaa celceliska 1 sano → suuqu wuu xoog badan yahay.`, `BTC is ${d50}% above its 1-year average → the trend is strong.`)
+              : T(`BTC wuxuu ${Math.abs(d50)}% ka hooseeyaa celceliska 1 sano → suuqu wuu daciif yahay.`, `BTC is ${Math.abs(d50)}% below its 1-year average → the trend is weak.`),
+            L >= m200 ? T(`Sagxadda ugu weyn (celceliska 4 sano): ${fmtUSD(m200)}.`, `Deepest floor (4-year average): ${fmtUSD(m200)}.`) : T(`BTC wuxuu ka hooseeyaa celceliska 4 sano (${fmtUSD(m200)}) → qiimo aad u jaban, dhif ah.`, `BTC is below its 4-year average (${fmtUSD(m200)}) → rare deep value.`)
           ] },
-          series: [{ name: T("Qiimaha", "Price"), color: "alt", type: "thin", data: w.map((r, i) => [r[0], cl[i]]), fmt: FU, log: true }, { name: T("50T", "50W"), color: C.org, type: "line", data: w.map((r, i) => [r[0], a50[i]]), fmt: FU }, { name: T("200T", "200W"), color: C.grn, type: "line", data: w.map((r, i) => [r[0], a200[i]]), fmt: FU }],
+          series: [{ name: T("Qiimaha", "Price"), color: "alt", type: "thin", data: w.map((r, i) => [r[0], cl[i]]), fmt: FU, log: true }, { name: T("Celcelis 1 sano", "1-yr avg"), color: C.org, type: "line", data: w.map((r, i) => [r[0], a50[i]]), fmt: FU }, { name: T("Celcelis 4 sano", "4-yr avg"), color: C.grn, type: "line", data: w.map((r, i) => [r[0], a200[i]]), fmt: FU }],
           labels: w.map((r) => yr(r[0])), n,
-          tip: (i) => [[(daily ? "" : T("Toddobaadka ", "Week of ")) + dLabel(w[i][0])], ["BTC", "alt", fmtUSD(cl[i])], ["50T", C.org, a50[i] ? fmtUSD(a50[i]) : "—"], ["200T", C.grn, a200[i] ? fmtUSD(a200[i]) : "—"]],
+          tip: (i) => [[(daily ? "" : T("Toddobaadka ", "Week of ")) + dLabel(w[i][0])], ["BTC", "alt", fmtUSD(cl[i])], [T("Celcelis 1 sano", "1-yr avg"), C.org, a50[i] ? fmtUSD(a50[i]) : "—"], [T("Celcelis 4 sano", "4-yr avg"), C.grn, a200[i] ? fmtUSD(a200[i]) : "—"]],
           draw(P, th) {
             const s = P.scale(n, lo, hi, true);
             P.yAxis(s, (v) => (v >= 1000 ? "$" + v / 1000 + "k" : "$" + v)); P.xLabels(s, w.map((r) => yr(r[0])), P.fs > 14 ? 8 : 5);
@@ -793,8 +795,8 @@
     state[ch.id] = { ch, el, range: ch.ranges.length ? ch.ranges[ch.def][0] : 0, model: null, hidden: new Set(ch.hide || []) };
     const rg = el.querySelector(".xcc-rg");
     if (!ch.ranges.length) rg.style.visibility = "hidden";
-    const rgTitle = (l) => { const m = String(l).match(/^(\d+)([TBS])$/); return m ? m[1] + " " + ({ T: T("toddobaad", "week"), B: T("bil", "month"), S: T("sano", "year") })[m[2]] : l; };
-    rg.innerHTML = ch.ranges.map((r, k) => `<button data-r="${r[0]}" class="${k === ch.def ? "on" : ""}" title="${esc(rgTitle(r[1]))}">${esc(EN ? r[2] : r[1])}</button>`).join("");
+    const rgWord = (l) => { const m = String(l).match(/^(\d+)([TBS])$/); if (!m) return l; if (m[2] === "T" && m[1] === "1") return T("7 maalin", "7 days"); return m[1] + " " + ({ T: T("toddobaad", "wk"), B: T("bil", "mo"), S: T("sano", "yr") })[m[2]]; };
+    rg.innerHTML = ch.ranges.map((r, k) => `<button data-r="${r[0]}" class="${k === ch.def ? "on" : ""}">${esc(rgWord(r[1]))}</button>`).join("");
     return el;
   }
 
