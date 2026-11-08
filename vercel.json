@@ -1,9 +1,12 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/api/liquidity", "destination": "/api/macro?k=liq" },
+    { "source": "/api/stables", "destination": "/api/macro?k=stab" },
+    { "source": "/api/alts", "destination": "/api/macro?k=alts" }
+  ],
   "functions": {
-    "api/alts.js": {
-      "maxDuration": 60
-    }
+    "api/macro.js": { "maxDuration": 60 }
   }
 }
