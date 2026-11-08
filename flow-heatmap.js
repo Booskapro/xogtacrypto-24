@@ -206,6 +206,7 @@
   const close = () => { menu.hidden = true; mb.classList.remove("on"); };
   el.querySelector(".xcc-act").addEventListener("click", async (e) => {
     const b = e.target.closest("button"); if (!b) return;
+    e.stopPropagation(); // xc-charts (grid) ha u qaban — haddii kale menu-gu wuu xirmayaa
     const a = b.dataset.act;
     if (a === "menu") { const o = menu.hidden; menu.hidden = !o; mb.classList.toggle("on", o); return; }
     close(); if (!st.model) return;
