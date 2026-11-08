@@ -1079,3 +1079,29 @@ body.xc-noscroll { overflow: hidden; }
 }
 .xcc-rg { flex-wrap: wrap; max-width: 100%; }
 .xcc-rg button { white-space: nowrap; padding: 6px 10px; }
+/* Lacagta socota — heatmap */
+.xcc.fh { grid-column: 1 / -1; }
+.fh-hd { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+.fh-big { text-align: right; flex-shrink: 0; }
+.fh-big b { display: block; font-family: var(--font-display); font-size: 2.1rem; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+.fh-big b.up { color: #2BD67B; } .fh-big b.down { color: #F05A5F; }
+.fh-big span { font-size: .75rem; color: var(--muted); font-weight: 500; }
+.fh-plot .fh-dl { font-size: 11.5px; }
+.fh-tabs { display: inline-flex; background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; margin: 14px 0 6px; flex-wrap: wrap; }
+.fh-tabs button { border: 0; background: none; color: var(--muted); font: 600 .84rem Inter, sans-serif; padding: 7px 14px; border-radius: 9px; cursor: pointer; }
+.fh-tabs button.on { background: var(--text); color: var(--bg); }
+.fh-plot { position: relative; margin-top: 8px; min-height: 120px; }
+.fh-plot svg { display: block; width: 100%; height: auto; }
+.fh-dl { fill: var(--text); font: 700 12px Inter, sans-serif; } .fh-dd { fill: var(--muted); font: 10.5px Inter, sans-serif; } .fh-hl { fill: var(--muted); font: 10.5px Inter, sans-serif; }
+.fh-empty { fill: var(--line); opacity: .45; }
+.fh-live { stroke: var(--text); stroke-width: 2; animation: fhp 1.6s ease-in-out infinite; }
+@keyframes fhp { 50% { stroke-opacity: .25; } }
+.fh-plot rect[data-j]:hover { stroke: var(--text); stroke-width: 1.5; }
+.fh-leg { display: flex; align-items: center; gap: 10px; font-size: .75rem; color: var(--muted); margin-top: 6px; }
+.fh-leg i { width: 190px; height: 10px; border-radius: 3px; background: linear-gradient(90deg, rgba(240,90,95,.98), rgba(240,90,95,.1) 48%, rgba(43,214,123,.1) 52%, rgba(43,214,123,.98)); }
+.fh-kp { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.fh-kp div { background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.fh-kp span { display: block; font-size: .72rem; color: var(--muted); }
+.fh-kp b { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; }
+.fh-kp b.up { color: #2BD67B; } .fh-kp b.down { color: #F05A5F; }
+@media (max-width: 700px) { .fh-hd { flex-direction: column; align-items: flex-start; } .fh-big { text-align: left; } .fh-kp { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fh-leg i { width: 120px; } }
