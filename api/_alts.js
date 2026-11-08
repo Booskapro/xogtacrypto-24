@@ -2,7 +2,7 @@
    /api/alts — Altcoins: boqolkiiba intee ka hooseeya celceliska 200 maalmood
    Isha: Binance (bilaash) — 100-ka altcoin ee ugu volume badan (USDT)
    Stablecoins, dahab iyo BTC/wrapped waa laga saaray.
-   Cache: 6 saac (xisaab culus).
+   Cache: 10 daqiiqo (maalinta hadda waa live).
    ========================================================= */
 const API = "https://data-api.binance.vision/api/v3";
 const SKIP = new Set(["BTC", "WBTC", "BTCB", "USDC", "FDUSD", "TUSD", "USDP", "DAI", "BUSD", "USDE", "PYUSD", "USD1", "RLUSD", "BFUSD", "XUSD", "UST", "USTC", "EUR", "EURI", "AEUR", "EURC", "GBP", "TRY", "BRL", "PAXG", "XAUT", "WBETH", "BETH", "STETH", "WSTETH", "SUSD", "U"]);
@@ -60,7 +60,7 @@ module.exports = async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   try {
     const p = await buildPayload();
-    res.setHeader("Cache-Control", "public, s-maxage=21600, stale-while-revalidate=172800");
+    res.setHeader("Cache-Control", "public, s-maxage=600, stale-while-revalidate=3600");
     res.statusCode = 200; res.end(JSON.stringify(p));
   } catch (e) {
     res.setHeader("Cache-Control", "no-store"); res.statusCode = 502;
