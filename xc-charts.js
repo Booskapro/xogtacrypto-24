@@ -744,13 +744,13 @@
         return {
           kicker: T("Crypto · Altcoins", "Crypto · Altcoins"),
           title: T(`${p}% altcoins ah ayaa ka hooseeya celceliska 200 maalmood`, `${p}% of altcoins are below their 200-day average`),
-          sub: T(`${ALTS.coins} altcoin ee ugu volume badan Binance (USDT) · maalinle · 70%+ = daciif, 30%- = altseason`, `Top ${ALTS.coins} altcoins by Binance volume (USDT) · daily · 70%+ = weak, under 30% = altseason`),
+          sub: T(`${ALTS.coins} altcoin ee ugu volume badan Binance (USDT) · maalinle, maanta waa live · 70%+ = daciif, 30%- = altseason`, `Top ${ALTS.coins} altcoins by Binance volume (USDT) · daily, today is live · 70%+ = weak, under 30% = altseason`),
           legend: [[sA, C.red]].concat(hasB ? [["BTC", "alt"]] : []),
-          source: T("Binance · Xogta Crypto ayaa xisaabisay", "Binance · computed by Xogta Crypto"), badge: T("Xogta: ", "Data: ") + dLabel(L[0]),
+          source: T("Binance · Xogta Crypto ayaa xisaabisay", "Binance · computed by Xogta Crypto"), badge: "Live", live: true,
           note: { t: MEAN, lines: [mean, T(`Toddobaad kahor: ${ago(7)} · Bil kahor: ${ago(30)} · 3 bilood kahor: ${ago(90)}`, `Last week: ${ago(7)} · Last month: ${ago(30)} · 3 months ago: ${ago(90)}`)] },
           series: [{ name: sA, color: C.red, type: "base", base: 50, top: C.red, bot: C.grn, range: [0, 100], data: rows.map((r) => [r[0], r[1]]), fmt: (v) => Math.round(v) + "%", lines: [[70, C.red, ""], [30, C.grn, ""]] }]
             .concat(hasB ? [{ name: "BTC", color: "alt", type: "thin", scale: "left", log: true, data: rows.map((r, i) => [r[0], btc[i]]), fmt: FU }] : []),
-          n, tip: (i) => [[dLabel(rows[i][0])], [sA, pv[i] >= 50 ? C.red : C.grn, pv[i] + "%"]].concat(hasB ? [["BTC", "alt", btc[i] ? fmtUSD(btc[i]) : "—"]] : []),
+          n, tip: (i) => [[(i === n - 1 ? T("Hadda · ", "Now · ") : "") + dLabel(rows[i][0])], [sA, pv[i] >= 50 ? C.red : C.grn, pv[i] + "%"]].concat(hasB ? [["BTC", "alt", btc[i] ? fmtUSD(btc[i]) : "—"]] : []),
           draw(P, th) {
             const r = P.scale(n, 0, 100); P.yAxis(r, (v) => v + "%", true); P.xLabels(r, rows.map((x) => ymShort(x[0])));
             P.s += `<rect x="${P.b.x0}" y="${r.y(100)}" width="${P.b.x1 - P.b.x0}" height="${r.y(70) - r.y(100)}" fill="${C.red}" opacity=".06" /><rect x="${P.b.x0}" y="${r.y(30)}" width="${P.b.x1 - P.b.x0}" height="${r.y(0) - r.y(30)}" fill="${C.grn}" opacity=".06" />`;
@@ -1137,7 +1137,7 @@
   loadFed(); loadBtc(); loadMacro(); loadSent(); loadLiq(); loadStab(); loadAlts();
   setInterval(loadLiq, 30 * 60 * 1000);    // FRED (Net Liquidity, S&P 500): 30 daqiiqo kasta
   setInterval(loadStab, 15 * 60 * 1000);   // Stablecoins: 15 daqiiqo kasta
-  setInterval(loadAlts, 60 * 60 * 1000);   // Altcoins: saacad kasta
+  setInterval(loadAlts, 10 * 60 * 1000);   // Altcoins: 10 daqiiqo kasta (maalinta hadda waa live)
   // Live: qiimaha BTC iyo saliidda daqiiqad kasta (Hyperliquid) — dhibicda u dambeysa ayaa la cusboonaysiinayaa
   async function tick() {
     try {
@@ -1148,7 +1148,7 @@
         const px = Math.round(d.BTC.px);
         BTC.live = px; BTC.weeks[BTC.weeks.length - 1][1] = px;
         if (BTC.daily && BTC.daily.length) { const L = BTC.daily[BTC.daily.length - 1]; if (L[0] === today) L[1] = px; else BTC.daily.push([today, px]); }
-        renderCard("btc-50-200"); renderCard("btc-fed"); if (SENT) renderCard("sentiment");
+        renderCard("btc-50-200"); renderCard("btc-fed"); if (SENT) renderCard("sentiment"); if (ALTS) renderCard("alts"); if (STAB) renderCard("stables");
       }
       if (MACRO && d["xyz:CL"] && d["xyz:CL"].px > 0) { MACRO.oilLive = { date: today, px: Math.round(d["xyz:CL"].px * 100) / 100 }; renderCard("dollar-oil"); }
     } catch (e) { /* xiriirka ayaa go'ay — mar kale ayaa la isku dayi doonaa */ }
