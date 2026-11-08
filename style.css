@@ -1048,3 +1048,32 @@ body.xc-noscroll { overflow: hidden; }
 .fh-act .kh-ib { color: var(--text); border-color: var(--line-2); background: var(--card-2); }
 .fh-act .kh-ib:hover, .fh-act .kh-ib.on { background: var(--line); }
 .fh-tlh { align-items: center; }
+/* Xaaladda suuqa (bogga hore) */
+.ms-wrap { margin-top: 18px; }
+.ms-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 12px; }
+.ms-h { margin: 4px 0 0; }
+.ms-right { display: flex; align-items: center; gap: 10px; }
+.ms-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.ms-c { display: flex; flex-direction: column; padding: 18px 20px; min-width: 0; }
+.ms-ct { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: .95rem; }
+.ms-ct span { color: var(--muted); font-size: .78rem; text-align: right; }
+.ms-c > div:nth-child(2) { flex: 1; }
+.ms-g { display: block; width: 230px; max-width: 100%; margin: 8px auto 0; }
+.ms-big { text-align: center; font-family: var(--font-display); font-weight: 800; font-size: 2rem; line-height: 1; margin-top: -52px; }
+.ms-pill { display: block; width: max-content; max-width: 100%; margin: 8px auto 4px; font-size: .78rem; font-weight: 800; padding: 4px 12px; border-radius: 999px; }
+.ms-r { display: flex; justify-content: space-between; font-size: .84rem; margin-top: 10px; } .ms-r b { font-weight: 800; }
+.ms-bar { height: 6px; border-radius: 4px; background: var(--line); margin-top: 5px; overflow: hidden; } .ms-bar i { display: block; height: 100%; border-radius: 4px; }
+.ms-three { display: flex; justify-content: space-between; font-size: .8rem; color: var(--muted); margin-top: 14px; } .ms-three b { color: var(--text); }
+.ms-as { margin-top: 20px; } .ms-asn { font-family: var(--font-display); font-weight: 800; font-size: 2.8rem; line-height: 1; } .ms-asl { font-size: .85rem; color: var(--muted); margin-left: 8px; }
+.ms-track { position: relative; height: 12px; border-radius: 8px; margin-top: 18px; background: linear-gradient(90deg, #F59E0B 0 25%, #FBD38D 25% 50%, #A5B4FC 50% 75%, #3B5BFF 75%); }
+.ms-knob { position: absolute; top: 50%; width: 20px; height: 20px; border-radius: 50%; background: var(--card); border: 3px solid var(--text); transform: translate(-50%, -50%); }
+.ms-tl { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: 8px; }
+.ms-txt { font-size: .82rem; color: var(--text-2); margin: 12px 0 0; }
+.ms-ft { display: flex; justify-content: space-between; font-size: .76rem; color: var(--muted); margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); }
+.ms-ft a { color: var(--accent-ink); text-decoration: none; font-weight: 600; }
+.ms-load { color: var(--muted); font-size: .85rem; padding: 40px 0; text-align: center; }
+@media (max-width: 900px) {
+  .ms-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; padding-bottom: 6px; }
+  .ms-grid .ms-c { flex: 0 0 86%; scroll-snap-align: start; }
+  .ms-head { flex-wrap: wrap; }
+}

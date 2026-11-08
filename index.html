@@ -67,6 +67,25 @@
 
       <div class="fh-cards" id="fh-cards"></div>
 
+      <!-- Xaaladda suuqa (live): Filashada FED · Fear & Greed · Altcoin Season -->
+      <div class="ms-wrap" id="ms">
+        <div class="ms-head">
+          <div><span class="eyebrow" data-en="MARKET STATUS · NOW">XAALADDA SUUQA · HADDA</span><h2 class="h3 ms-h" data-en="What does the market expect and feel?">Suuqu maxuu filayaa, maxuuse dareemayaa?</h2></div>
+          <div class="ms-right"><span class="status live" style="font-size:.8rem"><span class="dot"></span>Live</span>
+            <div class="kh-act fh-act" id="ms-act"><button class="kh-ib" type="button" data-k="menu" aria-haspopup="true"><svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span data-en="Image">Sawir</span></button>
+              <div class="xcc-menu" role="menu" hidden>
+                <button type="button" data-k="dl"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg><span data-en="Download image">Soo deji sawirka</span></button>
+                <button type="button" data-k="copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span data-en="Copy image">Koobi garee sawirka</span></button>
+                <hr><button type="button" data-k="x"><svg viewBox="0 0 24 24" class="fill"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span data-en="Share on X">Ku wadaag X</span></button>
+              </div></div></div>
+        </div>
+        <div class="ms-grid">
+          <div class="card ms-c"><div class="ms-ct"><b data-en="Fed expectations">Filashada FED</b><span id="ms-fed-when"></span></div><div id="ms-fed"></div><div class="ms-ft"><span data-en="Source: Kalshi">Isha: Kalshi</span><a href="#agent" data-en="Details →">Faahfaahin →</a></div></div>
+          <div class="card ms-c"><div class="ms-ct"><b>Fear &amp; Greed</b><span data-en="Bitcoin · today">Bitcoin · maanta</span></div><div id="ms-fng"></div><div class="ms-ft"><span data-en="Source: alternative.me">Isha: alternative.me</span><a href="charts.html#sentiment">Chart →</a></div></div>
+          <div class="card ms-c"><div class="ms-ct"><b>Altcoin Season</b><span data-en="90 days · Binance">90 maalmood · Binance</span></div><div id="ms-alt"></div><div class="ms-ft"><span data-en="Source: Binance · Xogta Crypto">Isha: Binance · Xogta Crypto</span><a href="charts.html#alts">Chart →</a></div></div>
+        </div>
+      </div>
+
       <div class="fh-tlw card">
         <div class="fh-tlh"><h2 class="h3" data-en="Upcoming data">Xogta soo socota</h2><div class="fh-tla"><div class="kh-act fh-act" id="fh-act"></div><a class="fh-callink" href="kalandarka.html" data-en="Full economic calendar →">Kalandarka oo dhan →</a></div></div>
         <div class="fh-tl" id="fh-timeline"></div>
@@ -193,6 +212,7 @@
 <script src="fed-hero.js"></script>
 <script src="fed-charts.js"></script>
 <script src="kal-share.js"></script>
+<script src="market-status.js"></script>
 <script src="live-feed.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
