@@ -1033,3 +1033,13 @@ body.xc-noscroll { overflow: hidden; }
 .xcc-li.tg { padding: 6px 11px 6px 8px; }
 .xcc-li.tg:not(.off) { border-color: var(--line-2); }
 .xcc-li.tg i::after { border-color: var(--bg) !important; }
+/* Kalandarka: sawir + X share */
+.kh-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.kh-act { position: relative; }
+.kh-ib { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.07); color: #fff; font: 600 .82rem/1 Inter, sans-serif; cursor: pointer; }
+.kh-ib:hover, .kh-ib.on { background: rgba(255,255,255,.15); }
+.kh-ib svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.kh-act .xcc-menu { top: 42px; min-width: 250px; }
+.kh-act .xcc-menu svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.kh-act .xcc-menu svg.fill { fill: currentColor; stroke: none; width: 16px; height: 16px; margin: 0 1px; }
+.kh-mh { padding: 8px 12px 4px; font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }

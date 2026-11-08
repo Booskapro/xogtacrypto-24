@@ -242,6 +242,7 @@
     if (h === "top") { st.lvl = { 1: false, 2: false, 3: true }; side.querySelectorAll("input[data-lvl]").forEach(function (c) { c.checked = c.dataset.lvl === "3"; }); }
   })();
 
+  window.XCKal = { events: allEvents, KIND: KIND, KCOL: KCOL, api: function () { return API; }, shiftM: shiftM };
   function renderAll() { renderHero(); renderStats(); renderCalendar(); }
   F.load().then(function (api) { if (api) { API = api; renderCalendar(); } });
   renderAll();
