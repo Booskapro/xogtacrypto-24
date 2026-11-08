@@ -39,21 +39,38 @@ function aggregate(maps, minCoins) {
     .map(([d, a]) => [d, Math.round(a[0] / a[1] * 1000) / 10, a[1]]);
 }
 
+// Altcoin Season Index: boqolkiiba intee altcoin ah ayaa BTC ka badiyay 90-kii maalmood ee u dambeeyay
+// (75+ = Altcoin Season, 25 ama ka yar = Bitcoin Season). Maalin kasta 120-kii maalmood ee u dambeeyay.
+const SEASON = 90;
+function seasonIndex(series, btc) {
+  const hist = [];
+  for (let j = Math.max(SEASON, btc.length - 120); j < btc.length; j++) {
+    const d = btc[j][0], d0 = btc[j - SEASON][0], br = btc[j][1] / btc[j - SEASON][1];
+    let n = 0, up = 0;
+    series.forEach((m) => { const a = m.get(d), b = m.get(d0); if (a > 0 && b > 0) { n++; if (a / b > br) up++; } });
+    if (n >= 30) hist.push([d, Math.round(up / n * 100), n]);
+  }
+  return hist;
+}
+
 async function buildPayload() {
   const coins = pickCoins(await getJSON(API + "/ticker/24hr", 15000));
   if (coins.length < 30) throw new Error("coins yar");
-  const maps = [], errors = [];
+  const maps = [], errors = [], series = [];
+  let btc = [];
+  try { btc = (await getJSON(`${API}/klines?symbol=BTCUSDT&interval=1d&limit=1000`)).map((x) => [new Date(x[0]).toISOString().slice(0, 10), parseFloat(x[4])]); } catch (e) { errors.push("BTCUSDT"); }
   for (let i = 0; i < coins.length; i += 20) {
     const part = await Promise.allSettled(coins.slice(i, i + 20).map((c) => getJSON(`${API}/klines?symbol=${c.s}&interval=1d&limit=1000`)));
     part.forEach((r, k) => {
       if (r.status !== "fulfilled" || !Array.isArray(r.value)) { errors.push(coins[i + k].s); return; }
       const cl = r.value.map((x) => [new Date(x[0]).toISOString().slice(0, 10), parseFloat(x[4])]).filter((x) => x[1] > 0);
       if (cl.length >= SMA) maps.push(belowMap(cl));
+      if (cl.length > SEASON) series.push(new Map(cl));
     });
   }
   const days = aggregate(maps, 30);
   if (days.length < 30) throw new Error("xog yar");
-  return { updated: new Date().toISOString(), source: "Binance", coins: maps.length, days, errors };
+  return { updated: new Date().toISOString(), source: "Binance", coins: maps.length, days, season: seasonIndex(series, btc), errors };
 }
 
 module.exports = async function handler(req, res) {
@@ -67,4 +84,4 @@ module.exports = async function handler(req, res) {
     res.end(JSON.stringify({ error: "Binance lama gaari karo", detail: String(e && e.message) }));
   }
 };
-module.exports._internal = { pickCoins, belowMap, aggregate };
+module.exports._internal = { pickCoins, belowMap, aggregate, seasonIndex };
