@@ -261,10 +261,14 @@
           legend: [[T("Qiimaha", "Price"), "alt"], [T("Celcelis 50 toddobaad", "50-week avg"), C.org], [T("Celcelis 200 toddobaad", "200-week avg"), C.grn]],
           source: BTC.source + ", Hyperliquid", badge: "Live", live: true,
           note: { t: T("Maxay ka dhigan tahay hadda?", "What does it mean now?"), lines: [
-            Math.abs(d50) < 3 ? T(`BTC wuxuu taagan yahay xad muhiim ah (${fmtUSD(m50)}). Haddii uu ka hoos dhaco → cadaadis.`, `BTC is sitting on a key level (${fmtUSD(m50)}). A break below → pressure.`)
-              : above ? T(`BTC wuxuu ${d50}% ka sarreeyaa celceliska 50 toddobaad → suuqu wuu xoog badan yahay.`, `BTC is ${d50}% above its 50-week average → the trend is strong.`)
-              : T(`BTC wuxuu ${Math.abs(d50)}% ka hooseeyaa celceliska 50 toddobaad → suuqu wuu daciif yahay.`, `BTC is ${Math.abs(d50)}% below its 50-week average → the trend is weak.`),
-            L >= m200 ? T(`Sagxadda ugu weyn (celceliska 200 toddobaad): ${fmtUSD(m200)}.`, `Deepest floor (200-week average): ${fmtUSD(m200)}.`) : T(`BTC wuxuu ka hooseeyaa celceliska 200 toddobaad (${fmtUSD(m200)}) → qiimo aad u jaban, dhif ah.`, `BTC is below its 200-week average (${fmtUSD(m200)}) → rare deep value.`)
+            Math.abs(d50) < 3
+              ? T(`BTC (${fmtUSD(L)}) wuxuu taagan yahay xadka muhiimka ah: celceliska 50 toddobaad (${fmtUSD(m50)}). Haddii uu ka hoos dhaco, cadaadis ayaa imaan kara; haddii uu ka sarreeyo, waa calaamad xoog.`, `BTC (${fmtUSD(L)}) is sitting on a key level: the 50-week average (${fmtUSD(m50)}). A break below could bring pressure; holding above is a sign of strength.`)
+              : above ? T(`BTC (${fmtUSD(L)}) wuxuu ${d50}% ka sarreeyaa celceliska 50 toddobaad (${fmtUSD(m50)}) → suuqu wuu xoog badan yahay (kor u socod).`, `BTC (${fmtUSD(L)}) is ${d50}% above the 50-week average (${fmtUSD(m50)}) → the trend is up.`)
+              : T(`BTC (${fmtUSD(L)}) wuxuu ${Math.abs(d50)}% ka hooseeyaa celceliska 50 toddobaad (${fmtUSD(m50)}) → suuqu wuu daciif yahay (hoos u socod).`, `BTC (${fmtUSD(L)}) is ${Math.abs(d50)}% below the 50-week average (${fmtUSD(m50)}) → the trend is down.`),
+            L >= m200
+              ? T(`Celceliska 200 toddobaad (${fmtUSD(m200)}) waa sagxadda ugu weyn ee BTC taariikh ahaan. Qiimaha hadda ${d200}% ayuu ka sarreeyaa.`, `The 200-week average (${fmtUSD(m200)}) has historically been BTC's deepest floor. Price is ${d200}% above it.`)
+              : T(`BTC wuxuu ka hooseeyaa celceliska 200 toddobaad (${fmtUSD(m200)}). Taariikh ahaan tani waa heer qiimo aad u jaban oo dhif ah.`, `BTC is below the 200-week average (${fmtUSD(m200)}). Historically this is a rare, deep-value zone.`),
+            T(`${run} toddobaad oo xiriir ah ayuu ${above ? "ka sarreeyay" : "ka hooseeyay"} celceliska 50 toddobaad.`, `${run} weeks in a row ${above ? "above" : "below"} the 50-week average.`)
           ] },
           series: [{ name: T("Qiimaha", "Price"), color: "alt", type: "thin", data: w.map((r, i) => [r[0], cl[i]]), fmt: FU, log: true }, { name: T("50 toddobaad", "50 weeks"), color: C.org, type: "line", data: w.map((r, i) => [r[0], a50[i]]), fmt: FU }, { name: T("200 toddobaad", "200 weeks"), color: C.grn, type: "line", data: w.map((r, i) => [r[0], a200[i]]), fmt: FU }],
           labels: w.map((r) => yr(r[0])), n,
