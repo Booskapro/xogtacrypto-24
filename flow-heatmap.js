@@ -25,7 +25,8 @@
   const fmtM = (v) => { const a = Math.abs(v), s = v > 0 ? "+" : v < 0 ? "−" : ""; return s + "$" + (a >= 1e9 ? (a / 1e9).toFixed(2) + "B" : a >= 1e6 ? (a / 1e6).toFixed(a >= 1e8 ? 0 : 1) + "M" : Math.round(a / 1e3) + "K"); };
   const dayKey = (d) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
   const TZ = (() => { try { return (Intl.DateTimeFormat().resolvedOptions().timeZone || "").split("/").pop().replace(/_/g, " "); } catch (e) { return ""; } })();
-  const st = { set: "btc", data: {}, at: null, model: null };
+  const st = { set: "btc", week: 0, data: {}, at: null, model: null };
+  const WEEKS = [T("Toddobaadkan", "This week"), T("Toddobaadkii hore", "Last week"), T("2 toddobaad kahor", "2 weeks ago"), T("3 toddobaad kahor", "3 weeks ago")];
 
   // ---------- Kaarka ----------
   const I = {
@@ -48,8 +49,9 @@
       </div></div></div>
     <div class="fh-hd"><div><h2 class="xcc-t" id="fh-title">${T("Goorma ayay lacagtu soo gashaa?", "When does money flow in?")}</h2>
       <p class="xcc-s">${T("Sanduuq kasta = 1 saac · cagaar = lacag soo gashay (iibsi), casaan = lacag baxday (iibin) · waqtiga: saacaddaada", "Each box = 1 hour · green = money in (buying), red = money out (selling) · your local time")}${TZ ? " (" + esc(TZ) + ")" : ""}</p></div>
-      <div class="fh-big"><b id="fh-total">—</b><span>${T("7-dii maalmood ee u dambeeyay", "last 7 days")}</span></div></div>
-    <div class="fh-tabs" role="tablist">${Object.keys(SETS).map((k) => `<button data-set="${k}" class="${k === "btc" ? "on" : ""}">${esc(SETS[k].name)}</button>`).join("")}</div>
+      <div class="fh-big"><b id="fh-total">—</b><span id="fh-range">${T("7-dii maalmood ee u dambeeyay", "last 7 days")}</span></div></div>
+    <div class="fh-bar"><div class="fh-tabs" role="tablist">${Object.keys(SETS).map((k) => `<button data-set="${k}" class="${k === "btc" ? "on" : ""}">${esc(SETS[k].name)}</button>`).join("")}</div>
+      <div class="fh-nav fh-wk"><button data-d="1" aria-label="${T("Toddobaadkii hore", "Previous week")}">‹</button><span id="fh-wl">${esc(WEEKS[0])}</span><button data-d="-1" aria-label="${T("Toddobaadka xiga", "Next week")}" disabled>›</button></div></div>
     <div class="fh-plot"><div class="xcc-load">${T("Xogta ayaa soo socota…", "Loading data…")}</div></div>
     <div class="fh-leg"><span>${T("Iibin xoog leh", "Strong selling")}</span><i></i><span>${T("Iibsi xoog leh", "Strong buying")}</span></div>
     <div class="fh-kp" id="fh-kp"></div>
@@ -60,7 +62,7 @@
 
   // ---------- Xogta ----------
   async function klines(sym) {
-    const r = await fetch(`${API}?symbol=${sym}&interval=1h&limit=200`, { cache: "no-store" });
+    const r = await fetch(`${API}?symbol=${sym}&interval=1h&limit=720`, { cache: "no-store" });
     if (!r.ok) throw new Error(sym);
     return (await r.json()).map((k) => { const qv = +k[7], tb = +k[10]; return { t: k[0], close: +k[4], buy: tb, sell: qv - tb, net: 2 * tb - qv }; });
   }
@@ -73,9 +75,10 @@
     return [...m.values()].sort((a, b) => a.t - b.t);
   }
 
-  function model(rows) {
+  function model(rows, w) {
+    w = w || 0;
     const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const days = []; for (let k = 6; k >= 0; k--) { const d = new Date(today); d.setDate(d.getDate() - k); days.push(d); }
+    const days = []; for (let k = 6; k >= 0; k--) { const d = new Date(today); d.setDate(d.getDate() - k - 7 * w); days.push(d); }
     const idx = new Map(days.map((d, j) => [dayKey(d), j]));
     const cells = days.map(() => new Array(24).fill(null));
     rows.forEach((x) => { const d = new Date(x.t), j = idx.get(dayKey(d)); if (j != null) cells[j][d.getHours()] = x; });
@@ -89,7 +92,9 @@
     const col = new Array(24).fill(0); flat.forEach((c) => { col[new Date(c.t).getHours()] += c.net; });
     let hb = 0, hs = 0; col.forEach((v, h) => { if (v > col[hb]) hb = h; if (v < col[hs]) hs = h; });
     const buyAll = flat.reduce((s, c) => s + c.buy, 0), sellAll = flat.reduce((s, c) => s + c.sell, 0);
-    return { days, cells, scale, total, last24, todayNet, cur, hb, hs, col, buyPct: buyAll + sellAll ? Math.round(buyAll / (buyAll + sellAll) * 100) : 50 };
+    const dayNet = cells.map((r) => r.filter(Boolean).reduce((a, c) => a + c.net, 0));
+    let db = 0, ds = 0; dayNet.forEach((v, j) => { if (v > dayNet[db]) db = j; if (v < dayNet[ds]) ds = j; });
+    return { w, dayNet, db, ds, days, cells, scale, total, last24, todayNet, cur, hb, hs, col, buyPct: buyAll + sellAll ? Math.round(buyAll / (buyAll + sellAll) * 100) : 50 };
   }
   const cellCol = (v, scale, alpha) => { const a = Math.min(1, Math.abs(v) / scale); return v >= 0 ? `rgba(43,214,123,${(0.1 + a * 0.88) * (alpha || 1)})` : `rgba(240,90,95,${(0.1 + a * 0.88) * (alpha || 1)})`; };
 
@@ -97,30 +102,45 @@
   function render() {
     const m = st.model, S = SETS[st.set]; if (!m) return;
     const box = el.querySelector(".fh-plot"), W = Math.max(300, box.clientWidth), mob = W < 560;
-    const lw = mob ? 48 : 58, cw = (W - lw) / 24, chh = mob ? 26 : 34, gap = mob ? 2 : 3, H = 7 * chh + 26;
+    const lw = mob ? 46 : 62, rw = mob ? 46 : 74, cw = (W - lw - rw) / 24, chh = mob ? 24 : 32, gap = 2, ph = mob ? 26 : 34, H = 7 * chh + ph + 34;
+    const fs = (v) => { const a = Math.abs(v), sg = v > 0 ? "+" : v < 0 ? "−" : ""; return sg + (a >= 1e9 ? (a / 1e9).toFixed(1) + "B" : a >= 1e6 ? Math.round(a / 1e6) + "M" : Math.round(a / 1e3) + "K"); };
     let s = "";
     m.days.forEach((d, j) => {
-      s += `<text x="0" y="${j * chh + chh / 2 + 4}" class="fh-dl">${esc(j === 6 ? T("Maanta", "Today") : DAYS[d.getDay()])}</text>`;
+      s += `<text x="0" y="${j * chh + chh / 2 + 4}" class="fh-dl">${esc(j === 6 && !m.w ? T("Maanta", "Today") : DAYS[d.getDay()])}</text>`;
       if (!mob) s += `<text x="0" y="${j * chh + chh / 2 + 16}" class="fh-dd">${d.getDate()} ${MO[d.getMonth()]}</text>`;
       for (let h = 0; h < 24; h++) {
         const c = m.cells[j][h], x = lw + h * cw, y = j * chh;
         if (!c) { s += `<rect x="${x}" y="${y}" width="${cw - gap}" height="${chh - gap}" rx="4" class="fh-empty"/>`; continue; }
         const live = c === m.cur;
-        s += `<rect x="${x}" y="${y}" width="${cw - gap}" height="${chh - gap}" rx="4" fill="${cellCol(c.net, m.scale)}" data-j="${j}" data-h="${h}"${live ? ' class="fh-live"' : ""}/>`;
+        s += `<rect x="${x}" y="${y}" width="${cw - gap}" height="${chh - gap}" rx="3" fill="${cellCol(c.net, m.scale)}" data-j="${j}" data-h="${h}"${live ? ' class="fh-live"' : ""}/>`;
       }
+      const dv = m.dayNet[j]; if (m.cells[j].some(Boolean)) s += `<text x="${W}" y="${j * chh + chh / 2 + 4}" class="fh-dv ${dv >= 0 ? "up" : "down"}" text-anchor="end">${fs(dv)}</text>`;
     });
-    [0, 3, 6, 9, 12, 15, 18, 21, 23].forEach((h) => { if (mob && h % 6 && h !== 23) return; s += `<text x="${h === 23 ? lw + 24 * cw - gap : lw + h * cw + (cw - gap) / 2}" y="${7 * chh + 16}" class="fh-hl" text-anchor="${h === 23 ? "end" : "middle"}">${pad(h)}:00</text>`; });
+    // safka hoose: wadarta saacad kasta (toddobaadka)
+    const py = 7 * chh + 6, pm = py + ph / 2, cmax = Math.max(1, ...m.col.map(Math.abs));
+    s += `<line x1="${lw}" x2="${lw + 24 * cw - gap}" y1="${pm}" y2="${pm}" class="fh-ax"/>${mob ? "" : `<text x="0" y="${pm + 4}" class="fh-dd">${esc(T("Saacadaha", "By hour"))}</text>`}`;
+    m.col.forEach((v, h) => { const hh = Math.max(1.5, Math.abs(v) / cmax * (ph / 2 - 2)); s += `<rect x="${lw + h * cw + cw * 0.18}" y="${v >= 0 ? pm - hh : pm}" width="${cw * 0.64 - gap}" height="${hh}" rx="1.5" fill="${v >= 0 ? G : R}" opacity=".85"/>`; });
+    [0, 3, 6, 9, 12, 15, 18, 21, 23].forEach((h) => { if (mob && h % 6) return; s += `<text x="${h === 23 ? lw + 24 * cw - gap : lw + h * cw + (cw - gap) / 2}" y="${H - 4}" class="fh-hl" text-anchor="${h === 23 ? "end" : "middle"}">${pad(h)}:00</text>`; });
     box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(T("Lacagta socota", "Money flow"))}">${s}</svg><div class="xcc-tip" hidden></div>`;
     const tot = el.querySelector("#fh-total"); tot.textContent = fmtM(m.total); tot.className = m.total >= 0 ? "up" : "down";
+    const rng = m.days[0].getDate() + " " + MO[m.days[0].getMonth()] + " – " + m.days[6].getDate() + " " + MO[m.days[6].getMonth()];
+    el.querySelector("#fh-range").textContent = m.w ? rng : T("7-dii maalmood ee u dambeeyay", "last 7 days");
+    const wk = m.w ? WEEKS[m.w].toLowerCase() : T("toddobaadkan", "this week");
     el.querySelector("#fh-title").textContent = m.total >= 0
-      ? T(`Lacag ayaa ${S.short} soo gashay toddobaadkan`, `Money is flowing into ${S.short} this week`)
-      : T(`Lacag ayaa ${S.short} ka baxday toddobaadkan`, `Money is flowing out of ${S.short} this week`);
+      ? T(`Lacag ayaa ${S.short} soo gashay ${wk}`, `Money flowed into ${S.short} — ${wk}`)
+      : T(`Lacag ayaa ${S.short} ka baxday ${wk}`, `Money flowed out of ${S.short} — ${wk}`);
     const kp = (l, v) => `<div><span>${l}</span><b class="${v >= 0 ? "up" : "down"}">${fmtM(v)}</b></div>`;
-    el.querySelector("#fh-kp").innerHTML = kp(T("Saacadda hadda", "This hour"), m.cur ? m.cur.net : 0) + kp(T("Maanta", "Today"), m.todayNet) + kp(T("24 saac", "24 hours"), m.last24) + `<div><span>${T("Iibsi / iibin (7 maalin)", "Buy / sell (7 days)")}</span><b>${m.buyPct}% / ${100 - m.buyPct}%</b></div>`;
+    const dn = (j) => DAYS[m.days[j].getDay()] + " " + m.days[j].getDate() + " " + MO[m.days[j].getMonth()];
+    const bs = `<div><span>${T("Iibsi / iibin", "Buy / sell")}</span><b>${m.buyPct}% / ${100 - m.buyPct}%</b></div>`;
+    el.querySelector("#fh-kp").innerHTML = m.w
+      ? kp(T("Wadarta toddobaadka", "Week total"), m.total) + kp(T("Maalinta ugu iibsi badan · ", "Top buying day · ") + dn(m.db), m.dayNet[m.db]) + kp(T("Maalinta ugu iibin badan · ", "Top selling day · ") + dn(m.ds), m.dayNet[m.ds]) + bs
+      : kp(T("Saacadda hadda", "This hour"), m.cur ? m.cur.net : 0) + kp(T("Maanta", "Today"), m.todayNet) + kp(T("24 saac", "24 hours"), m.last24) + bs;
     const hr = (h) => pad(h) + ":00–" + pad((h + 1) % 24) + ":00";
-    el.querySelector("#fh-note").innerHTML = `<b>${T("Maxay ka dhigan tahay hadda?", "What does it mean now?")}</b>` +
-      `<span>${esc(m.total >= 0 ? T(`7-dii maalmood ee u dambeeyay iibsadayaasha ${S.short} ayaa xoog badnaa: lacag saafi ah oo ${fmtM(m.total)} ah ayaa soo gashay.`, `Over the last 7 days ${S.short} buyers were stronger: ${fmtM(m.total)} net inflow.`) : T(`7-dii maalmood ee u dambeeyay iibiyayaasha ${S.short} ayaa xoog badnaa: lacag saafi ah oo ${fmtM(m.total)} ah ayaa baxday.`, `Over the last 7 days ${S.short} sellers were stronger: ${fmtM(m.total)} net outflow.`))}</span>` +
-      `<span>${esc(m.last24 >= 0 ? T(`24-kii saac ee u dambeeyay: ${fmtM(m.last24)} → iibsi ayaa hadda badan.`, `Last 24 hours: ${fmtM(m.last24)} → buyers lead now.`) : T(`24-kii saac ee u dambeeyay: ${fmtM(m.last24)} → iibin ayaa hadda badan.`, `Last 24 hours: ${fmtM(m.last24)} → sellers lead now.`))}</span>` +
+    const l1 = m.total >= 0 ? T(`${m.w ? rng : "7-dii maalmood ee u dambeeyay"} iibsadayaasha ${S.short} ayaa xoog badnaa: lacag saafi ah oo ${fmtM(m.total)} ah ayaa soo gashay.`, `${m.w ? rng : "Over the last 7 days"}: ${S.short} buyers were stronger, ${fmtM(m.total)} net inflow.`)
+      : T(`${m.w ? rng : "7-dii maalmood ee u dambeeyay"} iibiyayaasha ${S.short} ayaa xoog badnaa: lacag saafi ah oo ${fmtM(m.total)} ah ayaa baxday.`, `${m.w ? rng : "Over the last 7 days"}: ${S.short} sellers were stronger, ${fmtM(m.total)} net outflow.`);
+    const l2 = m.w ? T(`Maalinta ugu iibsiga badnayd: ${dn(m.db)} (${fmtM(m.dayNet[m.db])}) · ugu iibinta badnayd: ${dn(m.ds)} (${fmtM(m.dayNet[m.ds])}).`, `Top buying day: ${dn(m.db)} (${fmtM(m.dayNet[m.db])}) · top selling day: ${dn(m.ds)} (${fmtM(m.dayNet[m.ds])}).`)
+      : m.last24 >= 0 ? T(`24-kii saac ee u dambeeyay: ${fmtM(m.last24)} → iibsi ayaa hadda badan.`, `Last 24 hours: ${fmtM(m.last24)} → buyers lead now.`) : T(`24-kii saac ee u dambeeyay: ${fmtM(m.last24)} → iibin ayaa hadda badan.`, `Last 24 hours: ${fmtM(m.last24)} → sellers lead now.`);
+    el.querySelector("#fh-note").innerHTML = `<b>${T("Maxay ka dhigan tahay?", "What does it mean?")}</b><span>${esc(l1)}</span><span>${esc(l2)}</span>` +
       `<span>${esc(T(`Saacadda iibsigu ugu badan yahay: ${hr(m.hb)} · iibintu: ${hr(m.hs)} (saacaddaada).`, `Strongest buying hour: ${hr(m.hb)} · selling: ${hr(m.hs)} (your time).`))}</span>`;
     el.querySelector("#fh-upd").textContent = st.at ? T("La cusboonaysiiyay ", "Updated ") + pad(st.at.getHours()) + ":" + pad(st.at.getMinutes()) : "";
   }
@@ -128,7 +148,7 @@
     set = set || st.set;
     try {
       const rows = await load(set); st.data[set] = rows;
-      if (set === st.set) { st.at = new Date(); st.model = model(rows); render(); }
+      if (set === st.set) { st.at = new Date(); st.model = model(rows, st.week); render(); }
     } catch (e) {
       if (!st.model) el.querySelector(".fh-plot").innerHTML = `<div class="xcc-load">${T("Xogta lama heli karo hadda. Isku day mar kale.", "Data unavailable. Please try again.")}</div>`;
     }
@@ -136,9 +156,16 @@
   el.querySelector(".fh-tabs").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-set]"); if (!b) return;
     st.set = b.dataset.set; el.querySelectorAll(".fh-tabs button").forEach((x) => x.classList.toggle("on", x === b));
-    if (st.data[st.set]) { st.model = model(st.data[st.set]); render(); }
+    if (st.data[st.set]) { st.model = model(st.data[st.set], st.week); render(); }
     else el.querySelector(".fh-plot").innerHTML = `<div class="xcc-load">${T("Xogta ayaa soo socota…", "Loading data…")}</div>`;
     refresh(st.set);
+  });
+  el.querySelector(".fh-wk").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-d]"); if (!b) return;
+    e.stopPropagation(); st.week = Math.max(0, Math.min(3, st.week + +b.dataset.d));
+    el.querySelector("#fh-wl").textContent = WEEKS[st.week];
+    el.querySelector('.fh-wk [data-d="1"]').disabled = st.week === 3; el.querySelector('.fh-wk [data-d="-1"]').disabled = st.week === 0;
+    if (st.data[st.set]) { st.model = model(st.data[st.set], st.week); render(); }
   });
   // Tooltip
   el.querySelector(".fh-plot").addEventListener("mousemove", (e) => {
@@ -178,17 +205,17 @@
     let s = `<rect width="${W0}" height="${H0}" fill="${K.bg}"/>`;
     s += tx(56, 62, el.querySelector("#fh-title").textContent, 30, { d: 1, w: 800 });
     s += tx(56, 92, T(`${S.name} · Binance spot · sanduuq kasta = 1 saac · waqtiga: ${TZ || "maxalli"}`, `${S.name} · Binance spot · each box = 1 hour · time: ${TZ || "local"}`), 15, { c: K.mut });
-    s += tx(W0 - 56, 70, fmtM(m.total), 46, { d: 1, w: 800, c: m.total >= 0 ? G : R, a: "end" }) + tx(W0 - 56, 94, T("7 maalmood", "7 days"), 14, { c: K.mut, a: "end" });
+    s += tx(W0 - 56, 70, fmtM(m.total), 46, { d: 1, w: 800, c: m.total >= 0 ? G : R, a: "end" }) + tx(W0 - 56, 94, el.querySelector("#fh-range").textContent, 14, { c: K.mut, a: "end" });
     const x0 = 140, cw = (W0 - 56 - x0) / 24, ch = 52, y0 = 130;
     m.days.forEach((d, j) => {
-      s += tx(56, y0 + j * ch + 24, j === 6 ? T("Maanta", "Today") : DAYS[d.getDay()], 15, { w: 700 }) + tx(56, y0 + j * ch + 42, d.getDate() + " " + MO[d.getMonth()], 12, { c: K.dim });
+      s += tx(56, y0 + j * ch + 24, j === 6 && !m.w ? T("Maanta", "Today") : DAYS[d.getDay()], 15, { w: 700 }) + tx(56, y0 + j * ch + 42, d.getDate() + " " + MO[d.getMonth()], 12, { c: K.dim });
       for (let h = 0; h < 24; h++) { const c = m.cells[j][h]; s += `<rect x="${(x0 + h * cw).toFixed(1)}" y="${y0 + j * ch}" width="${(cw - 4).toFixed(1)}" height="${ch - 5}" rx="6" fill="${c ? cellCol(c.net, m.scale) : "rgba(255,255,255,.03)"}"${c && c === m.cur ? ' stroke="#fff" stroke-width="2.5"' : ""}/>`; }
     });
     [0, 3, 6, 9, 12, 15, 18, 21].forEach((h) => { s += tx(x0 + h * cw + (cw - 4) / 2, y0 + 7 * ch + 18, pad(h) + ":00", 12, { c: K.dim, a: "middle" }); });
     const ly = y0 + 7 * ch + 46; s += tx(x0, ly + 10, T("Iibin xoog leh", "Strong selling"), 12.5, { c: K.mut });
     for (let k = 0; k < 9; k++) s += `<rect x="${x0 + 110 + k * 26}" y="${ly}" width="23" height="12" rx="3" fill="${cellCol((k - 4) / 4, 1)}"/>`;
     s += tx(x0 + 110 + 9 * 26 + 10, ly + 10, T("Iibsi xoog leh", "Strong buying"), 12.5, { c: K.mut });
-    s += tx(W0 - 56, ly + 10, T("24 saac: ", "24h: ") + fmtM(m.last24) + "  ·  " + T("Iibsi ", "Buy ") + m.buyPct + "%", 14, { w: 700, c: m.last24 >= 0 ? G : R, a: "end" });
+    s += tx(W0 - 56, ly + 10, (m.w ? "" : T("24 saac: ", "24h: ") + fmtM(m.last24) + "  ·  ") + T("Iibsi ", "Buy ") + m.buyPct + "%", 14, { w: 700, c: m.last24 >= 0 ? G : R, a: "end" });
     s += `<line x1="56" x2="${W0 - 56}" y1="${H0 - 58}" y2="${H0 - 58}" stroke="${K.line}"/>` + tx(56, H0 - 24, "© " + new Date().getFullYear() + " Xogta Crypto 24/7", 13, { c: K.dim });
     s += `<image href="${logo}" x="${W0 - 56 - 214}" y="${H0 - 46}" width="28" height="28"/>` + tx(W0 - 56, H0 - 25, "Xogta Crypto 24/7", 19, { d: 1, w: 800, a: "end" });
     return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W0}" height="${H0}" viewBox="0 0 ${W0} ${H0}"><style>${fc}</style>${s}</svg>`;
