@@ -256,19 +256,19 @@
         const yr = (iso) => (EN ? MO[+iso.slice(5, 7) - 1] + " '" : MO[+iso.slice(5, 7) - 1] + " '") + iso.slice(2, 4);
         return {
           kicker: "Crypto",
-          title: above ? T("Bitcoin wuxuu ka sarreeyaa celceliskiisa 1 sano", "Bitcoin is above its 1-year average") : T("Bitcoin wuxuu ka hooseeyaa celceliskiisa 1 sano", "Bitcoin is below its 1-year average"),
-          sub: T("Qiimaha BTC iyo celceliskiisa 1 sano (50 toddobaad) iyo 4 sano (200 toddobaad)", "BTC price with its 1-year (50-week) and 4-year (200-week) averages"),
-          legend: [[T("Qiimaha", "Price"), "alt"], [T("Celcelis 1 sano", "1-year avg"), C.org], [T("Celcelis 4 sano", "4-year avg"), C.grn]],
+          title: above ? T("Bitcoin wuxuu ka sarreeyaa celceliska 50 toddobaad", "Bitcoin is above its 50-week average") : T("Bitcoin wuxuu ka hooseeyaa celceliska 50 toddobaad", "Bitcoin is below its 50-week average"),
+          sub: T("Qiimaha BTC iyo celceliska 50 toddobaad (~1 sano) iyo 200 toddobaad (~4 sano)", "BTC price with its 50-week (~1 year) and 200-week (~4 years) averages"),
+          legend: [[T("Qiimaha", "Price"), "alt"], [T("Celcelis 50 toddobaad", "50-week avg"), C.org], [T("Celcelis 200 toddobaad", "200-week avg"), C.grn]],
           source: BTC.source + ", Hyperliquid", badge: "Live", live: true,
           note: { t: T("Maxay ka dhigan tahay hadda?", "What does it mean now?"), lines: [
             Math.abs(d50) < 3 ? T(`BTC wuxuu taagan yahay xad muhiim ah (${fmtUSD(m50)}). Haddii uu ka hoos dhaco → cadaadis.`, `BTC is sitting on a key level (${fmtUSD(m50)}). A break below → pressure.`)
-              : above ? T(`BTC wuxuu ${d50}% ka sarreeyaa celceliska 1 sano → suuqu wuu xoog badan yahay.`, `BTC is ${d50}% above its 1-year average → the trend is strong.`)
-              : T(`BTC wuxuu ${Math.abs(d50)}% ka hooseeyaa celceliska 1 sano → suuqu wuu daciif yahay.`, `BTC is ${Math.abs(d50)}% below its 1-year average → the trend is weak.`),
-            L >= m200 ? T(`Sagxadda ugu weyn (celceliska 4 sano): ${fmtUSD(m200)}.`, `Deepest floor (4-year average): ${fmtUSD(m200)}.`) : T(`BTC wuxuu ka hooseeyaa celceliska 4 sano (${fmtUSD(m200)}) → qiimo aad u jaban, dhif ah.`, `BTC is below its 4-year average (${fmtUSD(m200)}) → rare deep value.`)
+              : above ? T(`BTC wuxuu ${d50}% ka sarreeyaa celceliska 50 toddobaad → suuqu wuu xoog badan yahay.`, `BTC is ${d50}% above its 50-week average → the trend is strong.`)
+              : T(`BTC wuxuu ${Math.abs(d50)}% ka hooseeyaa celceliska 50 toddobaad → suuqu wuu daciif yahay.`, `BTC is ${Math.abs(d50)}% below its 50-week average → the trend is weak.`),
+            L >= m200 ? T(`Sagxadda ugu weyn (celceliska 200 toddobaad): ${fmtUSD(m200)}.`, `Deepest floor (200-week average): ${fmtUSD(m200)}.`) : T(`BTC wuxuu ka hooseeyaa celceliska 200 toddobaad (${fmtUSD(m200)}) → qiimo aad u jaban, dhif ah.`, `BTC is below its 200-week average (${fmtUSD(m200)}) → rare deep value.`)
           ] },
-          series: [{ name: T("Qiimaha", "Price"), color: "alt", type: "thin", data: w.map((r, i) => [r[0], cl[i]]), fmt: FU, log: true }, { name: T("Celcelis 1 sano", "1-yr avg"), color: C.org, type: "line", data: w.map((r, i) => [r[0], a50[i]]), fmt: FU }, { name: T("Celcelis 4 sano", "4-yr avg"), color: C.grn, type: "line", data: w.map((r, i) => [r[0], a200[i]]), fmt: FU }],
+          series: [{ name: T("Qiimaha", "Price"), color: "alt", type: "thin", data: w.map((r, i) => [r[0], cl[i]]), fmt: FU, log: true }, { name: T("50 toddobaad", "50 weeks"), color: C.org, type: "line", data: w.map((r, i) => [r[0], a50[i]]), fmt: FU }, { name: T("200 toddobaad", "200 weeks"), color: C.grn, type: "line", data: w.map((r, i) => [r[0], a200[i]]), fmt: FU }],
           labels: w.map((r) => yr(r[0])), n,
-          tip: (i) => [[(daily ? "" : T("Toddobaadka ", "Week of ")) + dLabel(w[i][0])], ["BTC", "alt", fmtUSD(cl[i])], [T("Celcelis 1 sano", "1-yr avg"), C.org, a50[i] ? fmtUSD(a50[i]) : "—"], [T("Celcelis 4 sano", "4-yr avg"), C.grn, a200[i] ? fmtUSD(a200[i]) : "—"]],
+          tip: (i) => [[(daily ? "" : T("Toddobaadka ", "Week of ")) + dLabel(w[i][0])], ["BTC", "alt", fmtUSD(cl[i])], [T("50 toddobaad", "50 weeks"), C.org, a50[i] ? fmtUSD(a50[i]) : "—"], [T("200 toddobaad", "200 weeks"), C.grn, a200[i] ? fmtUSD(a200[i]) : "—"]],
           draw(P, th) {
             const s = P.scale(n, lo, hi, true);
             P.yAxis(s, (v) => (v >= 1000 ? "$" + v / 1000 + "k" : "$" + v)); P.xLabels(s, w.map((r) => yr(r[0])), P.fs > 14 ? 8 : 5);
