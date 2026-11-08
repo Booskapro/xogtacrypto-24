@@ -15,7 +15,7 @@ const START = "2014-01-01";
 
 async function fetchSeries(id, start) {
   const url = FRED_CSV + "?id=" + id + "&cosd=" + (start || START);
-  let lastErr;
+  let lastErr;  
   for (let attempt = 0; attempt < 2; attempt++) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 12000);
@@ -115,7 +115,7 @@ async function buildPayload() {
   };
 }
 
-module.exports = async function handler(req, res) {
+module.exports = async function handler(req, res) {  const _k = String((req.query && req.query.k) || req.url || ""); if (/liq/.test(_k)) return require("./_liquidity")(req, res); if (/stab/.test(_k)) return require("./_stables")(req, res); if (/alts/.test(_k)) return require("./_alts")(req, res);
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   try {
     const p = await buildPayload();
