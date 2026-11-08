@@ -6,10 +6,22 @@
    ========================================================= */
 (function () {
   "use strict";
-  if (!window.XCKal || !window.FedCore) return;
-  const K = window.XCKal, F = window.FedCore, T = F.T;
-  const host = document.getElementById("kh-act");
+  if (!window.FedCore || !window.FED_CAL) return;
+  const F = window.FedCore, T = F.T;
+  const host = document.getElementById("kh-act") || document.getElementById("fh-act");
   if (!host) return;
+  // Bogga Kalandarka: xogta kalandar.js · Bogga hore: halkan ayaa laga dhisayaa (fed-data.js)
+  const K = window.XCKal || (function () {
+    const CAL = window.FED_CAL, KIND = { infl: T("Sicir-barar", "Inflation"), jobs: T("Shaqo", "Jobs"), growth: T("Koboc", "Growth"), fed: "FED" };
+    let API = null; F.load().then(function (a) { API = a; });
+    function events() {
+      const items = CAL.upcoming.map(function (x) { return { name: F.EN && x.name_en ? x.name_en : x.name, time: x.time, kind: x.kind || "infl", lvl: x.lvl || 2, src: x.src || "", url: x.url || "", fomc: false, code: x.code || "", period: x.period || "" }; });
+      CAL.meetings.forEach(function (m) { items.push({ name: T("Go'aanka FED (FOMC)", "Fed decision (FOMC)") + (m.sep ? T(" + saadaasha", " + projections") : ""), time: m.time, kind: "fed", lvl: 3, src: "Federal Reserve", url: "", fomc: true }); });
+      return items.sort(function (a, b) { return new Date(a.time) - new Date(b.time); });
+    }
+    function shiftM(ym, d) { let y = +ym.slice(0, 4), m = +ym.slice(5, 7) + d; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; } return y + "-" + F.pad(m); }
+    return { events: events, KIND: KIND, KCOL: { infl: "#F2A93B", jobs: "#5B9DFF", growth: "#1FBF86", fed: "#D97706" }, api: function () { return API; }, shiftM: shiftM };
+  })();
 
   const I = {
     cam: '<svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
@@ -271,7 +283,7 @@
     if (b.dataset.k === "menu") { const open = menu.hidden; menu.hidden = !open; b.classList.toggle("on", open); return; }
     act(b.dataset.k, b.dataset.v, b);
   });
-  document.addEventListener("click", function (ev) { if (!ev.target.closest("#kh-act")) close(); });
+  document.addEventListener("click", function (ev) { if (!host.contains(ev.target)) close(); });
   document.addEventListener("keydown", function (ev) { if (ev.key === "Escape") close(); });
 
   window.XCKalShare = { svg: makeSVG, png: makePNG };

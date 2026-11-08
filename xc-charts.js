@@ -584,6 +584,186 @@
     }
   ];
 
+
+  // =========================================================
+  // 4-ta chart ee cusub: Net Liquidity, Stablecoins, BTC vs S&P 500, Altcoins
+  // =========================================================
+  let LIQ = null, STAB = null, ALTS = null;
+  const MEAN = T("Maxay ka dhigan tahay hadda?", "What does it mean now?");
+  const FB = (v) => "$" + Math.round(v).toLocaleString("en-US") + "B";
+  const kFmt = (x) => (x >= 1000 ? "$" + Math.round(x / 1000) + "K" : "$" + Math.round(x));
+  // Qiimaha ugu dambeeya ee taariikh la siiyay ama ka hor (series waa la kala soocay)
+  function asOfFn(series) {
+    let k = 0;
+    return (d) => { if (!series.length || series[0][0] > d) return null; while (k < series.length - 1 && series[k + 1][0] <= d) k++; return series[k][1]; };
+  }
+  // BTC: maalinle (1000 maalmood) + toddobaadle (ka hor)
+  function btcSeries() {
+    if (!BTC) return [];
+    const d = BTC.daily || [], first = d.length ? d[0][0] : "9999";
+    return BTC.weeks.filter((w) => w[0] < first).map((w) => [w[0], w[1]]).concat(d.map((x) => [x[0], x[1]]));
+  }
+  // Aag midab leh oo u dhexeeya khadka iyo heer (base) — export-ka
+  function signFill(P, sc, a, base, up, dn, op) {
+    for (let i = 0; i < a.length - 1; i++) {
+      if (a[i] == null || a[i + 1] == null) continue;
+      const col = (a[i] + a[i + 1]) / 2 >= base ? up : dn;
+      P.s += `<path d="M${sc.x(i)},${sc.y(base)} L${sc.x(i)},${sc.y(a[i])} L${sc.x(i + 1)},${sc.y(a[i + 1])} L${sc.x(i + 1)},${sc.y(base)} Z" fill="${col}" opacity="${op}" />`;
+      P.s += `<path d="M${sc.x(i)},${sc.y(a[i])} L${sc.x(i + 1)},${sc.y(a[i + 1])}" stroke="${col}" stroke-width="${P.fs > 14 ? 2.2 : 1.6}" fill="none" stroke-linecap="round" />`;
+    }
+  }
+  const NEW4 = [
+    {
+      id: "net-liq", cat: "fed", ranges: [[52, "1S", "1Y"], [104, "2S", "2Y"], [260, "5S", "5Y"], [9999, T("Dhammaan", "All"), "All"]], def: 1, need: "liq+btc", hide: ["M2"],
+      build(range) {
+        const all = LIQ.net, rows = all.slice(-range), n = rows.length, nl = rows.map((r) => r[1]);
+        const gB = asOfFn(btcSeries()), btc = rows.map((r) => gB(r[0]));
+        const m2s = MACRO && MACRO.m2 ? MACRO.m2.map(([ym, v]) => [ym + "-01", v]) : [], gM = asOfFn(m2s), m2 = rows.map((r) => (m2s.length ? gM(r[0]) : null));
+        const L = all[all.length - 1], k13 = Math.max(0, all.length - 14), d13 = Math.round((L[1] - all[k13][1]) * 1000);
+        const up = d13 > 50, dn = d13 < -50;
+        const head = T(`Lacagta FED ee suuqa: $${L[1].toFixed(2)}T — ${up ? "way kordhay" : dn ? "way yaraatay" : "isma beddelin"}${up || dn ? " $" + Math.abs(d13) + "B" : ""} 3 bilood`,
+          `Fed net liquidity: $${L[1].toFixed(2)}T — ${up ? "up" : dn ? "down" : "flat"}${up || dn ? " $" + Math.abs(d13) + "B" : ""} in 3 months`);
+        const mean = up ? T(`Lacagta suuqa ku jirta way kordhay $${d13}B 3dii bilood ee u dambeeyay → guud ahaan taageero bay u tahay BTC iyo saamiyada.`, `Liquidity rose $${d13}B over 3 months → generally supportive for BTC and stocks.`)
+          : dn ? T(`Lacagta suuqa ku jirta way yaraatay $${-d13}B 3dii bilood ee u dambeeyay → cadaadis bay ku tahay BTC iyo saamiyada.`, `Liquidity fell $${-d13}B over 3 months → a headwind for BTC and stocks.`)
+          : T(`Lacagta suuqu wax badan isma beddelin 3 bilood (${d13 >= 0 ? "+" : "−"}$${Math.abs(d13)}B) → saameyn dhexdhexaad ah.`, `Liquidity barely moved in 3 months (${d13 >= 0 ? "+" : "−"}$${Math.abs(d13)}B) → neutral impact.`);
+        const hasM2 = m2.some((v) => v != null), hasB = btc.filter((v) => v != null).length > n * 0.5;
+        const sNL = T("Net Liquidity", "Net liquidity");
+        return {
+          kicker: T("FED · Lacagta suuqa", "Fed · Liquidity"), title: head,
+          sub: T("Xaashida FED − TGA (akoonka Maaliyadda) − Reverse Repo · $ tiriliyan · toddobaadle · BTC (log, bidix)", "Fed balance sheet − TGA − reverse repo · $ trillions · weekly · BTC (log, left)"),
+          legend: [[sNL, C.blu]].concat(hasB ? [["BTC", "alt"]] : [], hasM2 ? [["M2", C.pur]] : []),
+          source: "Federal Reserve, FRED" + (hasB ? ", Binance" : ""), badge: T("Xogta: ", "Data: ") + dLabel(L[0]),
+          note: { t: MEAN, lines: [mean, T(`Xaashida FED $${(L[2] / 1000).toFixed(2)}T · TGA $${L[3]}B · Reverse Repo $${L[4]}B (${dLabel(L[0])})`, `Fed balance sheet $${(L[2] / 1000).toFixed(2)}T · TGA $${L[3]}B · Reverse repo $${L[4]}B (${dLabel(L[0])})`)] },
+          series: [{ name: sNL, color: C.blu, type: "area", data: rows.map((r) => [r[0], r[1]]), fmt: (v) => "$" + v.toFixed(2) + "T" }]
+            .concat(hasB ? [{ name: "BTC", color: "alt", type: "thin", scale: "left", log: true, data: rows.map((r, i) => [r[0], btc[i]]), fmt: FU }] : [])
+            .concat(hasM2 ? [{ name: "M2", color: C.pur, type: "dash", scale: "m2", data: rows.map((r, i) => [r[0], m2[i]]), fmt: (v) => "$" + v.toFixed(2) + "T" }] : []),
+          n, tip: (i) => [[dLabel(rows[i][0])], [sNL, C.blu, "$" + nl[i].toFixed(2) + "T"], ["BTC", "alt", btc[i] ? fmtUSD(btc[i]) : "—"]],
+          draw(P, th) {
+            const lo = Math.min(...nl), hi = Math.max(...nl), pad = (hi - lo) * 0.12 || 0.1, r = P.scale(n, lo - pad, hi + pad);
+            P.yAxis(r, (v) => "$" + v.toFixed(1) + "T", true); P.xLabels(r, rows.map((x) => ymShort(x[0])));
+            if (hasB) { const bv = btc.filter((v) => v != null), s = P.scale(n, Math.min(...bv) * 0.85, Math.max(...bv) * 1.08, true); P.yAxis(s, kFmt); P.raw(s, btc, th.alt, P.fs > 14 ? 1.8 : 1.3); }
+            if (hasM2) { const mv = m2.filter((v) => v != null), q = P.scale(n, Math.min(...mv) * 0.98, Math.max(...mv) * 1.02); P.line(q, m2, C.pur, P.fs > 14 ? 2.4 : 1.6, "6 5"); }
+            P.area(r, nl, C.blu, lo - pad); P.line(r, nl, C.blu, P.fs > 14 ? 3.2 : 2.2);
+            P.dot(r, n - 1, nl[n - 1], C.blu, "$" + nl[n - 1].toFixed(2) + "T");
+          }
+        };
+      }
+    },
+    {
+      id: "stables", cat: "crypto", ranges: [[365, "1S", "1Y"], [730, "2S", "2Y"], [1825, "5S", "5Y"]], def: 1, need: "stab",
+      build(range) {
+        const all = STAB.days, chAll = all.map((r, i) => (i >= 90 ? Math.round((r[1] / all[i - 90][1] - 1) * 1000) / 10 : null));
+        const off = Math.max(0, all.length - range), rows = all.slice(off), ch = chAll.slice(off), n = rows.length, cap = rows.map((r) => r[1]);
+        const bm = new Map((BTC && BTC.daily) || []), btc = rows.map((r) => (bm.has(r[0]) ? bm.get(r[0]) : null)), hasB = btc.filter((v) => v != null).length > n * 0.5;
+        const L = all[all.length - 1], c90 = chAll[chAll.length - 1], c30 = all.length > 30 ? (L[1] / all[all.length - 31][1] - 1) * 100 : 0;
+        let pk = 0; cap.forEach((v, i) => { if (v > cap[pk]) pk = i; });
+        const mean = c90 > 2 ? T(`Stablecoin-ku wuu koray ${c90.toFixed(1)}% 90 maalmood → lacag cusub ayaa crypto soo gelaysa (calaamad wanaagsan).`, `Stablecoins grew ${c90.toFixed(1)}% in 90 days → fresh money is entering crypto (a healthy sign).`)
+          : c90 < -2 ? T(`Stablecoin-ku wuu yaraaday ${Math.abs(c90).toFixed(1)}% 90 maalmood → lacag ayaa crypto ka baxaysa (taxaddar).`, `Stablecoins shrank ${Math.abs(c90).toFixed(1)}% in 90 days → money is leaving crypto (caution).`)
+          : T(`Stablecoin-ku wax badan isma beddelin 90 maalmood (${pctTxt(c90)}) → lacag cusub oo badan ma soo gelayso.`, `Stablecoins barely moved in 90 days (${pctTxt(c90)}) → little new money coming in.`);
+        const sCap = T("Market cap", "Market cap"), sCh = T("Isbeddel 90m", "90d change");
+        return {
+          kicker: T("Crypto · Stablecoin", "Crypto · Stablecoins"),
+          title: T(`Stablecoin-ku waa $${Math.round(L[1])}B — ${c90 >= 0 ? "wuu koray" : "wuu yaraaday"} ${Math.abs(c90).toFixed(1)}% 90 maalmood`, `Stablecoins at $${Math.round(L[1])}B — ${c90 >= 0 ? "up" : "down"} ${Math.abs(c90).toFixed(1)}% in 90 days`),
+          sub: T("Wadarta stablecoin-nada (USDT, USDC iyo kuwa kale) · $ bilyan · maalinle · hoose: isbeddelka 90 maalmood", "Total stablecoin supply (USDT, USDC and more) · $ billions · daily · bottom: 90-day change"),
+          legend: [[sCap, C.pur], [sCh, C.grn]].concat(hasB ? [["BTC", "alt"]] : []),
+          source: "DefiLlama" + (hasB ? ", Binance" : ""), badge: "Live", live: true,
+          note: { t: MEAN, lines: [mean, T(`Hadda: $${L[1].toFixed(1)}B · 30 maalmood: ${pctTxt(c30)} · Ugu sarreeyay muddadan: $${Math.round(cap[pk])}B (${dLabel(rows[pk][0])})`, `Now: $${L[1].toFixed(1)}B · 30 days: ${pctTxt(c30)} · Period high: $${Math.round(cap[pk])}B (${dLabel(rows[pk][0])})`)] },
+          series: [{ name: sCap, color: C.pur, type: "area", data: rows.map((r) => [r[0], r[1]]), fmt: FB },
+            { name: sCh, color: C.grn, type: "hist", scale: "chg", margins: { top: 0.78, bottom: 0 }, data: rows.map((r, i) => [r[0], ch[i], ch[i] == null ? null : ch[i] >= 0 ? hexA(C.grn, 0.75) : hexA(C.red, 0.75)]), fmt: pctTxt }]
+            .concat(hasB ? [{ name: "BTC", color: "alt", type: "thin", scale: "left", log: true, data: rows.map((r, i) => [r[0], btc[i]]), fmt: FU }] : []),
+          n, tip: (i) => [[dLabel(rows[i][0])], [sCap, C.pur, FB(cap[i])], [sCh, C.grn, ch[i] != null ? pctTxt(ch[i]) : "—"]],
+          draw(P, th) {
+            const b = P.b, split = b.y0 + (b.y1 - b.y0) * 0.74, top = Object.assign({}, b, { y1: split - 8 }), bot = Object.assign({}, b, { y0: split + 6 });
+            const lo = Math.min(...cap), hi = Math.max(...cap);
+            P.b = top; const r = P.scale(n, lo * 0.97, hi * 1.02); P.yAxis(r, (v) => "$" + Math.round(v) + "B", true);
+            let s = null; if (hasB) { const bv = btc.filter((v) => v != null); s = P.scale(n, Math.min(...bv) * 0.85, Math.max(...bv) * 1.08, true); P.yAxis(s, kFmt); }
+            P.area(r, cap, C.pur, lo * 0.97); P.line(r, cap, C.pur, P.fs > 14 ? 3.2 : 2.2);
+            if (s) P.raw(s, btc, th.alt, P.fs > 14 ? 1.8 : 1.3);
+            P.dot(r, n - 1, cap[n - 1], C.pur, "$" + Math.round(cap[n - 1]) + "B");
+            const cm = Math.max(5, ...ch.filter((v) => v != null).map(Math.abs));
+            P.b = bot; const q = P.scale(n, -cm, cm);
+            if (!(P.hid && P.hid.has(C.grn))) { P.s += `<line x1="${bot.x0}" x2="${bot.x1}" y1="${q.y(0)}" y2="${q.y(0)}" stroke="${th.grid}" />`; P.bars(q, ch, hexA(C.grn, 0.75), hexA(C.red, 0.75)); }
+            P.b = b; P.xLabels(P.scale(n, 0, 1), rows.map((x) => ymShort(x[0])));
+          }
+        };
+      }
+    },
+    {
+      id: "btc-spx", cat: "stock", ranges: [[252, "1S", "1Y"], [504, "2S", "2Y"]], def: 1, need: "liq+btc", hide: ["S&P 500"],
+      build(range) {
+        // Isbeddelka maalinlaha (log) ee maalmaha ganacsiga — correlation 63 maalmood (~90 maalmood kalandar)
+        const bm = new Map(BTC.daily || []), pts = LIQ.spx.filter((r) => bm.has(r[0])).map((r) => [r[0], r[1], bm.get(r[0])]), W = 63, corr = [];
+        for (let i = W; i < pts.length; i++) {
+          let sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0;
+          for (let k = i - W + 1; k <= i; k++) { const x = Math.log(pts[k][1] / pts[k - 1][1]), y = Math.log(pts[k][2] / pts[k - 1][2]); sx += x; sy += y; sxx += x * x; syy += y * y; sxy += x * y; }
+          const c = (W * sxy - sx * sy) / Math.sqrt((W * sxx - sx * sx) * (W * syy - sy * sy));
+          if (isFinite(c)) corr.push([pts[i][0], Math.round(c * 100) / 100, pts[i][1], pts[i][2]]);
+        }
+        if (corr.length < 20) throw 0;
+        const rows = corr.slice(-range), n = rows.length, cv = rows.map((r) => r[1]), spx = rows.map((r) => r[2]), btc = rows.map((r) => r[3]);
+        const L = corr[corr.length - 1], c = L[1];
+        const lab = c >= 0.5 ? T("xiriir xooggan", "strong link") : c >= 0.2 ? T("xiriir dhexdhexaad ah", "moderate link") : c > -0.2 ? T("xiriir ma jiro", "no clear link") : T("xiriir lid ah", "inverse link");
+        const mean = c >= 0.5 ? T("BTC waxay si xooggan ula socotaa saamiyada Mareykanka → marka S&P 500 dhaco, BTC-na waxay u badan tahay inay dhacdo.", "BTC is moving closely with US stocks → when the S&P 500 falls, BTC tends to fall too.")
+          : c >= 0.2 ? T("BTC qayb ahaan way la socotaa saamiyada Mareykanka → suuqa saamiyadu saameyn bay ku leedahay BTC.", "BTC partly follows US stocks → the stock market has some influence on BTC.")
+          : c > -0.2 ? T("BTC waxay u socotaa si ka madax bannaan saamiyada → arrimaha crypto-da ayaa hadda go'aamiya qiimaha.", "BTC is moving independently of stocks → crypto-specific factors are driving price.")
+          : T("BTC waxay u socotaa jihada ka soo horjeedda saamiyada → arrin dhif ah.", "BTC is moving opposite to stocks → this is rare.");
+        const sC = T("Xiriirka", "Correlation");
+        return {
+          kicker: T("Stock · Xiriirka", "Stocks · Correlation"),
+          title: T(`BTC iyo S&P 500: ${c >= 0 ? "+" : "−"}${Math.abs(c).toFixed(2)} — ${lab}`, `BTC and the S&P 500: ${c >= 0 ? "+" : "−"}${Math.abs(c).toFixed(2)} — ${lab}`),
+          sub: T("Correlation-ka isbeddelka maalinlaha · 90 maalmood (63 maalmood ganacsi) · −1 ilaa +1 · BTC (log, bidix)", "Correlation of daily returns · 90 days (63 trading days) · −1 to +1 · BTC (log, left)"),
+          legend: [[sC, C.grn], ["BTC", "alt"], ["S&P 500", C.org]],
+          source: "S&P Dow Jones Indices, FRED, Binance", badge: T("Xogta: ", "Data: ") + dLabel(L[0]),
+          note: { t: MEAN, lines: [mean, T(`S&P 500: ${L[2].toLocaleString("en-US")} · BTC: ${fmtUSD(L[3])} (${dLabel(L[0])}) · Xiriirku ma aha sabab.`, `S&P 500: ${L[2].toLocaleString("en-US")} · BTC: ${fmtUSD(L[3])} (${dLabel(L[0])}) · Correlation is not causation.`)] },
+          series: [{ name: sC, color: C.grn, type: "base", base: 0, top: C.grn, bot: C.red, range: [-1, 1], data: rows.map((r) => [r[0], r[1]]), fmt: (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2), lines: [[0, "#8A97A8", ""]] },
+            { name: "BTC", color: "alt", type: "thin", scale: "left", log: true, data: rows.map((r) => [r[0], r[3]]), fmt: FU },
+            { name: "S&P 500", color: C.org, type: "line", scale: "spx", data: rows.map((r) => [r[0], r[2]]), fmt: (v) => Math.round(v).toLocaleString("en-US") }],
+          n, tip: (i) => [[dLabel(rows[i][0])], [sC, cv[i] >= 0 ? C.grn : C.red, cv[i].toFixed(2)], ["BTC", "alt", fmtUSD(btc[i])], ["S&P 500", C.org, Math.round(spx[i]).toLocaleString("en-US")]],
+          draw(P, th) {
+            const r = P.scale(n, -1, 1); P.yAxis(r, (v) => (v > 0 ? "+" : "") + v, true); P.xLabels(r, rows.map((x) => ymShort(x[0])));
+            const s = P.scale(n, Math.min(...btc) * 0.85, Math.max(...btc) * 1.08, true); P.yAxis(s, kFmt);
+            const y0 = r.y(0); P.s += `<line x1="${P.b.x0}" x2="${P.b.x1}" y1="${y0}" y2="${y0}" stroke="${th.mut}" stroke-width="1" stroke-dasharray="4 5" />`;
+            if (!(P.hid && P.hid.has(C.grn))) signFill(P, r, cv, 0, C.grn, C.red, 0.2);
+            if (!(P.hid && P.hid.has(C.org))) { const q = P.scale(n, Math.min(...spx) * 0.97, Math.max(...spx) * 1.02); P.line(q, spx, C.org, P.fs > 14 ? 2 : 1.4); }
+            P.raw(s, btc, th.alt, P.fs > 14 ? 1.8 : 1.3);
+            if (!(P.hid && P.hid.has(C.grn))) P.dot(r, n - 1, c, c >= 0 ? C.grn : C.red, (c >= 0 ? "+" : "−") + Math.abs(c).toFixed(2));
+          }
+        };
+      }
+    },
+    {
+      id: "alts", cat: "crypto", ranges: [[90, "3B", "3M"], [365, "1S", "1Y"], [730, "2S", "2Y"]], def: 1, need: "alts",
+      build(range) {
+        const all = ALTS.days, rows = all.slice(-range), n = rows.length, pv = rows.map((r) => r[1]);
+        const bm = new Map((BTC && BTC.daily) || []), btc = rows.map((r) => (bm.has(r[0]) ? bm.get(r[0]) : null)), hasB = btc.filter((v) => v != null).length > n * 0.5;
+        const L = all[all.length - 1], p = L[1], ago = (k) => (all.length > k ? all[all.length - 1 - k][1] + "%" : "—");
+        const mean = p >= 70 ? T(`${p}% altcoins ah ayaa ka hooseeya celceliska 200 maalmood → inta badan way daciif yihiin; wali ma aha altseason.`, `${p}% of altcoins are below their 200-day average → most are weak; not altseason yet.`)
+          : p > 30 ? T("Suuqa altcoin-ku waa isku dhafan → qaar way xoog badan yihiin, qaarna way daciif yihiin.", "The altcoin market is mixed → some are strong, some are weak.")
+          : T(`Kaliya ${p}% ayaa ka hooseeya celceliska 200 maalmood → inta badan altcoins-ku way xoog badan yihiin (calaamadda altseason).`, `Only ${p}% are below their 200-day average → most altcoins are strong (an altseason sign).`);
+        const sA = T("% ka hooseeya 200-DMA", "% below 200-DMA");
+        return {
+          kicker: T("Crypto · Altcoins", "Crypto · Altcoins"),
+          title: T(`${p}% altcoins ah ayaa ka hooseeya celceliska 200 maalmood`, `${p}% of altcoins are below their 200-day average`),
+          sub: T(`${ALTS.coins} altcoin ee ugu volume badan Binance (USDT) · maalinle · 70%+ = daciif, 30%- = altseason`, `Top ${ALTS.coins} altcoins by Binance volume (USDT) · daily · 70%+ = weak, under 30% = altseason`),
+          legend: [[sA, C.red]].concat(hasB ? [["BTC", "alt"]] : []),
+          source: T("Binance · Xogta Crypto ayaa xisaabisay", "Binance · computed by Xogta Crypto"), badge: T("Xogta: ", "Data: ") + dLabel(L[0]),
+          note: { t: MEAN, lines: [mean, T(`Toddobaad kahor: ${ago(7)} · Bil kahor: ${ago(30)} · 3 bilood kahor: ${ago(90)}`, `Last week: ${ago(7)} · Last month: ${ago(30)} · 3 months ago: ${ago(90)}`)] },
+          series: [{ name: sA, color: C.red, type: "base", base: 50, top: C.red, bot: C.grn, range: [0, 100], data: rows.map((r) => [r[0], r[1]]), fmt: (v) => Math.round(v) + "%", lines: [[70, C.red, ""], [30, C.grn, ""]] }]
+            .concat(hasB ? [{ name: "BTC", color: "alt", type: "thin", scale: "left", log: true, data: rows.map((r, i) => [r[0], btc[i]]), fmt: FU }] : []),
+          n, tip: (i) => [[dLabel(rows[i][0])], [sA, pv[i] >= 50 ? C.red : C.grn, pv[i] + "%"]].concat(hasB ? [["BTC", "alt", btc[i] ? fmtUSD(btc[i]) : "—"]] : []),
+          draw(P, th) {
+            const r = P.scale(n, 0, 100); P.yAxis(r, (v) => v + "%", true); P.xLabels(r, rows.map((x) => ymShort(x[0])));
+            P.s += `<rect x="${P.b.x0}" y="${r.y(100)}" width="${P.b.x1 - P.b.x0}" height="${r.y(70) - r.y(100)}" fill="${C.red}" opacity=".06" /><rect x="${P.b.x0}" y="${r.y(30)}" width="${P.b.x1 - P.b.x0}" height="${r.y(0) - r.y(30)}" fill="${C.grn}" opacity=".06" />`;
+            P.s += `<text x="${P.b.x0 + 10}" y="${r.y(100) + P.fs * 1.4}" font-size="${P.fs}" font-weight="700" fill="${C.red}">${esc(T("Daciif (70%+)", "Weak (70%+)"))}</text><text x="${P.b.x0 + 10}" y="${r.y(0) - P.fs * 0.7}" font-size="${P.fs}" font-weight="700" fill="${C.grn}">${esc(T("Altseason (30% ka hoos)", "Altseason (under 30%)"))}</text>`;
+            [[70, C.red], [30, C.grn]].forEach((h) => { const y = r.y(h[0]); P.s += `<line x1="${P.b.x0}" x2="${P.b.x1}" y1="${y}" y2="${y}" stroke="${h[1]}" stroke-width="1.2" stroke-dasharray="5 5" />`; });
+            if (hasB) { const bv = btc.filter((v) => v != null), s = P.scale(n, Math.min(...bv) * 0.85, Math.max(...bv) * 1.08, true); P.yAxis(s, kFmt); P.raw(s, btc, th.alt, P.fs > 14 ? 1.8 : 1.3); }
+            if (!(P.hid && P.hid.has(C.red))) { signFill(P, r, pv, 50, C.red, C.grn, 0.18); P.dot(r, n - 1, p, p >= 50 ? C.red : C.grn, p + "%"); }
+          }
+        };
+      }
+    }
+  ];
+
   // =========================================================
   // Render bogga
   // =========================================================
@@ -610,7 +790,7 @@
       <div class="xcc-bot"><div class="xcc-rg"></div><div class="xcc-src"></div></div>
       <div class="xcc-note"></div>`;
     grid.appendChild(el);
-    state[ch.id] = { ch, el, range: ch.ranges.length ? ch.ranges[ch.def][0] : 0, model: null };
+    state[ch.id] = { ch, el, range: ch.ranges.length ? ch.ranges[ch.def][0] : 0, model: null, hidden: new Set(ch.hide || []) };
     const rg = el.querySelector(".xcc-rg");
     if (!ch.ranges.length) rg.style.visibility = "hidden";
     rg.innerHTML = ch.ranges.map((r, k) => `<button data-r="${r[0]}" class="${k === ch.def ? "on" : ""}">${esc(EN ? r[2] : r[1])}</button>`).join("");
@@ -619,7 +799,7 @@
 
   function renderCard(id) {
     const st = state[id], ch = st.ch, el = st.el;
-    const have = { fed: !!FED, btc: !!BTC, macro: !!MACRO, sent: !!SENT };
+    const have = { fed: !!FED, btc: !!BTC, macro: !!MACRO, sent: !!SENT, liq: !!LIQ, stab: !!STAB, alts: !!ALTS };
     if (ch.need.split("+").some((k) => !have[k])) return;
     let m;
     try { m = ch.build(st.range); } catch (e) { el.querySelector(".xcc-plot").innerHTML = `<div class="xcc-load">${T("Xogta lama heli karo hadda.", "Data unavailable right now.")}</div>`; return; }
@@ -674,11 +854,13 @@
       let ser;
       if (sp.type === "hist") ser = chart.addHistogramSeries(Object.assign(base, { color: col }));
       else if (sp.type === "fng") ser = chart.addBaselineSeries(Object.assign(base, { baseValue: { type: "price", price: 50 }, lineWidth: 1.5, topLineColor: col, bottomLineColor: col, topFillColor1: "rgba(245,165,74,.45)", topFillColor2: "rgba(245,165,74,.05)", bottomFillColor1: "rgba(59,130,246,.05)", bottomFillColor2: "rgba(59,130,246,.45)", autoscaleInfoProvider: () => ({ priceRange: { minValue: 0, maxValue: 100 } }) }));
+      else if (sp.type === "base") ser = chart.addBaselineSeries(Object.assign(base, { baseValue: { type: "price", price: sp.base }, lineWidth: 2, topLineColor: sp.top, bottomLineColor: sp.bot, topFillColor1: hexA(sp.top, 0.32), topFillColor2: hexA(sp.top, 0.04), bottomFillColor1: hexA(sp.bot, 0.04), bottomFillColor2: hexA(sp.bot, 0.32), autoscaleInfoProvider: sp.range ? () => ({ priceRange: { minValue: sp.range[0], maxValue: sp.range[1] } }) : undefined }));
       else if (sp.type === "area" || sp.type === "steparea") ser = chart.addAreaSeries(Object.assign(base, { lineColor: col, topColor: hexA(col, 0.28), bottomColor: hexA(col, 0.01), lineWidth: 2, lineType: sp.type === "steparea" ? 1 : 0 }));
       else ser = chart.addLineSeries(Object.assign(base, { color: col, lineWidth: sp.type === "thin" ? 1.5 : 2, lineType: sp.type === "step" ? 1 : 0, lineStyle: sp.type === "dash" ? 2 : 0 }));
       ser.setData(sp.data.filter((d) => d[1] != null).map((d) => (d[2] ? { time: d[0], value: d[1], color: d[2] } : { time: d[0], value: d[1] })));
-      (sp.lines || []).forEach((l) => ser.createPriceLine({ price: l[0], color: l[1], lineWidth: 1, lineStyle: 2, axisLabelVisible: sp.type !== "fng", title: "" }));
+      (sp.lines || []).forEach((l) => ser.createPriceLine({ price: l[0], color: l[1], lineWidth: 1, lineStyle: 2, axisLabelVisible: sp.type !== "fng" && sp.type !== "base", title: "" }));
       if (sp.log) chart.priceScale(sp.scale || "right").applyOptions({ mode: 1 });
+      if (sp.margins) chart.priceScale(sp.scale).applyOptions({ scaleMargins: sp.margins });
       const lastPt = sp.data.filter((d) => d[1] != null).slice(-1)[0];
       return { sp, ser, col, last: lastPt ? lastPt[1] : null };
     });
@@ -865,8 +1047,8 @@
   // =========================================================
   // Bilow + cusboonaysiin
   // =========================================================
-  const BYID = {}; CHARTS.concat(MORE).forEach((c) => { BYID[c.id] = c; });
-  ["fed-rate", "fed-bs", "cpi-fed", "core-pce", "shaqo", "bonds", "dollar-oil", "btc-50-200", "btc-fed", "sentiment"].forEach((id) => cardShell(BYID[id]));
+  const BYID = {}; CHARTS.concat(MORE, NEW4).forEach((c) => { BYID[c.id] = c; });
+  ["fed-rate", "fed-bs", "net-liq", "cpi-fed", "core-pce", "shaqo", "bonds", "dollar-oil", "btc-spx", "btc-50-200", "btc-fed", "sentiment", "stables", "alts"].forEach((id) => cardShell(BYID[id]));
   const renderAll = () => Object.keys(state).forEach(renderCard);
   async function loadFed() {
     try { const r = await fetch("/api/fed", { cache: "no-store" }); const j = await r.json(); if (j && j.monthly) { FED = j; renderAll(); } else throw 0; }
@@ -893,7 +1075,7 @@
         const rows = await (await fetch("https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=1000")).json();
         if (Array.isArray(rows) && rows.length > 60) { j.daily = rows.map((k) => [new Date(k[0]).toISOString().slice(0, 10), Math.round(parseFloat(k[4]))]); if (j.live) j.daily[j.daily.length - 1][1] = Math.round(j.live); }
       } catch (e) { /* maalinle ma jiro — toddobaadle ayaa la isticmaalayaa */ }
-      BTC = j; renderCard("btc-50-200"); renderCard("btc-fed"); if (SENT) renderCard("sentiment");
+      BTC = j; renderAll();
     } else if (!BTC) failMsg("btc");
   }
 
@@ -929,7 +1111,32 @@
     }
     if (j) { SENT = j; renderCard("sentiment"); } else if (!SENT) failMsg("sent");
   }
-  loadFed(); loadBtc(); loadMacro(); loadSent();
+  // Kaararka cusub: haddii xogtu la waayo, kaarka waa la qarinayaa (bogga ma jabo)
+  function offCards(need, off) { Object.values(state).filter((s) => s.ch.need.indexOf(need) !== -1).forEach((s) => s.el.classList.toggle("xcc-off", off)); }
+  async function getAPI(url, ok) { try { const r = await fetch(url, { cache: "no-store" }); if (!r.ok) return null; const j = await r.json(); return ok(j) ? j : null; } catch (e) { return null; } }
+  async function loadLiq() {
+    const j = await getAPI("/api/liquidity", (x) => x && Array.isArray(x.net) && x.net.length > 20);
+    if (j) { LIQ = j; offCards("liq", false); renderCard("net-liq"); renderCard("btc-spx"); } else if (!LIQ) offCards("liq", true);
+  }
+  async function loadStab() {
+    let j = await getAPI("/api/stables", (x) => x && Array.isArray(x.days) && x.days.length > 100);
+    if (!j) { // si toos ah DefiLlama (browser-ka)
+      try {
+        const rows = await (await fetch("https://stablecoins.llama.fi/stablecoincharts/all")).json(), days = [];
+        rows.forEach((r) => { const sum = Object.values(r.totalCirculatingUSD || {}).reduce((a, v) => a + (+v || 0), 0), d = new Date(+r.date * 1000).toISOString().slice(0, 10); if (sum > 0 && d >= "2019-01-01") days.push([d, Math.round(sum / 1e7) / 100]); });
+        if (days.length > 100) j = { source: "DefiLlama", days };
+      } catch (e) { /* ignore */ }
+    }
+    if (j) { STAB = j; offCards("stab", false); renderCard("stables"); } else if (!STAB) offCards("stab", true);
+  }
+  async function loadAlts() {
+    const j = await getAPI("/api/alts", (x) => x && Array.isArray(x.days) && x.days.length > 30);
+    if (j) { ALTS = j; offCards("alts", false); renderCard("alts"); } else if (!ALTS) offCards("alts", true);
+  }
+  loadFed(); loadBtc(); loadMacro(); loadSent(); loadLiq(); loadStab(); loadAlts();
+  setInterval(loadLiq, 30 * 60 * 1000);    // FRED (Net Liquidity, S&P 500): 30 daqiiqo kasta
+  setInterval(loadStab, 15 * 60 * 1000);   // Stablecoins: 15 daqiiqo kasta
+  setInterval(loadAlts, 60 * 60 * 1000);   // Altcoins: saacad kasta
   // Live: qiimaha BTC iyo saliidda daqiiqad kasta (Hyperliquid) — dhibicda u dambeysa ayaa la cusboonaysiinayaa
   async function tick() {
     try {

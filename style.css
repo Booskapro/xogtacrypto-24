@@ -1043,3 +1043,8 @@ body.xc-noscroll { overflow: hidden; }
 .kh-act .xcc-menu svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .kh-act .xcc-menu svg.fill { fill: currentColor; stroke: none; width: 16px; height: 16px; margin: 0 1px; }
 .kh-mh { padding: 8px 12px 4px; font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+/* Bogga hore: badhanka sawirka ee "Xogta soo socota" */
+.fh-tla { display: flex; align-items: center; gap: 14px; }
+.fh-act .kh-ib { color: var(--text); border-color: var(--line-2); background: var(--card-2); }
+.fh-act .kh-ib:hover, .fh-act .kh-ib.on { background: var(--line); }
+.fh-tlh { align-items: center; }
