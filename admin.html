@@ -93,7 +93,11 @@
     const new7 = r.members.filter((m) => (m.first || 0) > d7).length, act7 = r.members.filter((m) => (m.last || 0) > d7).length;
     const rows = r.members.filter((m) => !q || (m.name + " " + m.username).toLowerCase().includes(q.toLowerCase()));
     const sum = (k) => r.days.reduce((a, d) => a + (d[k] || 0), 0);
-    root.innerHTML = (r.kv ? "" : `<p class="ad-msg bad">Database (KV) lama helin.</p>`) + `
+    const B = r.bot || null;
+    const botBox = !B ? "" : B.ok
+      ? `<p class="ad-msg" style="color:#2BD67B">✓ Bot-ka @${esc(B.name)} wuu arki karaa kooxda “${esc(B.chat)}” (${esc(B.type)} · ${esc(B.status)}).</p>`
+      : `<div class="card" style="border-color:#F05A5F;margin:14px 0"><b style="color:#F05A5F">✗ Bot-ka${B.name ? " @" + esc(B.name) : ""} ma hubin karo xubnaha kooxda</b><p class="ad-msg">${B.status ? "Heerka bot-ka: <b>" + esc(B.status) + "</b>" + (B.type ? " · nooca: " + esc(B.type) : "") + ". " : ""}${B.msg ? "Telegram: " + esc(B.msg) : ""}</p><p class="ad-msg">Xalka: Telegram → fur kooxda/channel-ka → Administrators → Add Admin → dooro bot-ka → Save. Kadib hubi in <b>TELEGRAM_CHAT_ID</b> (Vercel) uu yahay <b>@Xogtacrypto24_7</b> ama lambarka kooxda (-100…).</p></div>`;
+    root.innerHTML = (r.kv ? "" : `<p class="ad-msg bad">Database (KV) lama helin.</p>`) + botBox + `
       <div class="ad-kp">
         <div><span>Xubnaha bogga (Telegram login)</span><b>${mem.length}</b></div>
         <div><span>Kooxda Telegram (wadarta)</span><b>${r.group != null ? r.group.toLocaleString("en-US") : "—"}</b></div>

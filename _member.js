@@ -84,7 +84,7 @@ module.exports = async function handler(req, res) {
       if (!validLogin(u)) return send(401, { error: "Saxiixa Telegram ma saxna" });
       const st = await status(u.id);
       await saveUser(u, st);
-      return send(200, { member: st.member, admin: st.admin, t: st.member || st.admin ? issue(u.id, st) : null, name: u.first_name || "" });
+      return send(200, { member: st.member, admin: st.admin, t: st.member || st.admin ? issue(u.id, st) : null, name: u.first_name || "", err: st.err || "" });
     }
     if (op === "check") {
       const o = read(body.t); if (!o) return send(200, { member: false });
@@ -128,7 +128,15 @@ module.exports = async function handler(req, res) {
         days.push(o2);
       }
       const cnt = await tg("getChatMemberCount", { chat_id: CHAT });
-      return send(200, { kv: true, members, days, group: cnt.ok ? cnt.result : null });
+      // Hubinta bot-ka: ma arki karaa kooxda? ma admin baa?
+      let bot = { ok: false, msg: "" };
+      try {
+        const me = await tg("getMe"), ch = await tg("getChat", { chat_id: CHAT });
+        const bm = me.ok ? await tg("getChatMember", { chat_id: CHAT, user_id: me.result.id }) : { ok: false, description: me.description };
+        bot = { ok: !!(ch.ok && bm.ok && ["administrator", "creator", "member"].includes(bm.result.status)), name: me.ok ? me.result.username : "", chat: ch.ok ? (ch.result.title || "") : "", type: ch.ok ? ch.result.type : "", status: bm.ok ? bm.result.status : "", msg: !ch.ok ? (ch.description || "") : !bm.ok ? (bm.description || "") : "" };
+        if (bot.type === "channel" && bot.status !== "administrator") bot.ok = false;
+      } catch (e) { bot.msg = String(e.message || e); }
+      return send(200, { kv: true, members, days, group: cnt.ok ? cnt.result : null, bot });
     }
     return send(400, { error: "op?" });
   } catch (e) {

@@ -68,6 +68,9 @@
           if (get("xc-xf") !== "1") set("xc-xf", "1");
           msg(T(`Ku soo dhowow${r.name ? ", " + esc(r.name) : ""}! ✓ Wax walba waa kuu furan yihiin.`, `Welcome${r.name ? ", " + esc(r.name) : ""}! ✓ Everything is unlocked.`), "ok");
           setTimeout(() => { const g = document.getElementById("xg"); if (g) g.remove(); document.body.classList.remove("xg-locked"); document.querySelectorAll(".xg-pill").forEach((p) => p.remove()); }, 1200);
+        } else if (r && r.err) {
+          // Bot-ka ma arki karo kooxda (ma aha in qofku ka maqan yahay)
+          msg(T(`Bot-ka ma hubin karo kooxda hadda — khaladka ma aha adiga. Maamulaha website-ka waa la ogeysiiyay. (${esc(r.err)})`, `The bot can't check the group right now — it's not your fault. (${esc(r.err)})`), "bad");
         } else if (r && r.error) {
           msg(esc(r.error), "bad");
         } else {
