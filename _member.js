@@ -101,11 +101,22 @@ module.exports = async function handler(req, res) {
       if (o) { const old = await kv(["HGET", "xc:members", String(o.id)]); if (old) { try { const r = JSON.parse(old); r.last = Date.now(); r.views = (r.views || 0) + 1; await kv(["HSET", "xc:members", String(o.id), JSON.stringify(r)]); } catch (e) { /* ignore */ } } }
       return send(200, { ok: true });
     }
+    if (op === "admin") {
+      // Password-ka maamulka: Vercel → Environment Variables → ADMIN_PASSWORD (Secret)
+      const PW = env("ADMIN_PASSWORD");
+      if (!PW) return send(500, { error: "ADMIN_PASSWORD Vercel kuma jiro" });
+      const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "x", k = "xc:admtry:" + ip + ":" + new Date().toISOString().slice(0, 13);
+      const n = await kv(["INCR", k]); await kv(["EXPIRE", k, 3600]);
+      if (n != null && n > 8) return send(429, { error: "Isku day badan. Sug 1 saac." });
+      const a1 = crypto.createHash("sha256").update(String(body.pw || "")).digest(), a2 = crypto.createHash("sha256").update(PW).digest();
+      if (!crypto.timingSafeEqual(a1, a2)) return send(401, { error: "Password-ku waa khalad" });
+      const now = Date.now();
+      return send(200, { t: sign({ id: 0, adm: 1, pw: 1, chk: now, exp: now + 30 * 864e5 }) });
+    }
     if (op === "list") {
       const o = read(body.t);
-      if (!o) return send(401, { error: "Login with Telegram" });
-      const st = await status(o.id);
-      if (!st.admin) return send(403, { error: "Admin oo kaliya (maamulayaasha kooxda Telegram)" });
+      if (!o) return send(401, { error: "Login" });
+      if (!(o.pw && o.adm)) { const st = await status(o.id); if (!st.admin) return send(403, { error: "Admin oo kaliya" }); }
       if (!KVU) return send(200, { members: [], days: [], kv: false });
       const raw = (await kv(["HGETALL", "xc:members"])) || [];
       const members = []; for (let i = 0; i < raw.length; i += 2) { try { members.push(JSON.parse(raw[i + 1])); } catch (e) { /* ignore */ } }

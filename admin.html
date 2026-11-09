@@ -57,23 +57,20 @@
   let DATA = null;
 
   function login(msg, bad) {
-    root.innerHTML = `<div class="ad-login card" style="padding:28px">
-      <p>Boggan waxaa geli kara <b>maamulayaasha kooxda Telegram</b> oo kaliya. Riix Login with Telegram.</p>
-      <div id="ad-w">…</div><div class="ad-msg${bad ? " bad" : ""}">${msg || ""}</div></div>`;
-    api("bot").then((r) => {
-      if (!r || !r.bot) { root.querySelector(".ad-msg").textContent = "Bot-ka lama helin."; return; }
-      const sc = document.createElement("script"); sc.async = true; sc.src = "https://telegram.org/js/telegram-widget.js?22";
-      sc.setAttribute("data-telegram-login", r.bot); sc.setAttribute("data-size", "large"); sc.setAttribute("data-radius", "12"); sc.setAttribute("data-onauth", "XCAdmin(user)");
-      const w = root.querySelector("#ad-w"); w.innerHTML = ""; w.appendChild(sc);
+    root.innerHTML = `<form class="ad-login card" style="padding:28px" id="ad-f">
+      <p><b>Password-ka maamulka</b> geli.</p>
+      <input id="ad-pw" type="password" autocomplete="current-password" required placeholder="Password" style="width:100%;margin-top:10px;background:var(--card-2);border:1px solid var(--line-2);color:var(--text);border-radius:12px;padding:12px 14px;font:inherit">
+      <button class="ad-btn" style="width:100%;margin-top:12px;padding:12px">Gal</button>
+      <div class="ad-msg${bad ? " bad" : ""}">${msg || ""}</div></form>`;
+    root.querySelector("#ad-f").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const r = await api("admin", { pw: root.querySelector("#ad-pw").value }).catch(() => null);
+      if (r && r.t) { set("xc-adm", r.t); load(); } else login(r && r.error ? esc(r.error) : "Isku day mar kale.", true);
     });
+    root.querySelector("#ad-pw").focus();
   }
-  window.XCAdmin = async (user) => {
-    const r = await api("login", { user });
-    if (r && r.t) { set("xc-mem", r.t); load(); }
-    else login(r && r.error ? esc(r.error) : "Ma tihid maamule kooxda.", true);
-  };
   async function load() {
-    const t = get("xc-mem");
+    const t = get("xc-adm");
     if (!t) return login();
     root.innerHTML = `<p class="ad-msg">Xogta ayaa soo socota…</p>`;
     const r = await api("list", { t }).catch(() => null);
@@ -109,7 +106,7 @@
       const lines = [["id", "name", "username", "status", "first", "last", "views"].join(",")].concat(r.members.map((m) => [m.id, m.name, m.username, m.admin ? "admin" : m.member ? "member" : "not-member", m.first ? new Date(m.first).toISOString() : "", m.last ? new Date(m.last).toISOString() : "", m.views || 0].map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(",")));
       const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" })); a.download = "xubnaha-xogta-crypto-" + new Date().toISOString().slice(0, 10) + ".csv"; a.click();
     });
-    root.querySelector("#ad-out").addEventListener("click", (e) => { e.preventDefault(); set("xc-mem", null); login(); });
+    root.querySelector("#ad-out").addEventListener("click", (e) => { e.preventDefault(); set("xc-adm", null); login(); });
   }
   load();
 })();
