@@ -42,5 +42,11 @@ window.SITE = {
   // Tirada xubnaha kooxda Telegram (gacanta ku beddel)
   telegram_members: "1,400+",
 
+  // QUFULKA (Follow X + Telegram). Si aad u damiso: on: false
+  gate: {
+    on: true,
+    free: 3 // inta jeer ee bilaashka ah ka hor qufulka
+  },
+
   email: "" // tusaale: "info@xogtacrypto247.com"
 };

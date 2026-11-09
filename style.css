@@ -1115,3 +1115,29 @@ body.xc-noscroll { overflow: hidden; }
 .fh-dv { font: 700 12px 'Inter Tight', Inter, sans-serif; } .fh-dv.up { fill: #2BD67B; } .fh-dv.down { fill: #F05A5F; }
 .fh-ax { stroke: var(--line-2); }
 @media (max-width: 560px) { .fh-nav span { min-width: 120px; } .fh-dv { font-size: 10.5px; } }
+/* Qufulka xubnaha (gate.js) */
+body.xg-locked main { filter: blur(9px); pointer-events: none; user-select: none; max-height: 100vh; overflow: hidden; }
+.xg { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; padding: 16px; background: rgba(5, 8, 12, .55); backdrop-filter: blur(2px); overflow-y: auto; }
+body.xg-locked .xg { top: 64px; }
+.xg-box { position: relative; width: min(470px, 100%); background: var(--card); border: 1px solid var(--line-2); border-radius: 24px; padding: 28px 26px 22px; box-shadow: 0 30px 90px rgba(0, 0, 0, .55); text-align: center; }
+.xg-x { position: absolute; top: 12px; right: 14px; width: 34px; height: 34px; border: 0; border-radius: 10px; background: var(--card-2); color: var(--muted); font-size: 22px; cursor: pointer; }
+.xg-ic { width: 68px; height: 68px; margin: 0 auto 14px; border-radius: 20px; display: grid; place-items: center; background: radial-gradient(circle at 30% 20%, rgba(63,184,255,.25), rgba(91,91,255,.08)); border: 1px solid rgba(63,184,255,.35); box-shadow: 0 0 40px rgba(63,184,255,.18); }
+.xg-box h2 { font-family: var(--font-display); font-size: 1.4rem; letter-spacing: -.02em; margin: 0 0 8px; }
+.xg-box > p { color: var(--muted); font-size: .9rem; line-height: 1.55; margin: 0 0 18px; } .xg-box > p b { color: var(--text); }
+.xg-st { display: flex; align-items: center; gap: 12px; text-align: left; background: var(--card-2); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; }
+.xg-st.ok { border-color: rgba(43,214,123,.45); background: rgba(43,214,123,.06); }
+.xg-n { width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .8rem; background: var(--text); color: var(--bg); }
+.xg-st.ok .xg-n { background: #2BD67B; color: #0B1220; } .xg-n.xg-tg { background: #229ED9; color: #fff; }
+.xg-tx { min-width: 0; } .xg-tx b { display: block; font-size: .95rem; } .xg-tx span { font-size: .78rem; color: var(--muted); }
+.xg-b { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: .82rem; padding: 9px 14px; border-radius: 10px; text-decoration: none; white-space: nowrap; }
+.xg-bx { background: var(--text); color: var(--bg); } .xg-st.ok .xg-bx { background: none; color: #2BD67B; padding-right: 4px; }
+.xg-bt { background: #229ED9; color: #fff; }
+.xg-login { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); } .xg-login > span { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 10px; }
+#xg-w { min-height: 40px; display: flex; justify-content: center; } .xg-wait { color: var(--muted); }
+.xg-msg { margin-top: 12px; font-size: .85rem; padding: 10px 12px; border-radius: 10px; background: var(--card-2); } .xg-msg.ok { color: #2BD67B; } .xg-msg.bad { color: #F05A5F; } .xg-msg a { color: inherit; font-weight: 700; }
+.xg-fine { font-size: .72rem !important; color: var(--muted); margin: 14px 0 0 !important; }
+.xg-back { display: inline-block; margin-top: 12px; font-size: .82rem; color: var(--accent-ink); text-decoration: none; font-weight: 600; }
+.xg-pill { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 800; display: inline-flex; align-items: center; gap: 8px; max-width: calc(100% - 24px); background: var(--card); color: var(--text); border: 1px solid rgba(63,184,255,.4); border-radius: 999px; padding: 9px 16px 9px 10px; font: 600 .82rem Inter, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.35); cursor: pointer; }
+.xg-pill > span { display: grid; place-items: center; }
+:root { --font-display: "Space Grotesk", sans-serif; }
+.xg-pill { white-space: nowrap; }

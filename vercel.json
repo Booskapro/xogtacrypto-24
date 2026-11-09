@@ -2,11 +2,26 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/api/liquidity", "destination": "/api/macro?k=liq" },
-    { "source": "/api/stables", "destination": "/api/macro?k=stab" },
-    { "source": "/api/alts", "destination": "/api/macro?k=alts" }
+    {
+      "source": "/api/liquidity",
+      "destination": "/api/macro?k=liq"
+    },
+    {
+      "source": "/api/stables",
+      "destination": "/api/macro?k=stab"
+    },
+    {
+      "source": "/api/alts",
+      "destination": "/api/macro?k=alts"
+    },
+    {
+      "source": "/api/member",
+      "destination": "/api/macro?k=member"
+    }
   ],
   "functions": {
-    "api/macro.js": { "maxDuration": 60 }
+    "api/macro.js": {
+      "maxDuration": 60
+    }
   }
 }
