@@ -14,56 +14,56 @@
   <script src="config.js"></script>
   <script src="layout.js"></script>
   <style>
-    .ad { padding-top: 34px; padding-bottom: 60px; }
-    .ad-login { max-width: 420px; margin: 40px auto; text-align: center; }
-    .ad-login #ad-w { display: flex; justify-content: center; margin-top: 18px; min-height: 44px; }
-    .ad-msg { margin-top: 14px; color: var(--muted); font-size: .9rem; } .ad-msg.bad { color: #F05A5F; }
-    .ad-kp { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0 22px; }
-    .ad-kp div { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
-    .ad-kp span { display: block; font-size: .75rem; color: var(--muted); } .ad-kp b { font-family: var(--font-display); font-size: 1.7rem; }
-    .ad-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 26px 0 10px; }
-    .ad-row h2 { margin: 0; font-family: var(--font-display); font-size: 1.25rem; }
-    .ad-tools { display: flex; gap: 8px; } .ad-tools input { background: var(--card); border: 1px solid var(--line-2); color: var(--text); border-radius: 10px; padding: 8px 12px; font: inherit; font-size: .85rem; min-width: 200px; }
-    .ad-btn { background: var(--text); color: var(--bg); border: 0; border-radius: 10px; padding: 8px 14px; font: 700 .82rem Inter, sans-serif; cursor: pointer; }
-    .ad-tbl { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; font-size: .86rem; }
-    .ad-tbl th { text-align: left; font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); background: var(--card-2); padding: 10px 12px; }
-    .ad-tbl td { padding: 10px 12px; border-top: 1px solid var(--line); vertical-align: middle; }
-    .ad-u { display: flex; align-items: center; gap: 10px; } .ad-u img, .ad-u i { width: 32px; height: 32px; border-radius: 50%; background: var(--card-2); flex-shrink: 0; }
-    .ad-u a { color: var(--accent-ink); text-decoration: none; font-size: .78rem; }
-    .ad-tag { font-size: .7rem; font-weight: 800; padding: 3px 8px; border-radius: 999px; } .ad-tag.y { background: rgba(43,214,123,.15); color: #2BD67B; } .ad-tag.n { background: rgba(240,90,95,.15); color: #F05A5F; } .ad-tag.a { background: rgba(63,184,255,.15); color: #3FB8FF; }
-    .ad-days { width: 100%; border-collapse: collapse; font-size: .82rem; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
-    .ad-days th, .ad-days td { padding: 8px 10px; text-align: right; border-top: 1px solid var(--line); } .ad-days th { color: var(--muted); font-size: .7rem; text-transform: uppercase; background: var(--card-2); border-top: 0; } .ad-days td:first-child, .ad-days th:first-child { text-align: left; }
-    .ad-scroll { overflow-x: auto; }
-    .ad-g { display: block; font-style: normal; font-size: .78rem; margin-top: 2px; color: var(--muted); } .ad-g.up { color: #2BD67B; } .ad-g.down { color: #F05A5F; }
-    .ad-rg { display: inline-flex; gap: 4px; padding: 5px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); margin: 4px 0 14px; flex-wrap: wrap; }
-    .ad-rg button { border: 0; background: transparent; color: var(--muted); font: 600 .9rem Inter, sans-serif; padding: 9px 14px; border-radius: 10px; cursor: pointer; } .ad-rg button.on { background: var(--text); color: var(--bg); }
-    .ad-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; margin-bottom: 16px; min-width: 0; }
-    .ad-card h2 { margin: 0 0 12px; font-family: var(--font-display); font-size: 1.15rem; }
-    .ad-ch-h { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; } .ad-ch-h h2 { margin: 0; }
-    .ad-mini { display: flex; gap: 10px; } .ad-mini div { background: var(--card-2); border-radius: 12px; padding: 8px 12px; } .ad-mini span { display: block; font-size: .72rem; color: var(--muted); } .ad-mini b { font-family: var(--font-display); font-size: 1.2rem; }
-    .ad-ch { width: 100%; height: 260px; margin-top: 12px; display: block; } .ad-ax { font-size: 11px; fill: var(--muted); }
-    .ad-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 4px; vertical-align: 0; }
-    .ad-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .ad-bar { display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: .88rem; }
-    .ad-bar span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ad-bar i { display: block; height: 10px; border-radius: 99px; background: linear-gradient(90deg, #3FB8FF, #5B5BFF); } .ad-bar.pg i { background: #F5B53F; }
-    .ad-bar b { text-align: right; font-family: var(--font-display); } .ad-bar small { color: var(--muted); font-weight: 500; }
-    .ad-note { background: rgba(63,184,255,.1); border: 1px solid rgba(63,184,255,.3); border-radius: 12px; padding: 12px 14px; font-size: .9rem; margin: 14px 0 0; }
-    @media (max-width: 760px) { .ad-two { grid-template-columns: 1fr; } .ad-bar { grid-template-columns: 110px 1fr 70px; } .ad-ch { height: 200px; } }
-    @media (max-width: 760px) { .ad-kp { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ad-hide { display: none; } }
+    .mgw { padding-top: 34px; padding-bottom: 60px; }
+    .mg-login { max-width: 420px; margin: 40px auto; text-align: center; }
+    .mg-login #mg-w { display: flex; justify-content: center; margin-top: 18px; min-height: 44px; }
+    .mg-msg { margin-top: 14px; color: var(--muted); font-size: .9rem; } .mg-msg.bad { color: #F05A5F; }
+    .mg-kp { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0 22px; }
+    .mg-kp div { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+    .mg-kp span { display: block; font-size: .75rem; color: var(--muted); } .mg-kp b { font-family: var(--font-display); font-size: 1.7rem; }
+    .mg-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 26px 0 10px; }
+    .mg-row h2 { margin: 0; font-family: var(--font-display); font-size: 1.25rem; }
+    .mg-tools { display: flex; gap: 8px; } .mg-tools input { background: var(--card); border: 1px solid var(--line-2); color: var(--text); border-radius: 10px; padding: 8px 12px; font: inherit; font-size: .85rem; min-width: 200px; }
+    .mg-btn { background: var(--text); color: var(--bg); border: 0; border-radius: 10px; padding: 8px 14px; font: 700 .82rem Inter, sans-serif; cursor: pointer; }
+    .mg-tbl { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; font-size: .86rem; }
+    .mg-tbl th { text-align: left; font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); background: var(--card-2); padding: 10px 12px; }
+    .mg-tbl td { padding: 10px 12px; border-top: 1px solid var(--line); vertical-align: middle; }
+    .mg-u { display: flex; align-items: center; gap: 10px; } .mg-u img, .mg-u i { width: 32px; height: 32px; border-radius: 50%; background: var(--card-2); flex-shrink: 0; }
+    .mg-u a { color: var(--accent-ink); text-decoration: none; font-size: .78rem; }
+    .mg-tag { font-size: .7rem; font-weight: 800; padding: 3px 8px; border-radius: 999px; } .mg-tag.y { background: rgba(43,214,123,.15); color: #2BD67B; } .mg-tag.n { background: rgba(240,90,95,.15); color: #F05A5F; } .mg-tag.a { background: rgba(63,184,255,.15); color: #3FB8FF; }
+    .mg-days { width: 100%; border-collapse: collapse; font-size: .82rem; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+    .mg-days th, .mg-days td { padding: 8px 10px; text-align: right; border-top: 1px solid var(--line); } .mg-days th { color: var(--muted); font-size: .7rem; text-transform: uppercase; background: var(--card-2); border-top: 0; } .mg-days td:first-child, .mg-days th:first-child { text-align: left; }
+    .mg-scroll { overflow-x: auto; }
+    .mg-g { display: block; font-style: normal; font-size: .78rem; margin-top: 2px; color: var(--muted); } .mg-g.up { color: #2BD67B; } .mg-g.down { color: #F05A5F; }
+    .mg-rg { display: inline-flex; gap: 4px; padding: 5px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); margin: 4px 0 14px; flex-wrap: wrap; }
+    .mg-rg button { border: 0; background: transparent; color: var(--muted); font: 600 .9rem Inter, sans-serif; padding: 9px 14px; border-radius: 10px; cursor: pointer; } .mg-rg button.on { background: var(--text); color: var(--bg); }
+    .mg-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; margin-bottom: 16px; min-width: 0; }
+    .mg-card h2 { margin: 0 0 12px; font-family: var(--font-display); font-size: 1.15rem; }
+    .mg-ch-h { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; } .mg-ch-h h2 { margin: 0; }
+    .mg-mini { display: flex; gap: 10px; } .mg-mini div { background: var(--card-2); border-radius: 12px; padding: 8px 12px; } .mg-mini span { display: block; font-size: .72rem; color: var(--muted); } .mg-mini b { font-family: var(--font-display); font-size: 1.2rem; }
+    .mg-ch { width: 100%; height: 260px; margin-top: 12px; display: block; } .mg-ax { font-size: 11px; fill: var(--muted); }
+    .mg-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 4px; vertical-align: 0; }
+    .mg-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .mg-bar { display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: .88rem; }
+    .mg-bar span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .mg-bar i { display: block; height: 10px; border-radius: 99px; background: linear-gradient(90deg, #3FB8FF, #5B5BFF); } .mg-bar.pg i { background: #F5B53F; }
+    .mg-bar b { text-align: right; font-family: var(--font-display); } .mg-bar small { color: var(--muted); font-weight: 500; }
+    .mg-note { background: rgba(63,184,255,.1); border: 1px solid rgba(63,184,255,.3); border-radius: 12px; padding: 12px 14px; font-size: .9rem; margin: 14px 0 0; }
+    @media (max-width: 760px) { .mg-two { grid-template-columns: 1fr; } .mg-bar { grid-template-columns: 110px 1fr 70px; } .mg-ch { height: 200px; } }
+    @media (max-width: 760px) { .mg-kp { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mg-hide { display: none; } }
   </style>
 </head>
 <body>
 <header data-header="admin"></header>
-<main class="wrap ad">
+<main class="wrap mgw">
   <span class="eyebrow">MAAMULKA · ADMIN</span>
   <h1 class="h1">Booqashada website-ka</h1>
-  <div id="ad"></div>
+  <div id="mg"></div>
 </main>
 <footer data-footer></footer>
 <script>
 (function () {
   "use strict";
-  const root = document.getElementById("ad");
+  const root = document.getElementById("mg");
   const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const get = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const set = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
@@ -72,13 +72,13 @@
   let DATA = null;
 
   function login(msg, bad) {
-    root.innerHTML = `<div class="ad-login card" style="padding:28px">
+    root.innerHTML = `<div class="mg-login card" style="padding:28px">
       <p><b>Password-ka maamulka</b> geli.</p>
-      <input id="ad-pw" type="password" autocomplete="off" placeholder="Password" style="width:100%;margin-top:10px;background:var(--card-2);border:1px solid var(--line-2);color:var(--text);border-radius:12px;padding:12px 14px;font:inherit">
-      <button type="button" id="ad-go" style="display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:12px;background:#3FB8FF;color:#04121F;font:800 1rem Inter,sans-serif;cursor:pointer">Gal / Log in →</button>
-      <label style="display:flex;gap:8px;justify-content:center;align-items:center;margin-top:10px;font-size:.85rem;color:var(--muted);cursor:pointer"><input type="checkbox" id="ad-sh"> Tus password-ka</label>
-      <div id="ad-st" style="margin-top:14px;padding:10px 12px;border-radius:10px;font-size:.92rem;line-height:1.5;${msg ? "" : "display:none;"}background:${bad ? "rgba(240,90,95,.12);color:#F05A5F" : "rgba(63,184,255,.1);color:var(--text)"}">${msg || ""}</div></div>`;
-    const st = root.querySelector("#ad-st"), go = root.querySelector("#ad-go"), pw = root.querySelector("#ad-pw");
+      <input id="mg-pw" type="password" autocomplete="off" placeholder="Password" style="width:100%;margin-top:10px;background:var(--card-2);border:1px solid var(--line-2);color:var(--text);border-radius:12px;padding:12px 14px;font:inherit">
+      <button type="button" id="mg-go" style="display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:12px;background:#3FB8FF;color:#04121F;font:800 1rem Inter,sans-serif;cursor:pointer">Gal / Log in →</button>
+      <label style="display:flex;gap:8px;justify-content:center;align-items:center;margin-top:10px;font-size:.85rem;color:var(--muted);cursor:pointer"><input type="checkbox" id="mg-sh"> Tus password-ka</label>
+      <div id="mg-st" style="margin-top:14px;padding:10px 12px;border-radius:10px;font-size:.92rem;line-height:1.5;${msg ? "" : "display:none;"}background:${bad ? "rgba(240,90,95,.12);color:#F05A5F" : "rgba(63,184,255,.1);color:var(--text)"}">${msg || ""}</div></div>`;
+    const st = root.querySelector("#mg-st"), go = root.querySelector("#mg-go"), pw = root.querySelector("#mg-pw");
     const say = (t, bad) => { st.style.display = "block"; st.style.background = bad ? "rgba(240,90,95,.12)" : "rgba(63,184,255,.1)"; st.style.color = bad ? "#F05A5F" : "var(--text)"; st.innerHTML = t; };
     async function submit() {
       const v = pw.value.trim();
@@ -98,13 +98,13 @@
     }
     go.addEventListener("click", submit);
     pw.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
-    root.querySelector("#ad-sh").addEventListener("change", (e) => { pw.type = e.target.checked ? "text" : "password"; });
+    root.querySelector("#mg-sh").addEventListener("change", (e) => { pw.type = e.target.checked ? "text" : "password"; });
     pw.focus();
   }
   async function load() {
     const t = get("xc-adm");
     if (!t) return login();
-    root.innerHTML = `<p class="ad-msg">Xogta ayaa soo socota…</p>`;
+    root.innerHTML = `<p class="mg-msg">Xogta ayaa soo socota…</p>`;
     let r = null, why = "";
     try {
       const res = await fetch("/api/member?op=stats&_=" + Date.now(), { method: "POST", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ t }) });
@@ -116,7 +116,7 @@
   }
   const fmt = (n) => (n || 0).toLocaleString("en-US");
   const pct = (a, b) => (b ? Math.round((a - b) / b * 100) : null);
-  const gr = (g) => g == null ? `<em class="ad-g">— cusub</em>` : `<em class="ad-g ${g >= 0 ? "up" : "down"}">${g >= 0 ? "▲" : "▼"} ${Math.abs(g)}%</em>`;
+  const gr = (g) => g == null ? `<em class="mg-g">— cusub</em>` : `<em class="mg-g ${g >= 0 ? "up" : "down"}">${g >= 0 ? "▲" : "▼"} ${Math.abs(g)}%</em>`;
   const MO = ["Jan", "Feb", "Mar", "Abr", "May", "Jun", "Lul", "Og", "Seb", "Okt", "Nof", "Dis"];
   let DN; try { DN = new Intl.DisplayNames(["so", "en"], { type: "region" }); } catch (e) { DN = null; }
   const cname = (c) => { if (c === "XX") return "Lama garanayo"; try { return (DN && DN.of(c)) || c; } catch (e) { return c; } };
@@ -140,12 +140,12 @@
     const x = (i) => pl + (pts.length < 2 ? (W - pl - pr) / 2 : i * (W - pl - pr) / (pts.length - 1)), y = (v) => pt + (1 - v / top) * (H - pt - pb);
     const bw = Math.max(2, (W - pl - pr) / pts.length * 0.62);
     let s = "";
-    for (let k = 0; k <= 4; k++) { const v = top * k / 4; s += `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl - 8}" y="${y(v) + 4}" text-anchor="end" class="ad-ax">${fmt(Math.round(v))}</text>`; }
+    for (let k = 0; k <= 4; k++) { const v = top * k / 4; s += `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl - 8}" y="${y(v) + 4}" text-anchor="end" class="mg-ax">${fmt(Math.round(v))}</text>`; }
     pts.forEach((p, i) => { s += `<rect x="${x(i) - bw / 2}" y="${y(p.u)}" width="${bw}" height="${Math.max(0, H - pb - y(p.u))}" rx="3" fill="#3FB8FF" opacity=".85"><title>${esc(p.l)} · booqdayaal ${fmt(p.u)} · bogag ${fmt(p.v)}</title></rect>`; });
     s += `<polyline fill="none" stroke="#F5B53F" stroke-width="2.5" points="${pts.map((p, i) => x(i) + "," + y(p.v)).join(" ")}"/>`;
     const step = Math.ceil(pts.length / 8);
-    pts.forEach((p, i) => { if (i % step === 0 || i === pts.length - 1) s += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" class="ad-ax">${esc(p.l)}</text>`; });
-    return `<svg viewBox="0 0 ${W} ${H}" class="ad-ch" preserveAspectRatio="none">${s}</svg>`;
+    pts.forEach((p, i) => { if (i % step === 0 || i === pts.length - 1) s += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" class="mg-ax">${esc(p.l)}</text>`; });
+    return `<svg viewBox="0 0 ${W} ${H}" class="mg-ch" preserveAspectRatio="none">${s}</svg>`;
   }
   function render() {
     const r = DATA, S = series(), P = S.pts;
@@ -158,33 +158,33 @@
     const Pg = {}; S.H.forEach((h) => Object.keys(h).forEach((k) => { if (k.startsWith("p:")) Pg[k.slice(2)] = (Pg[k.slice(2)] || 0) + h[k]; }));
     const ps = Object.entries(Pg).sort((a, b) => b[1] - a[1]), pmax = ps.length ? ps[0][1] : 1;
     const empty = !r.all;
-    root.innerHTML = (r.kv ? "" : `<p class="ad-msg bad">Database (KV) lama helin.</p>`) +
-      (empty ? `<div class="ad-note">Tirinta booqashada hadda ayay bilaabatay. Xogtu way soo badan doontaa marka dadku booqdaan; 5 sano ayaa la kaydinayaa.</div>` : "") + `
-      <div class="ad-kp">
+    root.innerHTML = (r.kv ? "" : `<p class="mg-msg bad">Database (KV) lama helin.</p>`) +
+      (empty ? `<div class="mg-note">Tirinta booqashada hadda ayay bilaabatay. Xogtu way soo badan doontaa marka dadku booqdaan; 5 sano ayaa la kaydinayaa.</div>` : "") + `
+      <div class="mg-kp">
         <div><span>Maanta · booqdayaal</span><b>${fmt(today.u)}</b>${gr(pct(today.u, yday.u))}</div>
         <div><span>7 maalin · firfircoon</span><b>${fmt(r.wau)}</b>${gr(pct(r.wau, r.wau0))}</div>
         <div><span>30 maalin · firfircoon</span><b>${fmt(r.mau)}</b>${gr(pct(r.mau, r.mau0))}</div>
-        <div><span>Wadarta booqdayaasha (abid)</span><b>${fmt(r.all)}</b><em class="ad-g">Telegram: ${r.group != null ? fmt(r.group) : "—"}</em></div>
+        <div><span>Wadarta booqdayaasha (abid)</span><b>${fmt(r.all)}</b><em class="mg-g">Telegram: ${r.group != null ? fmt(r.group) : "—"}</em></div>
       </div>
-      <div class="ad-rg">${RANGES.map(([k, l]) => `<button data-rg="${k}" class="${k === RG ? "on" : ""}">${l}</button>`).join("")}</div>
-      <div class="ad-card">
-        <div class="ad-ch-h"><div><h2>Booqashada</h2><p class="ad-msg" style="margin:4px 0 0"><i class="ad-dot" style="background:#3FB8FF"></i>Booqdayaal ${S.unit} &nbsp; <i class="ad-dot" style="background:#F5B53F"></i>Bogag la furay</p></div>
-          <div class="ad-mini"><div><span>Bogag la furay</span><b>${fmt(views)}</b>${prevViews != null ? gr(pct(views, prevViews)) : ""}</div><div><span>Booqdayaal cusub</span><b>${fmt(newU)}</b></div></div></div>
+      <div class="mg-rg">${RANGES.map(([k, l]) => `<button data-rg="${k}" class="${k === RG ? "on" : ""}">${l}</button>`).join("")}</div>
+      <div class="mg-card">
+        <div class="mg-ch-h"><div><h2>Booqashada</h2><p class="mg-msg" style="margin:4px 0 0"><i class="mg-dot" style="background:#3FB8FF"></i>Booqdayaal ${S.unit} &nbsp; <i class="mg-dot" style="background:#F5B53F"></i>Bogag la furay</p></div>
+          <div class="mg-mini"><div><span>Bogag la furay</span><b>${fmt(views)}</b>${prevViews != null ? gr(pct(views, prevViews)) : ""}</div><div><span>Booqdayaal cusub</span><b>${fmt(newU)}</b></div></div></div>
         ${chart(P)}
       </div>
-      <div class="ad-two">
-        <div class="ad-card"><h2>Dalalka laga soo booqday</h2>
-          ${cs.length ? cs.slice(0, 12).map(([c, n]) => `<div class="ad-bar"><span>${flag(c)} ${esc(cname(c))}</span><i style="width:${Math.max(3, n / cmax * 100)}%"></i><b>${fmt(n)} <small>${Math.round(n / ctot * 100)}%</small></b></div>`).join("") : `<p class="ad-msg">Weli xog ma jirto.</p>`}
-          ${cs.length > 12 ? `<p class="ad-msg">+ ${cs.length - 12} dal oo kale</p>` : ""}</div>
-        <div class="ad-card"><h2>Bogagga ugu badan</h2>
-          ${ps.length ? ps.slice(0, 10).map(([p, n]) => `<div class="ad-bar pg"><span>${esc(PG[p] || p)}</span><i style="width:${Math.max(3, n / pmax * 100)}%"></i><b>${fmt(n)}</b></div>`).join("") : `<p class="ad-msg">Weli xog ma jirto.</p>`}</div>
+      <div class="mg-two">
+        <div class="mg-card"><h2>Dalalka laga soo booqday</h2>
+          ${cs.length ? cs.slice(0, 12).map(([c, n]) => `<div class="mg-bar"><span>${flag(c)} ${esc(cname(c))}</span><i style="width:${Math.max(3, n / cmax * 100)}%"></i><b>${fmt(n)} <small>${Math.round(n / ctot * 100)}%</small></b></div>`).join("") : `<p class="mg-msg">Weli xog ma jirto.</p>`}
+          ${cs.length > 12 ? `<p class="mg-msg">+ ${cs.length - 12} dal oo kale</p>` : ""}</div>
+        <div class="mg-card"><h2>Bogagga ugu badan</h2>
+          ${ps.length ? ps.slice(0, 10).map(([p, n]) => `<div class="mg-bar pg"><span>${esc(PG[p] || p)}</span><i style="width:${Math.max(3, n / pmax * 100)}%"></i><b>${fmt(n)}</b></div>`).join("") : `<p class="mg-msg">Weli xog ma jirto.</p>`}</div>
       </div>
-      <div class="ad-card"><h2>Sannad kasta (5 sano)</h2>
-        <div class="ad-scroll"><table class="ad-days"><tr><th>Sannad</th><th>Booqdayaal gaar ah</th><th>Bogag la furay</th><th>Korriin</th></tr>
+      <div class="mg-card"><h2>Sannad kasta (5 sano)</h2>
+        <div class="mg-scroll"><table class="mg-days"><tr><th>Sannad</th><th>Booqdayaal gaar ah</th><th>Bogag la furay</th><th>Korriin</th></tr>
         ${r.years.slice().reverse().map((y, i, a) => `<tr><td>${y.y}</td><td>${fmt(y.u)}</td><td>${fmt(y.v)}</td><td>${a[i + 1] && a[i + 1].u ? gr(pct(y.u, a[i + 1].u)) : "—"}</td></tr>`).join("")}</table></div></div>
-      <p class="ad-msg" style="margin-top:16px">Booqde = qof gaar ah (browser). Dalka waxaa laga garanayaa IP-ga (Vercel); magac iyo lambar lama kaydiyo. · <a href="#" id="ad-out">Ka bax (logout)</a></p>`;
-    root.querySelectorAll(".ad-rg button").forEach((b) => b.addEventListener("click", () => { RG = b.dataset.rg; set("xc-adm-rg", RG); render(); }));
-    root.querySelector("#ad-out").addEventListener("click", (e) => { e.preventDefault(); set("xc-adm", null); login(); });
+      <p class="mg-msg" style="margin-top:16px">Booqde = qof gaar ah (browser). Dalka waxaa laga garanayaa IP-ga (Vercel); magac iyo lambar lama kaydiyo. · <a href="#" id="mg-out">Ka bax (logout)</a></p>`;
+    root.querySelectorAll(".mg-rg button").forEach((b) => b.addEventListener("click", () => { RG = b.dataset.rg; set("xc-adm-rg", RG); render(); }));
+    root.querySelector("#mg-out").addEventListener("click", (e) => { e.preventDefault(); set("xc-adm", null); login(); });
   }
   load();
 })();
