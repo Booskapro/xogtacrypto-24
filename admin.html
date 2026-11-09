@@ -57,26 +57,34 @@
   let DATA = null;
 
   function login(msg, bad) {
-    root.innerHTML = `<form class="ad-login card" style="padding:28px" id="ad-f">
+    root.innerHTML = `<div class="ad-login card" style="padding:28px">
       <p><b>Password-ka maamulka</b> geli.</p>
-      <input id="ad-pw" type="password" autocomplete="current-password" required placeholder="Password" style="width:100%;margin-top:10px;background:var(--card-2);border:1px solid var(--line-2);color:var(--text);border-radius:12px;padding:12px 14px;font:inherit">
-      <button type="submit" id="ad-go" style="display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:12px;background:#3FB8FF;color:#04121F;font:800 1rem Inter,sans-serif;cursor:pointer">Gal / Log in →</button>
+      <input id="ad-pw" type="password" autocomplete="off" placeholder="Password" style="width:100%;margin-top:10px;background:var(--card-2);border:1px solid var(--line-2);color:var(--text);border-radius:12px;padding:12px 14px;font:inherit">
+      <button type="button" id="ad-go" style="display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:12px;background:#3FB8FF;color:#04121F;font:800 1rem Inter,sans-serif;cursor:pointer">Gal / Log in →</button>
       <label style="display:flex;gap:8px;justify-content:center;align-items:center;margin-top:10px;font-size:.85rem;color:var(--muted);cursor:pointer"><input type="checkbox" id="ad-sh"> Tus password-ka</label>
-      <div class="ad-msg${bad ? " bad" : ""}">${msg || ""}</div></form>`;
-    root.querySelector("#ad-f").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const go = root.querySelector("#ad-go"); go.disabled = true; go.textContent = "Waa la hubinayaa…";
+      <div id="ad-st" style="margin-top:14px;padding:10px 12px;border-radius:10px;font-size:.92rem;line-height:1.5;${msg ? "" : "display:none;"}background:${bad ? "rgba(240,90,95,.12);color:#F05A5F" : "rgba(63,184,255,.1);color:var(--text)"}">${msg || ""}</div></div>`;
+    const st = root.querySelector("#ad-st"), go = root.querySelector("#ad-go"), pw = root.querySelector("#ad-pw");
+    const say = (t, bad) => { st.style.display = "block"; st.style.background = bad ? "rgba(240,90,95,.12)" : "rgba(63,184,255,.1)"; st.style.color = bad ? "#F05A5F" : "var(--text)"; st.innerHTML = t; };
+    async function submit() {
+      const v = pw.value.trim();
+      if (!v) return say("Marka hore password-ka qor.", true);
+      go.disabled = true; go.textContent = "Waa la hubinayaa…"; say("Waa la hubinayaa…");
+      const ac = new AbortController(), to = setTimeout(() => ac.abort(), 20000);
       let r = null, why = "";
       try {
-        const res = await fetch("/api/member?op=admin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pw: root.querySelector("#ad-pw").value }) });
+        const res = await fetch("/api/member?op=admin&_=" + Date.now(), { method: "POST", cache: "no-store", signal: ac.signal, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pw: v }) });
         const txt = await res.text();
-        try { r = JSON.parse(txt); } catch (e) { why = res.status === 404 ? "API-ga lama helin (404): hubi in api/_member.js, api/macro.js iyo vercel.json la galiyay." : "Server-ka khalad (" + res.status + "): hubi Vercel → Deployments."; }
-      } catch (e) { why = "Internet-ka ama server-ka lama gaari karo."; }
-      if (r && r.t) { set("xc-adm", r.t); load(); }
-      else login(why || (r && r.error ? esc(r.error) : "Isku day mar kale."), true);
-    });
-    root.querySelector("#ad-sh").addEventListener("change", (e) => { root.querySelector("#ad-pw").type = e.target.checked ? "text" : "password"; });
-    root.querySelector("#ad-pw").focus();
+        try { r = JSON.parse(txt); } catch (e) { why = "Server-ka jawaab khaldan ayuu bixiyay (" + res.status + "): " + esc(txt.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 120)); }
+      } catch (e) { why = e.name === "AbortError" ? "Server-ku 20 ilbiriqsi kuma jawaabin. Isku day mar kale." : "Server-ka lama gaari karo (internet?)."; }
+      clearTimeout(to);
+      go.disabled = false; go.textContent = "Gal / Log in →";
+      if (r && r.t) { say("✓ Password-ku waa sax. Xogta ayaa soo socota…"); set("xc-adm", r.t); return load(); }
+      say(why || (r && r.error ? "✗ " + esc(r.error) : "✗ Jawaab aan la garanayn."), true);
+    }
+    go.addEventListener("click", submit);
+    pw.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+    root.querySelector("#ad-sh").addEventListener("change", (e) => { pw.type = e.target.checked ? "text" : "password"; });
+    pw.focus();
   }
   async function load() {
     const t = get("xc-adm");
