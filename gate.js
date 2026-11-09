@@ -22,7 +22,7 @@
   const soc = S.social || {}, XURL = soc.x || "https://x.com/Xogtacrypto24", TGURL = soc.telegram || "https://t.me/Xogtacrypto24_7";
   const XH = (S.x_handle || "@" + XURL.split("/").pop()).replace(/^@?/, "@");
   const TGH = TGURL.replace(/^https?:\/\//, "");
-  const api = (op, body) => fetch("/api/member?op=" + op, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined }).then((r) => r.json());
+  const api = (op, body) => fetch("/api/member?op=" + op + (body ? "" : "&_=" + Date.now()), { cache: "no-store", method: body ? "POST" : "GET", headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined }).then((r) => r.json());
   const hit = (s) => { api("hit", { p: page, s, t: get("xc-mem") }).catch(() => {}); };
 
   // Tijaabo: ?qufulka → qufulka si toos ah ayuu u muuqdaa (wax lama kaydiyo, waa la xiri karaa)
