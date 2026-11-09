@@ -1229,7 +1229,3 @@ body.xg-locked .xg { top: 64px; }
 
 .xj-t { display: block; font-size: 1.05rem; padding-right: 30px; }
 .lq-hr { display: inline-flex; align-items: center; gap: 10px; }
-.lq-cam { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--line-2); background: var(--card); color: var(--text); cursor: pointer; }
-.lq-cam:hover { background: var(--card-2); }
-.lq-cam svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.lq-cam.busy { opacity: .5; pointer-events: none; }

@@ -39,7 +39,20 @@
   const fmt = (v, sign) => { const a = Math.abs(v), s = sign ? (v > 0 ? "+" : v < 0 ? "−" : "") : ""; return s + "$" + (a >= 1e9 ? (a / 1e9).toFixed(2) + "B" : a >= 1e6 ? (a / 1e6).toFixed(a >= 1e8 ? 0 : a >= 1e7 ? 0 : 1) + "M" : a >= 1e3 ? Math.round(a / 1e3) + "K" : Math.round(a)); };
   const cls = (v) => (v >= 0 ? "up" : "down");
 
-  const CAM = (k) => `<button class="lq-cam" data-shot="${k}" aria-label="${T("Soo deji sawirka", "Download image")}" title="${T("Soo deji sawirka", "Download image")}"><svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></button>`;
+  const IC = {
+    cam: '<svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
+    dl: '<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>',
+    copy: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    link: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+    x: '<svg viewBox="0 0 24 24" class="fill"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>'
+  };
+  const CAM = (k) => `<span class="xcc-act" data-shot="${k}"><button class="xcc-ib" data-a="menu" aria-haspopup="true" aria-label="${T("Sawir", "Image")}">${IC.cam}</button>
+    <div class="xcc-menu" role="menu" hidden>
+      <button data-a="dl">${IC.dl}${T("Soo deji sawirka", "Download image")}</button>
+      <button data-a="copy">${IC.copy}${T("Koobi garee sawirka", "Copy image")}</button>
+      <button data-a="link">${IC.link}${T("Koobi garee link-ga", "Copy link")}</button>
+      <hr><button data-a="x">${IC.x}${T("Ku wadaag X", "Share on X")}</button>
+    </div></span>`;
   // ---------- Qaabka bogga ----------
   root.innerHTML = `
     <div class="lq-bar">
@@ -247,16 +260,31 @@
     const cv = document.createElement("canvas"); cv.width = W0 * 2; cv.height = H0 * 2; cv.getContext("2d").drawImage(img, 0, 0, W0 * 2, H0 * 2);
     return await new Promise((ok) => cv.toBlob(ok, "image/png"));
   }
+  let tT;
+  const toast = (m) => { let t = document.getElementById("xc-toast"); if (!t) { t = document.createElement("div"); t.id = "xc-toast"; document.body.appendChild(t); } t.textContent = m; t.classList.add("on"); clearTimeout(tT); tT = setTimeout(() => t.classList.remove("on"), 2600); };
+  const closeAll = () => root.querySelectorAll(".xcc-act").forEach((w) => { w.querySelector(".xcc-menu").hidden = true; w.querySelector(".xcc-ib").classList.remove("on"); });
+  const HEAD = { io: () => T("Lacagta crypto", "Crypto money flow"), coins: () => T("Coin kasta", "Each coin"), table: () => T("Lacagta saafiga ah", "Net money flow"), ls: () => T("Long iyo Short", "Long vs Short") };
   root.addEventListener("click", async (e) => {
-    const b = e.target.closest("button[data-shot]"); if (!b || !st.at) return;
-    b.classList.add("busy");
+    const b = e.target.closest(".xcc-act button"); if (!b) return;
+    const w = b.closest(".xcc-act"), k = w.dataset.shot, a = b.dataset.a;
+    e.stopPropagation();
+    if (a === "menu") { const m = w.querySelector(".xcc-menu"), o = m.hidden; closeAll(); m.hidden = !o; b.classList.toggle("on", o); return; }
+    closeAll(); if (!st.at) return;
+    const url = location.origin + "/lacagta";
+    const tf = TF.find((t) => t.k === st.tf), text = HEAD[k]() + (k === "ls" ? "" : " · " + tf.lab) + "\n\n" + url + (window.SITE && window.SITE.x_handle ? "\n" + window.SITE.x_handle : "");
+    const name = `xogta-crypto-lacagta-${k}-${st.tf}-${new Date().toISOString().slice(0, 10)}.png`;
     try {
-      const blob = await shotPNG(b.dataset.shot), name = `xogta-crypto-lacagta-${b.dataset.shot}-${st.tf}-${new Date().toISOString().slice(0, 10)}.png`, file = new File([blob], name, { type: "image/png" });
-      if (matchMedia("(pointer: coarse)").matches && navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
-      else { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
-    } catch (err) { /* ignore */ }
-    b.classList.remove("busy");
+      if (a === "link") { await navigator.clipboard.writeText(url); toast(T("Link-ga waa la koobiyeeyay", "Link copied")); return; }
+      if (a === "copy") { await navigator.clipboard.write([new ClipboardItem({ "image/png": shotPNG(k) })]); toast(T("Sawirka waa la koobiyeeyay", "Image copied")); return; }
+      const blob = await shotPNG(k), file = new File([blob], name, { type: "image/png" });
+      if (matchMedia("(pointer: coarse)").matches && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share(a === "x" ? { files: [file], text } : { files: [file] }); return; }
+      if (a === "dl") { const l = document.createElement("a"); l.href = URL.createObjectURL(blob); l.download = name; document.body.appendChild(l); l.click(); setTimeout(() => { URL.revokeObjectURL(l.href); l.remove(); }, 1500); toast(T("Sawirka waa la soo dejiyay", "Image downloaded")); return; }
+      try { await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]); toast(T("Sawirka waa la koobiyeeyay — X-ka ku dheji (Ctrl+V)", "Image copied — paste it into X (Ctrl+V)")); } catch (err) { /* ignore */ }
+      window.open("https://x.com/intent/post?text=" + encodeURIComponent(text), "_blank", "noopener");
+    } catch (err) { if (!err || err.name !== "AbortError") toast(T("Waan ka xumahay, isku day mar kale", "Sorry, please try again")); }
   });
+  document.addEventListener("click", (e) => { if (!e.target.closest || !e.target.closest("#lq .xcc-act")) closeAll(); });
+
   async function tick() {
     try { await loadSpot(); render(); }
     catch (e) { if (!st.at) root.querySelector("#lq-sum").textContent = T("Xogta lama heli karo hadda. Isku day mar kale.", "Data unavailable. Please try again."); }
