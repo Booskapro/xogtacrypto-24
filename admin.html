@@ -82,8 +82,13 @@
     const t = get("xc-adm");
     if (!t) return login();
     root.innerHTML = `<p class="ad-msg">Xogta ayaa soo socota…</p>`;
-    const r = await api("list", { t }).catch(() => null);
-    if (!r || r.error) return login(r && r.error ? esc(r.error) : "", true);
+    let r = null, why = "";
+    try {
+      const res = await fetch("/api/member?op=list", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ t }) });
+      const txt = await res.text();
+      try { r = JSON.parse(txt); } catch (e) { why = "Password-ku waa sax ✓, laakiin liiska xubnaha wuu fashilmay (server " + res.status + "): " + esc(txt.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160)); }
+    } catch (e) { why = "Password-ku waa sax ✓, laakiin server-ka lama gaari karo."; }
+    if (!r || r.error) { if (r && r.error === "Login") set("xc-adm", null); return login(why || (r && r.error ? "Password-ku waa sax ✓, laakiin: " + esc(r.error) : "Khalad aan la garanayn."), true); }
     DATA = r; render("");
   }
   function render(q) {
