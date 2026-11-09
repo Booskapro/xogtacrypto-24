@@ -60,13 +60,22 @@
     root.innerHTML = `<form class="ad-login card" style="padding:28px" id="ad-f">
       <p><b>Password-ka maamulka</b> geli.</p>
       <input id="ad-pw" type="password" autocomplete="current-password" required placeholder="Password" style="width:100%;margin-top:10px;background:var(--card-2);border:1px solid var(--line-2);color:var(--text);border-radius:12px;padding:12px 14px;font:inherit">
-      <button class="ad-btn" style="width:100%;margin-top:12px;padding:12px">Gal</button>
+      <button type="submit" id="ad-go" style="display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:12px;background:#3FB8FF;color:#04121F;font:800 1rem Inter,sans-serif;cursor:pointer">Gal / Log in →</button>
+      <label style="display:flex;gap:8px;justify-content:center;align-items:center;margin-top:10px;font-size:.85rem;color:var(--muted);cursor:pointer"><input type="checkbox" id="ad-sh"> Tus password-ka</label>
       <div class="ad-msg${bad ? " bad" : ""}">${msg || ""}</div></form>`;
     root.querySelector("#ad-f").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const r = await api("admin", { pw: root.querySelector("#ad-pw").value }).catch(() => null);
-      if (r && r.t) { set("xc-adm", r.t); load(); } else login(r && r.error ? esc(r.error) : "Isku day mar kale.", true);
+      const go = root.querySelector("#ad-go"); go.disabled = true; go.textContent = "Waa la hubinayaa…";
+      let r = null, why = "";
+      try {
+        const res = await fetch("/api/member?op=admin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pw: root.querySelector("#ad-pw").value }) });
+        const txt = await res.text();
+        try { r = JSON.parse(txt); } catch (e) { why = res.status === 404 ? "API-ga lama helin (404): hubi in api/_member.js, api/macro.js iyo vercel.json la galiyay." : "Server-ka khalad (" + res.status + "): hubi Vercel → Deployments."; }
+      } catch (e) { why = "Internet-ka ama server-ka lama gaari karo."; }
+      if (r && r.t) { set("xc-adm", r.t); load(); }
+      else login(why || (r && r.error ? esc(r.error) : "Isku day mar kale."), true);
     });
+    root.querySelector("#ad-sh").addEventListener("change", (e) => { root.querySelector("#ad-pw").type = e.target.checked ? "text" : "password"; });
     root.querySelector("#ad-pw").focus();
   }
   async function load() {

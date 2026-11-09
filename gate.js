@@ -25,9 +25,12 @@
   const api = (op, body) => fetch("/api/member?op=" + op, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined }).then((r) => r.json());
   const hit = (s) => { api("hit", { p: page, s, t: get("xc-mem") }).catch(() => {}); };
 
+  // Tijaabo: ?qufulka → qufulka si toos ah ayuu u muuqdaa (wax lama kaydiyo, waa la xiri karaa)
+  const TEST = /[?&]qufulka/.test(location.search);
+
   // ---------- 1) Xubin horay u ah ----------
   const tok = get("xc-mem");
-  if (tok) {
+  if (tok && !TEST) {
     hit("member");
     const lastChk = +get("xc-mem-chk") || 0;
     if (Date.now() - lastChk > 864e5) {
@@ -43,9 +46,11 @@
   // ---------- 2) Booqashooyinka bilaashka ah ----------
   const free = Math.max(0, +G.free || 0);
   let n = +get("xc-free") || 0;
-  const lastPg = get("xc-free-pg"), lastAt = +get("xc-free-at") || 0;
-  if (lastPg !== page || Date.now() - lastAt > 30 * 60 * 1000) { n += 1; set("xc-free", String(n)); }
-  set("xc-free-pg", page); set("xc-free-at", String(Date.now()));
+  if (!TEST) {
+    const lastPg = get("xc-free-pg"), lastAt = +get("xc-free-at") || 0;
+    if (lastPg !== page || Date.now() - lastAt > 30 * 60 * 1000) { n += 1; set("xc-free", String(n)); }
+    set("xc-free-pg", page); set("xc-free-at", String(Date.now()));
+  }
 
   const ICON = '<svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><defs><linearGradient id="xglg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3FB8FF"/><stop offset="1" stop-color="#5B5BFF"/></linearGradient></defs><path d="M15 21v-6a9 9 0 0 1 17.4-3.3" fill="none" stroke="url(#xglg)" stroke-width="3.4" stroke-linecap="round"/><rect x="9" y="21" width="30" height="21" rx="6" fill="none" stroke="url(#xglg)" stroke-width="3.4"/><circle cx="24" cy="30" r="2.6" fill="#3FB8FF"/><path d="M24 32.5v3.5" stroke="#3FB8FF" stroke-width="3" stroke-linecap="round"/></svg>';
   const CHECK = '<svg viewBox="0 0 24 24" width="15" height="15"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -72,6 +77,7 @@
     }
   };
 
+  if (TEST) { openGate(true); return; }
   if (n <= free) {
     hit("view");
     const left = free - n;

@@ -9,6 +9,7 @@
     { href: "wararka.html",     key: "wararka",    label: "Wararka",        en: "News" },
     { href: "kalandarka.html",  key: "kalandarka", label: "Kalandarka",     en: "Calendar" },
     { href: "charts.html",      key: "charts",     label: "Charts",         en: "Charts" },
+    { href: "lacagta.html",     key: "lacagta",    label: "Lacagta",        en: "Money Flow", nu: 1 },
     { href: "taariikhda.html",  key: "taariikhda", label: "Taariikhda FED", en: "Fed History" },
     { href: "fahanka-fed.html", key: "fahanka",    label: "Fahanka FED",    en: "Learn the Fed" },
     { href: "ku-saabsan.html",  key: "ku-saabsan", label: "Ku saabsan",     en: "About" }
@@ -104,7 +105,7 @@
       if (n.key === "ku-saabsan") {
         return '<button type="button" class="nav-drop" id="about-btn" aria-expanded="false" aria-controls="mega-about"' + (n.key === active ? ' aria-current="page"' : "") + ">" + label + icon.chev + "</button>";
       }
-      return '<a href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + label + "</a>";
+      return '<a href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + label + (n.nu ? ' <span class="nbadge">' + (LANG === "en" ? "NEW" : "CUSUB") + "</span>" : "") + "</a>";
     }).join("");
     return (
       '<div class="wrap header-row" style="position:relative">' +
@@ -202,7 +203,7 @@
   function buildDrawer(active) {
     const T = window.I18N.tx, s = window.SITE;
     const big = NAV.map(function (n) {
-      return '<a class="dr-big" href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + (LANG === "en" ? n.en : n.label) + "</a>";
+      return '<a class="dr-big" href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + (LANG === "en" ? n.en : n.label) + (n.nu ? ' <span class="nbadge">' + (LANG === "en" ? "NEW" : "CUSUB") + "</span>" : "") + "</a>";
     }).join("");
     function sec(title, links) {
       return '<div class="dr-label">' + title + "</div>" + links.map(function (l) {
@@ -284,7 +285,7 @@
             '<div class="ff-social">' + socials + "</div>" +
           "</div>" +
           '<div class="ff-cols">' +
-            col(T("Xogta", "Data"), [["index.html", T("Maanta", "Today")], ["kalandarka.html", T("Kalandarka", "Calendar")], ["charts.html", T("Charts", "Charts"), T("cusub", "new")], ["wararka.html", T("Wararka", "News")], ["taariikhda.html", T("Taariikhda FED", "Fed history")]]) +
+            col(T("Xogta", "Data"), [["index.html", T("Maanta", "Today")], ["kalandarka.html", T("Kalandarka", "Calendar")], ["charts.html", T("Charts", "Charts")], ["lacagta.html", T("Lacagta", "Money Flow"), T("cusub", "new")], ["wararka.html", T("Wararka", "News")], ["taariikhda.html", T("Taariikhda FED", "Fed history")]]) +
             col(T("Waxbarasho", "Learn"), [["fahanka-fed.html", T("Fahanka FED", "Learn the Fed")], ["taariikhda.html", T("Go'aannadii hore", "Past decisions")]]) +
             col(T("Bulshada", "Community"), [[s.social.telegram || "#", T("Kooxda Telegram", "Telegram group")], [s.social.x || "#", s.x_handle || "X"], [s.founder.x || "#", s.founder.handle || s.founder.name]]) +
             col(T("Ku saabsan", "About"), [["ku-saabsan.html", T("Ku saabsan", "About us")], ["ku-saabsan.html#aasaasaha", T("Aasaasayaasha", "Founders")]]) +

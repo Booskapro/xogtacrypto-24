@@ -104,7 +104,7 @@ module.exports = async function handler(req, res) {
     if (op === "admin") {
       // Password-ka maamulka: Vercel → Environment Variables → ADMIN_PASSWORD (Secret)
       const PW = env("ADMIN_PASSWORD");
-      if (!PW) return send(500, { error: "ADMIN_PASSWORD Vercel kuma jiro" });
+      if (!PW) return send(500, { error: "ADMIN_PASSWORD Vercel kuma jiro → Settings → Environment Variables ku dar, kadib Redeploy." });
       const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "x", k = "xc:admtry:" + ip + ":" + new Date().toISOString().slice(0, 13);
       const n = await kv(["INCR", k]); await kv(["EXPIRE", k, 3600]);
       if (n != null && n > 8) return send(429, { error: "Isku day badan. Sug 1 saac." });
