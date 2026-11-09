@@ -1208,3 +1208,28 @@ body.xg-locked .xg { top: 64px; }
   .lq-tabs button { padding: 9px 11px; font-size: .88rem; }
   .lq-t th, .lq-t td { padding: 12px 14px; }
 }
+
+/* ===== Kaarka "Ku biir" (X + Telegram) ===== */
+.xj { position: fixed; right: 20px; bottom: 20px; z-index: 60; width: 300px; max-width: calc(100vw - 24px); background: var(--card); border: 1px solid var(--line-2); border-radius: 18px; padding: 18px; box-shadow: 0 18px 50px rgba(0,0,0,.45); opacity: 0; transform: translateY(16px); transition: opacity .3s, transform .3s; }
+.xj.on { opacity: 1; transform: none; }
+.xj-x { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; }
+.xj-x:hover { background: var(--card-2); color: var(--text); }
+.xj-h { display: flex; gap: 12px; align-items: flex-start; padding-right: 24px; }
+.xj-h img { border-radius: 10px; flex: none; }
+.xj-h b { display: block; font-size: 1rem; line-height: 1.3; }
+.xj-h span { display: block; font-size: .85rem; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+.xj-b { display: grid; gap: 8px; margin-top: 14px; }
+.xj-l { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border-radius: 12px; font: 700 .92rem Inter, sans-serif; text-decoration: none; }
+.xj-xb { background: var(--text); color: var(--bg); }
+.xj-tb { background: #229ED9; color: #fff; }
+.xj-l.ok { background: rgba(43,214,123,.14); color: #2BD67B; }
+.xj-n { display: block; margin: 10px auto 0; border: 0; background: transparent; color: var(--muted); font: 600 .82rem Inter, sans-serif; cursor: pointer; padding: 6px 10px; }
+.xj-n:hover { color: var(--text); }
+@media (max-width: 560px) { .xj { right: 12px; left: 12px; bottom: 12px; width: auto; } }
+
+.xj-t { display: block; font-size: 1.05rem; padding-right: 30px; }
+.lq-hr { display: inline-flex; align-items: center; gap: 10px; }
+.lq-cam { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--line-2); background: var(--card); color: var(--text); cursor: pointer; }
+.lq-cam:hover { background: var(--card-2); }
+.lq-cam svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lq-cam.busy { opacity: .5; pointer-events: none; }

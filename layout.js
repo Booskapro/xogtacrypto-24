@@ -343,3 +343,57 @@
     if (mq.addEventListener) mq.addEventListener("change", function () { if (load("xc-mode", "dark") === "auto") applyTheme(); });
   }
 })();
+
+/* =========================================================
+   KAARKA KU BIIR (X + Telegram) — gees ayuu ka soo baxaa marka qofku akhriyo
+   - 35 ilbiriqsi kadib (ama marka uu bogga kala badh dhaafo + 15 ilbiriqsi)
+   - Qofku wuu xiri karaa (×) → 3 maalin kadib ayuu mar kale soo baxaa
+   - Haddii labada tallaabo horay loo sameeyay (xc-xf + xc-tg) → mar dambe ma soo baxo
+   ========================================================= */
+(function () {
+  "use strict";
+  const g = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const s = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } };
+  document.addEventListener("DOMContentLoaded", function () {
+    const hdr = document.querySelector("[data-header]");
+    if (hdr && hdr.dataset.header === "admin") return;
+    if (g("xc-xf") === "1" && g("xc-tg") === "1") return;
+    if (Date.now() - (+g("xc-join-x") || 0) < 864e5) return; // maalintii hal mar
+    const S = window.SITE || {}, soc = S.social || {};
+    const XURL = soc.x || "https://x.com/Xogtacrypto24", TGURL = soc.telegram || "https://t.me/Xogtacrypto24_7";
+    const XH = (S.x_handle || "@Xogtacrypto24").replace(/^@?/, "@");
+    const EN = g("xc-lang") === "en", T = (so, en) => (EN ? en : so);
+    const t0 = Date.now();
+    let shown = false;
+    function show() {
+      if (shown || document.getElementById("xg") || document.getElementById("xj")) return;
+      shown = true; s("xc-join-x", String(Date.now()));
+      const xd = g("xc-xf") === "1", td = g("xc-tg") === "1";
+      const OK = '<svg viewBox="0 0 24 24" width="15" height="15"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      const XI = '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
+      const TI = '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M21.9 4.3 18.6 19.8c-.2 1.1-.9 1.4-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.2-8.3c.4-.4-.1-.6-.6-.2L6 13.4 1.1 11.9c-1.1-.3-1.1-1.1.2-1.6L20.5 2.9c.9-.3 1.7.2 1.4 1.4z"/></svg>';
+      const el = document.createElement("div");
+      el.id = "xj"; el.className = "xj"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", T("Ku biir bulshada", "Join the community"));
+      el.innerHTML = '<button class="xj-x" type="button" aria-label="' + T("Xir", "Close") + '">×</button>' +
+        '<b class="xj-t">' + T("Ku biir bulshada", "Join the community") + '</b>' +
+        '<div class="xj-b"><a class="xj-l xj-xb' + (xd ? " ok" : "") + '" href="' + XURL + '" target="_blank" rel="noopener">' + (xd ? OK + " " + T("Mahadsanid!", "Thank you!") : XI + " Follow X") + '</a>' +
+        '<a class="xj-l xj-tb' + (td ? " ok" : "") + '" href="' + TGURL + '" target="_blank" rel="noopener">' + (td ? OK + " " + T("Mahadsanid!", "Thank you!") : TI + " " + T("Ku biir Telegram", "Join Telegram")) + '</a></div>';
+      document.body.appendChild(el);
+      requestAnimationFrame(() => el.classList.add("on"));
+      const close = () => { el.classList.remove("on"); setTimeout(() => el.remove(), 300); };
+      el.querySelector(".xj-x").addEventListener("click", close);
+      const mark = (sel, key, txt) => el.querySelector(sel).addEventListener("click", () => setTimeout(() => {
+        s(key, "1"); const a = el.querySelector(sel); a.classList.add("ok"); a.innerHTML = OK + " " + txt;
+        if (g("xc-xf") === "1" && g("xc-tg") === "1") setTimeout(() => { el.classList.remove("on"); setTimeout(() => el.remove(), 300); }, 1500);
+      }, 1200));
+      mark(".xj-xb", "xc-xf", T("Mahadsanid!", "Thank you!"));
+      mark(".xj-tb", "xc-tg", T("Mahadsanid!", "Thank you!"));
+    }
+    setTimeout(show, 35000);
+    window.addEventListener("scroll", function onS() {
+      const h = document.documentElement, p = (h.scrollTop + innerHeight) / Math.max(1, h.scrollHeight);
+      if (p > 0.5 && Date.now() - t0 > 15000) { window.removeEventListener("scroll", onS); show(); }
+    }, { passive: true });
+    window.XCJoin = { show };
+  });
+})();
