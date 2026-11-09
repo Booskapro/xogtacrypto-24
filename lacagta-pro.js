@@ -120,15 +120,28 @@
       `</tbody></table><div class="lq-src">Binance futures · ${T("Qiimaha: live (ilbiriqsi kasta)", "Price: live (every second)")} · ${T("Long/short: 5 daqiiqo kasta", "Long/short: every 5 min")} · ${hm(S.at.lsc)}</div>`;
   }
   // Qiimaha live (WebSocket): isbeddel kasta wuu iftiimayaa
+  function flash(el, up) { if (!el) return; el.classList.remove("fu", "fd"); void el.offsetWidth; el.classList.add(up ? "fu" : "fd"); }
   function startPrices() {
-    ws("wss://fstream.binance.com/stream?streams=" + LSC.map((c) => c.toLowerCase() + "usdt@miniTicker").join("/"), () => {}, (m) => {
-      const x = m.data; if (!x || !S.lsc) return;
-      const c = x.s.replace("USDT", ""), r = S.lsc.find((q) => q.c === c); if (!r) return;
-      const p = +x.c, o = +x.o, ch = o ? (p / o - 1) * 100 : r.ch;
-      const td = document.querySelector(`#lq-lsc [data-p="${c}"]`), tc = document.querySelector(`#lq-lsc [data-ch="${c}"]`);
-      if (td && p !== r.p) { td.textContent = price(p); td.classList.remove("fu", "fd"); void td.offsetWidth; td.classList.add(p > r.p ? "fu" : "fd"); }
-      if (tc) { tc.textContent = pct(ch); tc.className = cls(ch); }
-      r.p = p; r.ch = ch;
+    // Suuqa oo dhan, ilbiriqsi kasta (Binance futures !miniTicker@arr)
+    ws("wss://fstream.binance.com/ws/!miniTicker@arr", () => {}, (arr) => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach((x) => {
+        if (!/USDT$/.test(x.s)) return;
+        const c = x.s.replace(/USDT$/, ""), p = +x.c, o = +x.o, ch = o ? (p / o - 1) * 100 : null, q = +x.q;
+        const r1 = S.lsc && S.lsc.find((r) => r.c === c);
+        if (r1) {
+          if (p !== r1.p) { const td = document.querySelector(`#lq-lsc [data-p="${c}"]`); if (td) { td.textContent = price(p); flash(td, p > r1.p); } }
+          const tc = document.querySelector(`#lq-lsc [data-ch="${c}"]`); if (tc && ch != null) { tc.textContent = pct(ch); tc.className = cls(ch); }
+          r1.p = p; if (ch != null) r1.ch = ch;
+        }
+        const r2 = S.vol && S.vol.rows.find((r) => r.c === c);
+        if (r2) {
+          if (p !== r2.p) { const td = document.querySelector(`#lq-vt [data-p="${c}"]`); if (td) { td.textContent = price(p); td.dataset.x = c + " · " + T("Qiimaha", "Price") + ": $" + p; flash(td, p > r2.p); } }
+          if (ch != null) { const tc = document.querySelector(`#lq-vt [data-pc="${c}"]`); if (tc) { tc.textContent = pct(ch); tc.setAttribute("style", heat(ch * 5)); } r2.ch = ch; }
+          if (q && q !== r2.v24) { const tv = document.querySelector(`#lq-vt [data-v="${c}"]`); if (tv) { tv.innerHTML = "<b>" + fmt(q) + "</b>"; tv.dataset.x = c + " · Volume 24s: $" + Math.round(q).toLocaleString("en-US"); flash(tv, q > r2.v24); } r2.v24 = q; }
+          r2.p = p;
+        }
+      });
     });
   }
   L.add("lsc", { head: () => T("Coin kasta: long vs short", "Each coin: long vs short"), at: () => S.at.lsc, src: "Binance futures", body: () => {
@@ -287,15 +300,28 @@
       card("BTC futures", btc && btc.v24, btc ? (btc.v24 / V.total * 100).toFixed(1) + T("% futures-ka", "% of futures") : "", btc && btc.c24) +
       card("ETH futures", eth && eth.v24, eth ? (eth.v24 / V.total * 100).toFixed(1) + T("% futures-ka", "% of futures") : "", eth && eth.c24) +
       card("BTC spot", V.spot, "Binance", null);
-    const top = V.rows.slice(0, 20);
-    document.getElementById("lq-vt").innerHTML = `<table class="lq-tt lq-vtt"><thead><tr><th>#</th><th>Coin</th><th class="r">${T("Qiimaha", "Price")}</th><th class="r">${T("Qiimaha 24s", "Price 24h")}</th><th class="r">Volume ${T("24s", "24h")}</th><th class="r">Vol ${T("24s", "24h")} %</th><th class="r">Vol ${T("1s", "1h")} %</th><th class="r">Vol ${T("4s", "4h")} %</th><th class="r">Vol ${T("30m", "30d")} %</th><th class="r">OI</th><th class="r">OI / Vol</th></tr></thead><tbody>` +
-      top.map((r, i) => `<tr><td class="lq-dim">${i + 1}</td><td><b>${esc(r.c)}</b></td><td class="r">${price(r.p)}</td><td class="r" style="${heat(r.ch * 5)}">${pct(r.ch)}</td><td class="r"><b>${fmt(r.v24)}</b></td><td class="r" style="${heat(r.c24)}">${pct(r.c24)}</td><td class="r" style="${heat(r.c1)}">${pct(r.c1)}</td><td class="r" style="${heat(r.c4)}">${pct(r.c4)}</td><td class="r" style="${heat(r.c30)}">${pct(r.c30)}</td><td class="r">${r.oi != null ? fmt(r.oi) : "—"}</td><td class="r">${r.oi != null ? (r.oi / r.v24).toFixed(2) : "—"}</td></tr>`).join("") +
-      `</tbody></table><div class="lq-src">Binance futures (USDT) · ${T("Vol 1s/4s/24s % = marka la barbardhigo muddadii ka horraysay · 30m = 30 maalin", "Vol 1h/4h/24h % vs the previous period · 30d = 30 days")} · ${T("La cusboonaysiiyay", "Updated")} ${hm(S.at.vol)}</div>`;
+    const COLS = [["c", "Coin", 0], ["p", T("Qiimaha", "Price"), 1], ["ch", T("Qiimaha 24s", "Price 24h"), 1], ["v24", "Volume " + T("24s", "24h"), 1], ["c24", "Vol " + T("24s", "24h") + " %", 1], ["c1", "Vol " + T("1s", "1h") + " %", 1], ["c4", "Vol " + T("4s", "4h") + " %", 1], ["c30", "Vol " + T("30m", "30d") + " %", 1], ["oi", "OI", 1], ["oiv", "OI / Vol", 1]];
+    const sk = S.vsort || "v24", sd = S.vdir || -1;
+    const top = V.rows.slice(0, 20).map((r) => Object.assign(r, { oiv: r.oi != null ? r.oi / r.v24 : null })).sort((x, y) => sk === "c" ? sd * String(x.c).localeCompare(y.c) : sd * ((x[sk] == null ? -Infinity : x[sk]) - (y[sk] == null ? -Infinity : y[sk])));
+    const ex$ = (v) => "$" + Math.round(v).toLocaleString("en-US"), exP = (v) => v == null ? "—" : (v > 0 ? "+" : "") + v.toFixed(4) + "%";
+    const cell = (r, k, html, style, tip) => `<td class="r"${style ? ` style="${style}"` : ""} data-x="${esc(r.c + " · " + tip)}">${html}</td>`;
+    document.getElementById("lq-vt").innerHTML = `<table class="lq-tt lq-vtt"><thead><tr><th>#</th>${COLS.map(([k, l, r]) => `<th class="${r ? "r " : ""}lq-sort${k === sk ? " on" : ""}" data-k="${k}">${esc(l)}${k === sk ? (sd < 0 ? " ▼" : " ▲") : ""}</th>`).join("")}</tr></thead><tbody>` +
+      top.map((r, i) => `<tr><td class="lq-dim">${i + 1}</td><td><b>${esc(r.c)}</b></td>` +
+        `<td class="r lq-px" data-p="${esc(r.c)}" data-x="${esc(r.c + " · " + T("Qiimaha", "Price") + ": $" + r.p)}">${price(r.p)}</td>` +
+        `<td class="r" style="${heat(r.ch * 5)}" data-pc="${esc(r.c)}" data-x="${esc(r.c + " · 24s: " + exP(r.ch))}">${pct(r.ch)}</td>` +
+        `<td class="r lq-px" data-v="${esc(r.c)}" data-x="${esc(r.c + " · Volume 24s: " + ex$(r.v24))}"><b>${fmt(r.v24)}</b></td>` +
+        cell(r, "c24", pct(r.c24), heat(r.c24), "Vol 24s: " + exP(r.c24) + " · " + ex$(r.v24)) +
+        cell(r, "c1", pct(r.c1), heat(r.c1), "Vol 1s: " + exP(r.c1) + " · " + ex$(r.v1)) +
+        cell(r, "c4", pct(r.c4), heat(r.c4), "Vol 4s: " + exP(r.c4) + " · " + ex$(r.v4)) +
+        cell(r, "c30", pct(r.c30), heat(r.c30), "Vol 30m: " + exP(r.c30) + " · " + ex$(r.v30)) +
+        cell(r, "oi", r.oi != null ? fmt(r.oi) : "—", "", "Open interest: " + (r.oi != null ? ex$(r.oi) : "—")) +
+        cell(r, "oiv", r.oiv != null ? r.oiv.toFixed(2) : "—", "", "OI / Vol: " + (r.oiv != null ? r.oiv.toFixed(4) : "—")) + `</tr>`).join("") +
+      `</tbody></table><div class="lq-src">Binance futures (USDT) · ${T("Qiimaha iyo Volume 24s: live", "Price & 24h volume: live")} · ${T("Riix cinwaanka si aad u kala soocdo · dul mar si aad u aragto tirada saxda ah", "Click a header to sort · hover for exact values")} · ${hm(S.at.vol)}</div>`;
     const cols = HMC.map(by).filter(Boolean);
     const u = (so, en) => T(so, en);
     const rowsH = [["Volume " + u("1s", "1h"), "v1", 0], ["Vol " + u("1s", "1h") + " %", "c1", 1], ["Volume " + u("4s", "4h"), "v4", 0], ["Vol " + u("4s", "4h") + " %", "c4", 1], ["Volume " + u("12s", "12h"), "v12", 0], ["Vol " + u("12s", "12h") + " %", "c12", 1], ["Volume " + u("24s", "24h"), "v24", 0], ["Vol " + u("24s", "24h") + " %", "c24", 1], ["Volume " + u("30m", "30d"), "v30", 0], ["Vol " + u("30m", "30d") + " %", "c30", 1]];
     document.getElementById("lq-vh").innerHTML = `<table class="lq-tt lq-vhm"><thead><tr><th></th>${cols.map((r) => `<th class="c">${esc(r.c)}</th>`).join("")}</tr></thead><tbody>` +
-      rowsH.map(([l, f, isP]) => `<tr><td class="lq-dim">${l}</td>${cols.map((r) => isP ? `<td class="c" style="${heat(r[f])}">${pct(r[f])}</td>` : `<td class="c" style="${heat(r[f.replace("v", "c")])}"><b>${r[f] != null ? fmt(r[f]) : "—"}</b></td>`).join("")}</tr>`).join("") + `</tbody></table>`;
+      rowsH.map(([l, f, isP]) => `<tr><td class="lq-dim">${l}</td>${cols.map((r) => isP ? `<td class="c" style="${heat(r[f])}" data-x="${esc(r.c + " · " + l + ": " + (r[f] == null ? "—" : (r[f] > 0 ? "+" : "") + r[f].toFixed(4) + "%"))}">${pct(r[f])}</td>` : `<td class="c" style="${heat(r[f.replace("v", "c")])}" data-x="${esc(r.c + " · " + l + ": $" + (r[f] != null ? Math.round(r[f]).toLocaleString("en-US") : "—"))}"><b>${r[f] != null ? fmt(r[f]) : "—"}</b></td>`).join("")}</tr>`).join("") + `</tbody></table>`;
   }
   L.add("vol", { head: () => T("Volume-ka futures", "Futures volume"), at: () => S.at.vol, src: "Binance futures", body: () => {
     const V = S.vol || { rows: [] }; let s = tx(56, 72, T("Volume-ka futures · 24 saac", "Futures volume · 24h"), 32, { d: 1, w: 800 }) + box(56, 100, 1088, 450);
@@ -304,6 +330,19 @@
     V.rows.slice(0, 8).forEach((r, i) => { const y = 190 + i * 45; s += tx(cx[0], y, r.c, 21, { w: 800 }) + tx(cx[1], y, price(r.p), 19) + tx(cx[2], y, fmt(r.v24), 21, { d: 1, w: 800 }) + tx(cx[3], y, pct(r.c24), 20, { w: 700, c: r.c24 >= 0 ? G : R }) + tx(cx[4], y, r.oi != null ? fmt(r.oi) : "—", 20, { a: "end" }); });
     return s;
   } });
+
+  document.getElementById("lq-vt").addEventListener("click", (e) => {
+    const th = e.target.closest("th[data-k]"); if (!th || !S.vol) return;
+    const k = th.dataset.k; S.vdir = S.vsort === k ? -(S.vdir || -1) : -1; S.vsort = k; renderVol();
+  });
+  // Tooltip: tirada saxda ah marka la dul maro
+  const TIP = document.createElement("div"); TIP.className = "lq-xtip"; TIP.hidden = true; document.body.appendChild(TIP);
+  host.addEventListener("mousemove", (e) => {
+    const c = e.target.closest && e.target.closest("[data-x]"); if (!c) { TIP.hidden = true; return; }
+    TIP.textContent = c.dataset.x; TIP.hidden = false;
+    const w = TIP.offsetWidth; TIP.style.left = Math.min(innerWidth - w - 8, e.clientX + 14) + "px"; TIP.style.top = (e.clientY - 38) + "px";
+  });
+  host.addEventListener("mouseleave", () => { TIP.hidden = true; });
 
   // ================= G) Su'aalaha =================
   const faq = document.getElementById("lq-faq");
