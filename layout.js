@@ -327,6 +327,15 @@
       footer.className = "site-footer";
       footer.innerHTML = buildFooter();
     }
+    // Tirada booqashada (dal + booqde gaar ah) — magac iyo lambar lama kaydiyo
+    try {
+      const pg = (header && header.dataset.header) || (location.pathname.replace(/^\/|\.html$/g, "") || "maanta");
+      if (pg !== "admin" && !/^(localhost|127\.)/.test(location.hostname)) {
+        let vid = load("xc-vid", "");
+        if (!vid) { vid = Math.random().toString(36).slice(2) + Date.now().toString(36); save("xc-vid", vid); }
+        fetch("/api/member?op=track", { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p: pg, v: vid }) }).catch(function () {});
+      }
+    } catch (e) { /* ignore */ }
   });
 
   if (window.matchMedia) {

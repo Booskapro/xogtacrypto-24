@@ -34,6 +34,21 @@
     .ad-days { width: 100%; border-collapse: collapse; font-size: .82rem; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
     .ad-days th, .ad-days td { padding: 8px 10px; text-align: right; border-top: 1px solid var(--line); } .ad-days th { color: var(--muted); font-size: .7rem; text-transform: uppercase; background: var(--card-2); border-top: 0; } .ad-days td:first-child, .ad-days th:first-child { text-align: left; }
     .ad-scroll { overflow-x: auto; }
+    .ad-g { display: block; font-style: normal; font-size: .78rem; margin-top: 2px; color: var(--muted); } .ad-g.up { color: #2BD67B; } .ad-g.down { color: #F05A5F; }
+    .ad-rg { display: inline-flex; gap: 4px; padding: 5px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); margin: 4px 0 14px; flex-wrap: wrap; }
+    .ad-rg button { border: 0; background: transparent; color: var(--muted); font: 600 .9rem Inter, sans-serif; padding: 9px 14px; border-radius: 10px; cursor: pointer; } .ad-rg button.on { background: var(--text); color: var(--bg); }
+    .ad-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; margin-bottom: 16px; min-width: 0; }
+    .ad-card h2 { margin: 0 0 12px; font-family: var(--font-display); font-size: 1.15rem; }
+    .ad-ch-h { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; } .ad-ch-h h2 { margin: 0; }
+    .ad-mini { display: flex; gap: 10px; } .ad-mini div { background: var(--card-2); border-radius: 12px; padding: 8px 12px; } .ad-mini span { display: block; font-size: .72rem; color: var(--muted); } .ad-mini b { font-family: var(--font-display); font-size: 1.2rem; }
+    .ad-ch { width: 100%; height: 260px; margin-top: 12px; display: block; } .ad-ax { font-size: 11px; fill: var(--muted); }
+    .ad-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 4px; vertical-align: 0; }
+    .ad-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .ad-bar { display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: .88rem; }
+    .ad-bar span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ad-bar i { display: block; height: 10px; border-radius: 99px; background: linear-gradient(90deg, #3FB8FF, #5B5BFF); } .ad-bar.pg i { background: #F5B53F; }
+    .ad-bar b { text-align: right; font-family: var(--font-display); } .ad-bar small { color: var(--muted); font-weight: 500; }
+    .ad-note { background: rgba(63,184,255,.1); border: 1px solid rgba(63,184,255,.3); border-radius: 12px; padding: 12px 14px; font-size: .9rem; margin: 14px 0 0; }
+    @media (max-width: 760px) { .ad-two { grid-template-columns: 1fr; } .ad-bar { grid-template-columns: 110px 1fr 70px; } .ad-ch { height: 200px; } }
     @media (max-width: 760px) { .ad-kp { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ad-hide { display: none; } }
   </style>
 </head>
@@ -41,7 +56,7 @@
 <header data-header="admin"></header>
 <main class="wrap ad">
   <span class="eyebrow">MAAMULKA · ADMIN</span>
-  <h1 class="h1">Xubnaha iyo booqashooyinka</h1>
+  <h1 class="h1">Booqashada website-ka</h1>
   <div id="ad"></div>
 </main>
 <footer data-footer></footer>
@@ -92,46 +107,83 @@
     root.innerHTML = `<p class="ad-msg">Xogta ayaa soo socota…</p>`;
     let r = null, why = "";
     try {
-      const res = await fetch("/api/member?op=list", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ t }) });
+      const res = await fetch("/api/member?op=stats&_=" + Date.now(), { method: "POST", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ t }) });
       const txt = await res.text();
-      try { r = JSON.parse(txt); } catch (e) { why = "Password-ku waa sax ✓, laakiin liiska xubnaha wuu fashilmay (server " + res.status + "): " + esc(txt.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160)); }
-    } catch (e) { why = "Password-ku waa sax ✓, laakiin server-ka lama gaari karo."; }
-    if (!r || r.error) { if (r && r.error === "Login") set("xc-adm", null); return login(why || (r && r.error ? "Password-ku waa sax ✓, laakiin: " + esc(r.error) : "Khalad aan la garanayn."), true); }
-    DATA = r; render("");
+      try { r = JSON.parse(txt); } catch (e) { why = "Xogta booqashada lama soo qaadi karo (server " + res.status + ")."; }
+    } catch (e) { why = "Server-ka lama gaari karo."; }
+    if (!r || r.error) { if (r && r.error === "Login") set("xc-adm", null); return login(why || (r && r.error === "Login" ? "Fadlan mar kale gal." : esc((r && r.error) || "Khalad")), true); }
+    DATA = r; render();
   }
-  function render(q) {
-    const r = DATA, now = Date.now(), d7 = now - 7 * 864e5;
-    const mem = r.members.filter((m) => m.member), today = new Date().toISOString().slice(0, 10);
-    const newToday = r.members.filter((m) => m.first && new Date(m.first).toISOString().slice(0, 10) === today).length;
-    const new7 = r.members.filter((m) => (m.first || 0) > d7).length, act7 = r.members.filter((m) => (m.last || 0) > d7).length;
-    const rows = r.members.filter((m) => !q || (m.name + " " + m.username).toLowerCase().includes(q.toLowerCase()));
-    const sum = (k) => r.days.reduce((a, d) => a + (d[k] || 0), 0);
-    const B = r.bot || null;
-    const botBox = !B ? "" : B.ok
-      ? `<p class="ad-msg" style="color:#2BD67B">✓ Bot-ka @${esc(B.name)} wuu arki karaa kooxda “${esc(B.chat)}” (${esc(B.type)} · ${esc(B.status)}).</p>`
-      : `<div class="card" style="border-color:#F05A5F;margin:14px 0"><b style="color:#F05A5F">✗ Bot-ka${B.name ? " @" + esc(B.name) : ""} ma hubin karo xubnaha kooxda</b><p class="ad-msg">${B.status ? "Heerka bot-ka: <b>" + esc(B.status) + "</b>" + (B.type ? " · nooca: " + esc(B.type) : "") + ". " : ""}${B.msg ? "Telegram: " + esc(B.msg) : ""}</p><p class="ad-msg">Xalka: Telegram → fur kooxda/channel-ka → Administrators → Add Admin → dooro bot-ka → Save. Kadib hubi in <b>TELEGRAM_CHAT_ID</b> (Vercel) uu yahay <b>@Xogtacrypto24_7</b> ama lambarka kooxda (-100…).</p></div>`;
-    root.innerHTML = (r.kv ? "" : `<p class="ad-msg bad">Database (KV) lama helin.</p>`) + botBox + `
+  const fmt = (n) => (n || 0).toLocaleString("en-US");
+  const pct = (a, b) => (b ? Math.round((a - b) / b * 100) : null);
+  const gr = (g) => g == null ? `<em class="ad-g">— cusub</em>` : `<em class="ad-g ${g >= 0 ? "up" : "down"}">${g >= 0 ? "▲" : "▼"} ${Math.abs(g)}%</em>`;
+  const MO = ["Jan", "Feb", "Mar", "Abr", "May", "Jun", "Lul", "Og", "Seb", "Okt", "Nof", "Dis"];
+  let DN; try { DN = new Intl.DisplayNames(["so", "en"], { type: "region" }); } catch (e) { DN = null; }
+  const cname = (c) => { if (c === "XX") return "Lama garanayo"; try { return (DN && DN.of(c)) || c; } catch (e) { return c; } };
+  const flag = (c) => c && c.length === 2 && c !== "XX" ? String.fromCodePoint(...[...c].map((x) => 127397 + x.charCodeAt(0))) : "🌐";
+  const PG = { maanta: "Maanta", index: "Maanta", charts: "Charts", lacagta: "Lacagta", kalandarka: "Kalandarka", wararka: "Wararka", taariikhda: "Taariikhda FED", fahanka: "Fahanka FED", "ku-saabsan": "Ku saabsan" };
+  const RANGES = [["7", "7 maalin"], ["30", "30 maalin"], ["90", "90 maalin"], ["1y", "1 sano"], ["5y", "5 sano"]];
+  let RG = get("xc-adm-rg") || "30";
+
+  function series() {
+    const r = DATA;
+    if (RG === "1y" || RG === "5y") {
+      const n = RG === "1y" ? 12 : 60, ms = r.months.slice(-n);
+      return { pts: ms.map((x) => ({ l: MO[+x.m.slice(5) - 1] + (RG === "5y" ? " " + x.m.slice(2, 4) : ""), u: x.u, v: x.h.v || 0, n: x.h.new || 0 })), H: ms.map((x) => x.h), prevU: null, unit: "bishii" };
+    }
+    const n = +RG, ds = r.days.slice(-n), prev = r.days.slice(-2 * n, -n);
+    return { pts: ds.map((x) => ({ l: +x.d.slice(8) + " " + MO[+x.d.slice(5, 7) - 1], u: x.u, v: x.h.v || 0, n: x.h.new || 0 })), H: ds.map((x) => x.h), prev, unit: "maalintii" };
+  }
+  function chart(pts) {
+    const W = 1000, H = 260, pl = 46, pr = 12, pt = 14, pb = 30, max = Math.max(4, ...pts.map((p) => Math.max(p.u, p.v)));
+    const nice = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / nice) * nice;
+    const x = (i) => pl + (pts.length < 2 ? (W - pl - pr) / 2 : i * (W - pl - pr) / (pts.length - 1)), y = (v) => pt + (1 - v / top) * (H - pt - pb);
+    const bw = Math.max(2, (W - pl - pr) / pts.length * 0.62);
+    let s = "";
+    for (let k = 0; k <= 4; k++) { const v = top * k / 4; s += `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl - 8}" y="${y(v) + 4}" text-anchor="end" class="ad-ax">${fmt(Math.round(v))}</text>`; }
+    pts.forEach((p, i) => { s += `<rect x="${x(i) - bw / 2}" y="${y(p.u)}" width="${bw}" height="${Math.max(0, H - pb - y(p.u))}" rx="3" fill="#3FB8FF" opacity=".85"><title>${esc(p.l)} · booqdayaal ${fmt(p.u)} · bogag ${fmt(p.v)}</title></rect>`; });
+    s += `<polyline fill="none" stroke="#F5B53F" stroke-width="2.5" points="${pts.map((p, i) => x(i) + "," + y(p.v)).join(" ")}"/>`;
+    const step = Math.ceil(pts.length / 8);
+    pts.forEach((p, i) => { if (i % step === 0 || i === pts.length - 1) s += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" class="ad-ax">${esc(p.l)}</text>`; });
+    return `<svg viewBox="0 0 ${W} ${H}" class="ad-ch" preserveAspectRatio="none">${s}</svg>`;
+  }
+  function render() {
+    const r = DATA, S = series(), P = S.pts;
+    const sum = (k) => P.reduce((a, p) => a + p[k], 0);
+    const views = sum("v"), newU = sum("n"), today = r.days[r.days.length - 1], yday = r.days[r.days.length - 2];
+    const prevViews = S.prev ? S.prev.reduce((a, x) => a + (x.h.v || 0), 0) : null;
+    // dalalka
+    const C = {}; S.H.forEach((h) => Object.keys(h).forEach((k) => { if (k.startsWith("c:")) C[k.slice(2)] = (C[k.slice(2)] || 0) + h[k]; }));
+    const cs = Object.entries(C).sort((a, b) => b[1] - a[1]), ctot = cs.reduce((a, c) => a + c[1], 0) || 1, cmax = cs.length ? cs[0][1] : 1;
+    const Pg = {}; S.H.forEach((h) => Object.keys(h).forEach((k) => { if (k.startsWith("p:")) Pg[k.slice(2)] = (Pg[k.slice(2)] || 0) + h[k]; }));
+    const ps = Object.entries(Pg).sort((a, b) => b[1] - a[1]), pmax = ps.length ? ps[0][1] : 1;
+    const empty = !r.all;
+    root.innerHTML = (r.kv ? "" : `<p class="ad-msg bad">Database (KV) lama helin.</p>`) +
+      (empty ? `<div class="ad-note">Tirinta booqashada hadda ayay bilaabatay. Xogtu way soo badan doontaa marka dadku booqdaan; 5 sano ayaa la kaydinayaa.</div>` : "") + `
       <div class="ad-kp">
-        <div><span>Xubnaha bogga (Telegram login)</span><b>${mem.length}</b></div>
-        <div><span>Kooxda Telegram (wadarta)</span><b>${r.group != null ? r.group.toLocaleString("en-US") : "—"}</b></div>
-        <div><span>Cusub maanta · 7 maalin</span><b>${newToday} · ${new7}</b></div>
-        <div><span>Firfircoon 7 maalin</span><b>${act7}</b></div>
+        <div><span>Maanta · booqdayaal</span><b>${fmt(today.u)}</b>${gr(pct(today.u, yday.u))}</div>
+        <div><span>7 maalin · firfircoon</span><b>${fmt(r.wau)}</b>${gr(pct(r.wau, r.wau0))}</div>
+        <div><span>30 maalin · firfircoon</span><b>${fmt(r.mau)}</b>${gr(pct(r.mau, r.mau0))}</div>
+        <div><span>Wadarta booqdayaasha (abid)</span><b>${fmt(r.all)}</b><em class="ad-g">Telegram: ${r.group != null ? fmt(r.group) : "—"}</em></div>
       </div>
-      <div class="ad-row"><h2>14-kii maalmood ee u dambeeyay</h2><span class="ad-msg" style="margin:0">Qufulka la arkay: ${sum("charts:gate") + sum("kalandarka:gate") + sum("lacagta:gate")} · login cusub: ${sum("joins")}</span></div>
-      <div class="ad-scroll"><table class="ad-days"><tr><th>Maalin</th><th>Charts (bilaash)</th><th>Charts (xubno)</th><th>Kalandarka (bilaash)</th><th>Kalandarka (xubno)</th><th>Qufulka la arkay</th><th>Login cusub</th></tr>
-      ${r.days.slice().reverse().map((d) => `<tr><td>${esc(d.d)}</td><td>${d["charts:view"] || 0}</td><td>${d["charts:member"] || 0}</td><td>${d["kalandarka:view"] || 0}</td><td>${d["kalandarka:member"] || 0}</td><td>${(d["charts:gate"] || 0) + (d["kalandarka:gate"] || 0) + (d["lacagta:gate"] || 0)}</td><td>${d.joins || 0}</td></tr>`).join("")}</table></div>
-      <div class="ad-row"><h2>Xubnaha (${rows.length})</h2><div class="ad-tools"><input id="ad-q" placeholder="Raadi magac ama @username" value="${esc(q)}"><button class="ad-btn" id="ad-csv">Soo deji CSV</button></div></div>
-      <div class="ad-scroll"><table class="ad-tbl"><tr><th>Qofka</th><th>Xaaladda</th><th class="ad-hide">Ku biiray</th><th>Booqashadii u dambaysay</th><th class="ad-hide">Booqasho</th></tr>
-      ${rows.map((m) => `<tr><td><div class="ad-u">${m.photo ? `<img src="${esc(m.photo)}" alt="" loading="lazy">` : "<i></i>"}<div><b>${esc(m.name)}</b><br>${m.username ? `<a href="https://t.me/${esc(m.username)}" target="_blank" rel="noopener">@${esc(m.username)}</a>` : `<span class="ad-msg">ID ${esc(m.id)}</span>`}</div></div></td>
-        <td>${m.admin ? '<span class="ad-tag a">Admin</span>' : m.member ? '<span class="ad-tag y">Xubin</span>' : '<span class="ad-tag n">Kooxda kuma jiro</span>'}</td>
-        <td class="ad-hide">${dt(m.first)}</td><td>${dt(m.last)}</td><td class="ad-hide">${m.views || 0}</td></tr>`).join("") || `<tr><td colspan="5" class="ad-msg">Weli xubno ma jiraan.</td></tr>`}</table></div>
-      <p class="ad-msg" style="margin-top:16px"><a href="#" id="ad-out">Ka bax (logout)</a></p>`;
-    const qi = root.querySelector("#ad-q");
-    qi.addEventListener("input", () => { const v = qi.value; render(v); const n = root.querySelector("#ad-q"); n.focus(); n.setSelectionRange(v.length, v.length); });
-    root.querySelector("#ad-csv").addEventListener("click", () => {
-      const lines = [["id", "name", "username", "status", "first", "last", "views"].join(",")].concat(r.members.map((m) => [m.id, m.name, m.username, m.admin ? "admin" : m.member ? "member" : "not-member", m.first ? new Date(m.first).toISOString() : "", m.last ? new Date(m.last).toISOString() : "", m.views || 0].map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(",")));
-      const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" })); a.download = "xubnaha-xogta-crypto-" + new Date().toISOString().slice(0, 10) + ".csv"; a.click();
-    });
+      <div class="ad-rg">${RANGES.map(([k, l]) => `<button data-rg="${k}" class="${k === RG ? "on" : ""}">${l}</button>`).join("")}</div>
+      <div class="ad-card">
+        <div class="ad-ch-h"><div><h2>Booqashada</h2><p class="ad-msg" style="margin:4px 0 0"><i class="ad-dot" style="background:#3FB8FF"></i>Booqdayaal ${S.unit} &nbsp; <i class="ad-dot" style="background:#F5B53F"></i>Bogag la furay</p></div>
+          <div class="ad-mini"><div><span>Bogag la furay</span><b>${fmt(views)}</b>${prevViews != null ? gr(pct(views, prevViews)) : ""}</div><div><span>Booqdayaal cusub</span><b>${fmt(newU)}</b></div></div></div>
+        ${chart(P)}
+      </div>
+      <div class="ad-two">
+        <div class="ad-card"><h2>Dalalka laga soo booqday</h2>
+          ${cs.length ? cs.slice(0, 12).map(([c, n]) => `<div class="ad-bar"><span>${flag(c)} ${esc(cname(c))}</span><i style="width:${Math.max(3, n / cmax * 100)}%"></i><b>${fmt(n)} <small>${Math.round(n / ctot * 100)}%</small></b></div>`).join("") : `<p class="ad-msg">Weli xog ma jirto.</p>`}
+          ${cs.length > 12 ? `<p class="ad-msg">+ ${cs.length - 12} dal oo kale</p>` : ""}</div>
+        <div class="ad-card"><h2>Bogagga ugu badan</h2>
+          ${ps.length ? ps.slice(0, 10).map(([p, n]) => `<div class="ad-bar pg"><span>${esc(PG[p] || p)}</span><i style="width:${Math.max(3, n / pmax * 100)}%"></i><b>${fmt(n)}</b></div>`).join("") : `<p class="ad-msg">Weli xog ma jirto.</p>`}</div>
+      </div>
+      <div class="ad-card"><h2>Sannad kasta (5 sano)</h2>
+        <div class="ad-scroll"><table class="ad-days"><tr><th>Sannad</th><th>Booqdayaal gaar ah</th><th>Bogag la furay</th><th>Korriin</th></tr>
+        ${r.years.slice().reverse().map((y, i, a) => `<tr><td>${y.y}</td><td>${fmt(y.u)}</td><td>${fmt(y.v)}</td><td>${a[i + 1] && a[i + 1].u ? gr(pct(y.u, a[i + 1].u)) : "—"}</td></tr>`).join("")}</table></div></div>
+      <p class="ad-msg" style="margin-top:16px">Booqde = qof gaar ah (browser). Dalka waxaa laga garanayaa IP-ga (Vercel); magac iyo lambar lama kaydiyo. · <a href="#" id="ad-out">Ka bax (logout)</a></p>`;
+    root.querySelectorAll(".ad-rg button").forEach((b) => b.addEventListener("click", () => { RG = b.dataset.rg; set("xc-adm-rg", RG); render(); }));
     root.querySelector("#ad-out").addEventListener("click", (e) => { e.preventDefault(); set("xc-adm", null); login(); });
   }
   load();
