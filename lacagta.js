@@ -69,15 +69,7 @@
     <div class="lq-coins" id="lq-coins"></div>
 
     <div class="lq-h"><h2>${T("Dhammaan waqtiyada", "All timeframes")}</h2><span class="lq-hr">${T("Saafi: soo gashay − baxday", "Net: in − out")}${CAM("table")}</span></div>
-    <div class="lq-tw"><table class="lq-t"><thead><tr><th>Coin</th>${TF.map((t) => `<th data-tf="${t.k}">${esc(t.th)}</th>`).join("")}</tr></thead><tbody id="lq-tb"></tbody></table></div>
-
-    <div class="lq-h"><h2>${T("Long iyo Short", "Long vs Short")}</h2><span class="lq-hr">${T("5 daqiiqo kasta", "Every 5 min")}${CAM("ls")}</span></div>
-    <div class="lq-ls" id="lq-ls"></div>
-    <div class="lq-exp"><b>${T("Fahan", "Read it")}</b>
-      <span>${T("<b>Long</b> = kor u kac · <b>Short</b> = hoos u dhac · 2.0 = 2 long, 1 short.", "<b>Long</b> = up · <b>Short</b> = down · 2.0 = 2 longs per short.")}</span>
-      <span>${T("Talo iibsi ama iibin ma aha.", "Not a buy or sell signal.")}</span></div>
-
-    <div class="lq-h"><h2>${T("Goorma ayay lacagtu soo gashaa?", "When does money flow in?")}</h2><span>${T("7 maalin", "7 days")}</span></div>`;
+    <div class="lq-tw"><table class="lq-t"><thead><tr><th>Coin</th>${TF.map((t) => `<th data-tf="${t.k}">${esc(t.th)}</th>`).join("")}</tr></thead><tbody id="lq-tb"></tbody></table></div>`;
 
   // ---------- Xogta spot ----------
   async function kl(sym) {
@@ -100,20 +92,6 @@
     let b = 0, q = 0;
     r.list.forEach((rows) => { rows.slice(-n).forEach((c) => { b += c.b; q += c.q; }); });
     return { buy: b, sell: q - b, net: 2 * b - q, tot: q };
-  }
-
-  // ---------- Long / Short ----------
-  async function fj(path) { const r = await fetch(FUT + path, { cache: "no-store" }); if (!r.ok) throw new Error(path); const j = await r.json(); if (!Array.isArray(j) || !j.length) throw new Error("empty"); return j[j.length - 1]; }
-  async function loadLS() {
-    try {
-      const out = {};
-      await Promise.all(["BTCUSDT", "ETHUSDT"].map(async (s) => {
-        const [acc, top] = await Promise.all([fj(`globalLongShortAccountRatio?symbol=${s}&period=5m&limit=1`), fj(`topLongShortPositionRatio?symbol=${s}&period=5m&limit=1`)]);
-        out[s] = { acc: +acc.longShortRatio, long: +acc.longAccount, top: +top.longShortRatio, t: +acc.timestamp };
-      }));
-      st.ls = out; st.lsAt = new Date(); st.lsErr = false;
-    } catch (e) { st.lsErr = true; }
-    renderLS();
   }
 
   // ---------- Muuqaalka ----------
@@ -153,21 +131,6 @@
     root.querySelectorAll(".lq-t th[data-tf]").forEach((h) => h.classList.toggle("on", h.dataset.tf === st.tf));
     if (st.at) root.querySelector("#lq-at").textContent = "Live · " + pad(st.at.getHours()) + ":" + pad(st.at.getMinutes());
   }
-  function renderLS() {
-    const box = root.querySelector("#lq-ls");
-    if (!st.ls) { box.innerHTML = `<div class="lq-lsc lq-na">${st.lsErr ? T("Xogtan hadda lama heli karo. 5 daqiiqo kadib ayaa mar kale la isku dayayaa.", "Unavailable right now. Retrying in 5 minutes.") : T("Xogta ayaa soo socota…", "Loading data…")}</div>`; return; }
-    const row = (l, v, txt) => `<div class="lq-r"><span>${l}</span><b class="${v == null ? "" : v >= 1 ? "up" : "down"}">${txt}</b></div>`;
-    box.innerHTML = [["BTCUSDT", "Bitcoin"], ["ETHUSDT", "Ethereum"]].map(([s, n]) => {
-      const d = st.ls[s]; if (!d) return "";
-      const lead = d.acc >= 1;
-      return `<div class="lq-lsc"><div class="lq-lsh"><b>Long / Short · ${n}</b><span class="lq-tag ${lead ? "up" : "down"}">${lead ? T("Long ayaa badan", "More longs") : T("Short ayaa badan", "More shorts")}</span></div>
-        ${row(T("Dadka caadiga ah (accounts)", "Regular traders (accounts)"), d.acc, d.acc.toFixed(2))}
-        ${row(T("Whales (positions)", "Whales (positions)"), d.top, d.top.toFixed(2))}
-        <div class="lq-r"><span>Long %</span><b>${Math.round(d.long * 100)}%</b></div>
-        <div class="lq-split sm"><i style="width:${d.long * 100}%"></i><i style="width:${100 - d.long * 100}%"></i></div></div>`;
-    }).join("") + (st.lsAt ? `<div class="lq-src">${T("La cusboonaysiiyay ", "Updated ")}${pad(st.lsAt.getHours())}:${pad(st.lsAt.getMinutes())}</div>` : "");
-  }
-
   root.querySelector(".lq-tabs").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-tf]"); if (!b) return;
     st.tf = b.dataset.tf; try { localStorage.setItem("xc-lq-tf", st.tf); } catch (err) { /* ignore */ }
@@ -178,6 +141,7 @@
 
 
   // ---------- Sawirka qayb kasta (1200×675 PNG) ----------
+  const EXTRA = {}; // qaybaha kale (lacagta-pro.js) ayaa halkan isku diiwaangeliya
   const W0 = 1200, H0 = 675, FB = "Inter, Arial, sans-serif", FD = "'Inter Tight', Inter, Arial, sans-serif";
   const G = "#2BD67B", R = "#F05A5F", K = { bg: "#0B1220", card: "#121A2B", ink: "#FFFFFF", mut: "#A9B6C4", dim: "#6E7D8F", line: "rgba(255,255,255,.09)" };
   const MO = EN ? ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] : ["Jan", "Feb", "Mar", "Abr", "May", "Jun", "Lul", "Og", "Seb", "Okt", "Nof", "Dis"];
@@ -230,27 +194,15 @@
         s += `<line x1="76" x2="1124" y1="${y - 60}" y2="${y - 60}" stroke="${K.line}"/>` + tx(cx[0], y, x.short || x.name, 26, { w: 700 });
         TF.forEach((t, j) => { const p = agg(x.k, t.n); if (p) s += tx(cx[j + 1], y, fmt(p.net, true), 28, { d: 1, w: 800, c: p.net >= 0 ? G : R }); });
       });
-    } else if (kind === "ls") {
-      s += tx(56, 72, T("Long iyo Short · futures", "Long vs Short · futures"), 34, { d: 1, w: 800 });
-      [["BTCUSDT", "Bitcoin", 56], ["ETHUSDT", "Ethereum", 614]].forEach(([k, n, x]) => {
-        const d = st.ls && st.ls[k]; s += box(x, 110, 530, 430);
-        if (!d) { s += tx(x + 32, 170, n, 30, { w: 700 }) + tx(x + 32, 230, "—", 30, { c: K.mut }); return; }
-        const lead = d.acc >= 1;
-        s += tx(x + 32, 168, n, 32, { w: 700 }) + tx(x + 498, 168, lead ? T("Long ayaa badan", "More longs") : T("Short ayaa badan", "More shorts"), 20, { w: 700, a: "end", c: lead ? G : R });
-        s += tx(x + 32, 250, T("Dadka caadiga ah", "Regular traders"), 22, { c: K.mut }) + tx(x + 498, 252, d.acc.toFixed(2), 40, { d: 1, w: 800, a: "end", c: d.acc >= 1 ? G : R });
-        s += tx(x + 32, 330, "Whales", 22, { c: K.mut }) + tx(x + 498, 332, d.top.toFixed(2), 40, { d: 1, w: 800, a: "end", c: d.top >= 1 ? G : R });
-        s += tx(x + 32, 410, "Long %", 22, { c: K.mut }) + tx(x + 498, 412, Math.round(d.long * 100) + "%", 40, { d: 1, w: 800, a: "end" });
-        s += bar(x + 32, 460, 466, 16, d.long) + tx(x + 32, 510, "Long", 18, { c: G }) + tx(x + 498, 510, "Short", 18, { c: R, a: "end" });
-      });
-    }
+    } else if (EXTRA[kind]) s += EXTRA[kind].body();
     return s;
   }
   async function shotSVG(kind) {
     const [fc, logo] = await Promise.all([fonts(), LOGO || dataURI("logo.svg").then((u) => (LOGO = u)).catch(() => "")]);
-    const at = kind === "ls" ? st.lsAt : st.at, d = at || new Date();
+    const at = EXTRA[kind] && EXTRA[kind].at ? EXTRA[kind].at() : st.at, d = at || new Date();
     const when = d.getDate() + " " + MO[d.getMonth()] + " " + d.getFullYear() + " · " + pad(d.getHours()) + ":" + pad(d.getMinutes());
     let s = `<rect width="${W0}" height="${H0}" fill="${K.bg}"/>` + body(kind);
-    s += `<line x1="56" x2="${W0 - 56}" y1="${H0 - 64}" y2="${H0 - 64}" stroke="${K.line}"/>` + tx(56, H0 - 28, when + " · " + T("Isha: Binance", "Source: Binance"), 16, { c: K.dim });
+    s += `<line x1="56" x2="${W0 - 56}" y1="${H0 - 64}" y2="${H0 - 64}" stroke="${K.line}"/>` + tx(56, H0 - 28, when + " · " + T("Isha: ", "Source: ") + (EXTRA[kind] && EXTRA[kind].src ? EXTRA[kind].src : "Binance"), 16, { c: K.dim });
     if (logo) s += `<image href="${logo}" x="${W0 - 56 - 214}" y="${H0 - 50}" width="28" height="28"/>`;
     s += tx(W0 - 56, H0 - 29, "Xogta Crypto 24/7", 19, { d: 1, w: 800, a: "end" });
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${W0}" height="${H0}" viewBox="0 0 ${W0} ${H0}"><style>${fc}</style>${s}</svg>`;
@@ -262,16 +214,16 @@
   }
   let tT;
   const toast = (m) => { let t = document.getElementById("xc-toast"); if (!t) { t = document.createElement("div"); t.id = "xc-toast"; document.body.appendChild(t); } t.textContent = m; t.classList.add("on"); clearTimeout(tT); tT = setTimeout(() => t.classList.remove("on"), 2600); };
-  const closeAll = () => root.querySelectorAll(".xcc-act").forEach((w) => { w.querySelector(".xcc-menu").hidden = true; w.querySelector(".xcc-ib").classList.remove("on"); });
-  const HEAD = { io: () => T("Lacagta crypto", "Crypto money flow"), coins: () => T("Coin kasta", "Each coin"), table: () => T("Lacagta saafiga ah", "Net money flow"), ls: () => T("Long iyo Short", "Long vs Short") };
-  root.addEventListener("click", async (e) => {
-    const b = e.target.closest(".xcc-act button"); if (!b) return;
+  const closeAll = () => document.querySelectorAll("main.lq .xcc-act").forEach((w) => { w.querySelector(".xcc-menu").hidden = true; w.querySelector(".xcc-ib").classList.remove("on"); });
+  const HEAD = { io: () => T("Lacagta crypto", "Crypto money flow"), coins: () => T("Coin kasta", "Each coin"), table: () => T("Lacagta saafiga ah", "Net money flow") };
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest && e.target.closest("main.lq .xcc-act button"); if (!b) return;
     const w = b.closest(".xcc-act"), k = w.dataset.shot, a = b.dataset.a;
     e.stopPropagation();
     if (a === "menu") { const m = w.querySelector(".xcc-menu"), o = m.hidden; closeAll(); m.hidden = !o; b.classList.toggle("on", o); return; }
-    closeAll(); if (!st.at) return;
+    closeAll(); if (!st.at && !EXTRA[k]) return;
     const url = location.origin + "/lacagta";
-    const tf = TF.find((t) => t.k === st.tf), text = HEAD[k]() + (k === "ls" ? "" : " · " + tf.lab) + "\n\n" + url + (window.SITE && window.SITE.x_handle ? "\n" + window.SITE.x_handle : "");
+    const tf = TF.find((t) => t.k === st.tf), text = (EXTRA[k] ? EXTRA[k].head() : HEAD[k]() + " · " + tf.lab) + "\n\n" + url + (window.SITE && window.SITE.x_handle ? "\n" + window.SITE.x_handle : "");
     const name = `xogta-crypto-lacagta-${k}-${st.tf}-${new Date().toISOString().slice(0, 10)}.png`;
     try {
       if (a === "link") { await navigator.clipboard.writeText(url); toast(T("Link-ga waa la koobiyeeyay", "Link copied")); return; }
@@ -283,15 +235,13 @@
       window.open("https://x.com/intent/post?text=" + encodeURIComponent(text), "_blank", "noopener");
     } catch (err) { if (!err || err.name !== "AbortError") toast(T("Waan ka xumahay, isku day mar kale", "Sorry, please try again")); }
   });
-  document.addEventListener("click", (e) => { if (!e.target.closest || !e.target.closest("#lq .xcc-act")) closeAll(); });
+  document.addEventListener("click", (e) => { if (!e.target.closest || !e.target.closest("main.lq .xcc-act")) closeAll(); });
 
   async function tick() {
     try { await loadSpot(); render(); }
     catch (e) { if (!st.at) root.querySelector("#lq-sum").textContent = T("Xogta lama heli karo hadda. Isku day mar kale.", "Data unavailable. Please try again."); }
   }
-  renderLS();
-  tick(); loadLS();
+  tick();
   setInterval(tick, 60 * 1000);        // spot: daqiiqad kasta
-  setInterval(loadLS, 5 * 60 * 1000);  // futures: 5 daqiiqo kasta
-  window.XCLacagta = { state: st, agg, shotSVG, shotPNG };
+  window.XCLacagta = { state: st, agg, shotSVG, shotPNG, CAM, fmt, esc, T, EN, pad, tx, box, bar, G, R, K, MO, add: (k, o) => { EXTRA[k] = o; } };
 })();
