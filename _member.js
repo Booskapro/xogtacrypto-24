@@ -23,6 +23,13 @@ async function kv(cmd) {
   if (!KVU || !KVT) return null;
   try { const r = await fetch(KVU, { method: "POST", headers: { Authorization: "Bearer " + KVT, "Content-Type": "application/json" }, body: JSON.stringify(cmd) }); return (await r.json()).result; } catch (e) { return null; }
 }
+// Hal mar oo badan (Upstash pipeline) — commands: [[...], [...]] → [result, ...]
+async function kvp(cmds) {
+  if (!KVU || !KVT || !cmds.length) return cmds.map(() => null);
+  try { const r = await fetch(KVU.replace(/\/$/, "") + "/pipeline", { method: "POST", headers: { Authorization: "Bearer " + KVT, "Content-Type": "application/json" }, body: JSON.stringify(cmds) }); const j = await r.json(); return Array.isArray(j) ? j.map((x) => (x ? x.result : null)) : cmds.map(() => null); } catch (e) { return cmds.map(() => null); }
+}
+const KEEP = 6 * 366 * 86400; // xogta booqashada: 6 sano
+const hobj = (a) => { const o = {}; if (Array.isArray(a)) for (let i = 0; i < a.length; i += 2) o[a[i]] = +a[i + 1] || 0; return o; };
 const tg = (m, b) => fetch("https://api.telegram.org/bot" + TOKEN + "/" + m, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b || {}) }).then((r) => r.json());
 const day = (t) => new Date(t || Date.now()).toISOString().slice(0, 10);
 
@@ -94,6 +101,44 @@ module.exports = async function handler(req, res) {
       if (old) { try { const r = JSON.parse(old); r.member = st.member; r.admin = st.admin; r.last = Date.now(); await kv(["HSET", "xc:members", String(o.id), JSON.stringify(r)]); } catch (e) { /* ignore */ } }
       return send(200, { member: st.member, admin: st.admin, t: st.member || st.admin ? issue(o.id, st) : null });
     }
+    if (op === "track") {
+      // Booqasho kasta (bog kasta) — dal, booqde gaar ah (HyperLogLog), bogga
+      const ua = String(req.headers["user-agent"] || "");
+      if (!ua || /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|headless|lighthouse|vercel/i.test(ua)) return send(200, { ok: 0 });
+      const cc = String(req.headers["x-vercel-ip-country"] || "XX").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 2) || "XX";
+      const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+      const vid = String(body.v || "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 32) || crypto.createHash("sha256").update(ip + ua).digest("hex").slice(0, 16);
+      const pg = String(body.p || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 24) || "other";
+      const d = day(), m = d.slice(0, 7), y = d.slice(0, 4);
+      const r = await kvp([["PFADD", "xc:u:d:" + d, vid], ["PFADD", "xc:u:m:" + m, vid], ["PFADD", "xc:u:y:" + y, vid], ["PFADD", "xc:u:all", vid],
+        ["HINCRBY", "xc:d:" + d, "v", 1], ["HINCRBY", "xc:d:" + d, "p:" + pg, 1], ["HINCRBY", "xc:m:" + m, "v", 1],
+        ["EXPIRE", "xc:d:" + d, KEEP], ["EXPIRE", "xc:u:d:" + d, KEEP], ["EXPIRE", "xc:m:" + m, KEEP], ["EXPIRE", "xc:u:m:" + m, KEEP]]);
+      const more = [];
+      if (r[0] === 1) more.push(["HINCRBY", "xc:d:" + d, "c:" + cc, 1]);
+      if (r[1] === 1) more.push(["HINCRBY", "xc:m:" + m, "c:" + cc, 1]);
+      if (r[3] === 1) more.push(["HINCRBY", "xc:d:" + d, "new", 1], ["HINCRBY", "xc:m:" + m, "new", 1]);
+      if (more.length) await kvp(more);
+      return send(200, { ok: 1 });
+    }
+    if (op === "stats") {
+      const o = read(body.t);
+      if (!o || !(o.pw && o.adm)) return send(401, { error: "Login" });
+      const now = Date.now(), D = [], M = [], Y = [];
+      for (let k = 89; k >= 0; k--) D.push(day(now - k * 864e5));
+      const t0 = new Date(); for (let k = 59; k >= 0; k--) { const x = new Date(Date.UTC(t0.getUTCFullYear(), t0.getUTCMonth() - k, 1)); M.push(x.toISOString().slice(0, 7)); }
+      for (let k = 4; k >= 0; k--) Y.push(String(t0.getUTCFullYear() - k));
+      const dk = (a) => a.map((d) => "xc:u:d:" + d);
+      const cmds = [].concat(
+        D.map((d) => ["HGETALL", "xc:d:" + d]), D.map((d) => ["PFCOUNT", "xc:u:d:" + d]),
+        M.map((m) => ["HGETALL", "xc:m:" + m]), M.map((m) => ["PFCOUNT", "xc:u:m:" + m]),
+        Y.map((y) => ["PFCOUNT", "xc:u:y:" + y]),
+        [["PFCOUNT", "xc:u:all"], ["PFCOUNT"].concat(dk(D.slice(-7))), ["PFCOUNT"].concat(dk(D.slice(-14, -7))), ["PFCOUNT"].concat(dk(D.slice(-30))), ["PFCOUNT"].concat(dk(D.slice(-60, -30)))]);
+      const r = await kvp(cmds); let i = 0;
+      const dh = D.map(() => hobj(r[i++])), du = D.map(() => +r[i++] || 0), mh = M.map(() => hobj(r[i++])), mu = M.map(() => +r[i++] || 0), yu = Y.map(() => +r[i++] || 0);
+      const [all, wau, wau0, mau, mau0] = [r[i++], r[i++], r[i++], r[i++], r[i++]].map((x) => +x || 0);
+      const cnt = await tg("getChatMemberCount", { chat_id: CHAT }).catch(() => ({}));
+      return send(200, { kv: !!KVU, days: D.map((d, j) => ({ d, u: du[j], h: dh[j] })), months: M.map((m, j) => ({ m, u: mu[j], h: mh[j] })), years: Y.map((y, j) => ({ y, u: yu[j], v: M.filter((m) => m.startsWith(y)).reduce((a, m) => a + (mh[M.indexOf(m)].v || 0), 0) })), all, wau, wau0, mau, mau0, group: cnt && cnt.ok ? cnt.result : null });
+    }
     if (op === "hit") {
       const p = PAGES.includes(body.p) ? body.p : null, s = body.s === "gate" ? "gate" : body.s === "member" ? "member" : "view";
       if (p) { await kv(["HINCRBY", "xc:hits:" + day(), p + ":" + s, 1]); await kv(["EXPIRE", "xc:hits:" + day(), 120 * 86400]); }
@@ -103,12 +148,12 @@ module.exports = async function handler(req, res) {
     }
     if (op === "admin") {
       // Password-ka maamulka: Vercel → Environment Variables → ADMIN_PASSWORD (Secret)
-      const PW = env("ADMIN_PASSWORD");
+      const PW = env("ADMIN_PASSWORD").trim();
       if (!PW) return send(500, { error: "ADMIN_PASSWORD Vercel kuma jiro → Settings → Environment Variables ku dar, kadib Redeploy." });
       const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "x", k = "xc:admtry:" + ip + ":" + new Date().toISOString().slice(0, 13);
       const n = await kv(["INCR", k]); await kv(["EXPIRE", k, 3600]);
-      if (n != null && n > 8) return send(429, { error: "Isku day badan. Sug 1 saac." });
-      const a1 = crypto.createHash("sha256").update(String(body.pw || "")).digest(), a2 = crypto.createHash("sha256").update(PW).digest();
+      if (n != null && n > 20) return send(429, { error: "Isku day badan (20 jeer). Sug 1 saac." });
+      const a1 = crypto.createHash("sha256").update(String(body.pw || "").trim()).digest(), a2 = crypto.createHash("sha256").update(PW).digest();
       if (!crypto.timingSafeEqual(a1, a2)) return send(401, { error: "Password-ku waa khalad" });
       const now = Date.now();
       return send(200, { t: sign({ id: 0, adm: 1, pw: 1, chk: now, exp: now + 30 * 864e5 }) });
