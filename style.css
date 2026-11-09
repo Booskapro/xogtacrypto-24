@@ -1298,3 +1298,10 @@ body.xg-locked .xg { top: 64px; }
 @media (max-width: 900px) { .lq-2, .lq-3 { grid-template-columns: 1fr; } .lq-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .lq-exr { grid-template-columns: 90px 1fr 70px 70px; gap: 8px; font-size: .8rem; } .lq-vc b { font-size: 1.25rem; } }
 .lq-tip[hidden] { display: none; }
+.lq-px { transition: color .2s; font-variant-numeric: tabular-nums; }
+.lq-px.fu { animation: lqfu 1s ease-out; }
+.lq-px.fd { animation: lqfd 1s ease-out; }
+@keyframes lqfu { 0% { background: rgba(43,214,123,.35); color: #2BD67B; } 100% { background: transparent; } }
+@keyframes lqfd { 0% { background: rgba(240,90,95,.35); color: #F05A5F; } 100% { background: transparent; } }
+.lq-trr.nw { animation: lqin .5s ease-out; }
+@keyframes lqin { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }

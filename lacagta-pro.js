@@ -17,7 +17,9 @@
   const FAPI = "https://fapi.binance.com/fapi/v1/", FD = "https://fapi.binance.com/futures/data/", SPOT = "https://data-api.binance.vision/api/v3/";
   const OKX = "https://www.okx.com/api/v5/rubik/stat/", BYB = "https://api.bybit.com/v5/market/";
   const getj = async (u) => { const r = await fetch(u, { cache: "no-store" }); if (!r.ok) throw new Error(r.status + " " + u); return r.json(); };
-  const okx = async (path) => { const j = await getj(OKX + path); if (!j || j.code !== "0" || !Array.isArray(j.data)) throw new Error("okx"); return j.data; };
+  // OKX/Bybit: server-kaaga ayaa loo marayaa (CORS) → haddii uu fashilo, si toos ah ayaa la isku dayaa
+  const viaPx = async (u) => { try { return await getj("/api/member?op=px&u=" + encodeURIComponent(u)); } catch (e) { return await getj(u); } };
+  const okx = async (path) => { const j = await viaPx(OKX + path); if (!j || j.code !== "0" || !Array.isArray(j.data)) throw new Error("okx"); return j.data; };
   const hm = (d) => pad(d.getHours()) + ":" + pad(d.getMinutes());
   const pct = (v, d) => (v == null || !isFinite(v) ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d == null ? 2 : d) + "%");
   const cls = (v) => (v == null ? "" : v >= 0 ? "up" : "down");
@@ -35,7 +37,7 @@
     H(T("Iibsi vs iibin: suuq kasta", "Buy vs sell by exchange"), tabs("exc", [["BTC", "BTC"], ["ETH", "ETH"]], "BTC") + tabs("ext", [["1", T("1 saac", "1h")], ["4", T("4 saac", "4h")], ["24", T("24 saac", "24h")]], "4") + CAM("ex")) +
     `<div class="lq-card" id="lq-ex"><div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div>` +
     `<div class="lq-2">` +
-      `<div>${H(T("Coin kasta: long vs short", "Each coin: long vs short"), T("5 daqiiqo", "5 min") + CAM("lsc"))}<div class="lq-card lq-tw2" id="lq-lsc"><div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div></div>` +
+      `<div>${H(T("Coin kasta: long vs short", "Each coin: long vs short"), `<span class="lq-live sm"><b class="pulse"></b>Live</span>` + CAM("lsc"))}<div class="lq-card lq-tw2" id="lq-lsc"><div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div></div>` +
       `<div>${H(T("Ganacsiyada waaweyn", "Large trades"), `<span class="lq-live sm"><b class="pulse"></b>Live</span>` + tabs("trc", [["ALL", T("Dhammaan", "All")], ["BTC", "BTC"], ["ETH", "ETH"], ["SOL", "SOL"]], "ALL"))}<div class="lq-card lq-tr" id="lq-tr"><div class="lq-load">${T("Waxaa la sugayaa ganacsi ≥ $100K…", "Waiting for trades ≥ $100K…")}</div></div></div>` +
     `</div>` +
     H(T("Dadka vs whales: suuq kasta", "Retail vs whales by exchange"), tabs("xlc", [["BTC", "BTC"], ["ETH", "ETH"]], "BTC") + CAM("lsx")) +
@@ -113,14 +115,26 @@
     } catch (e) { if (!S.lsc) document.getElementById("lq-lsc").innerHTML = `<div class="lq-load">${T("Xogta hadda lama heli karo.", "Data unavailable.")}</div>`; }
   }
   function renderLsc() {
-    document.getElementById("lq-lsc").innerHTML = `<table class="lq-tt"><thead><tr><th>Coin</th><th>${T("Qiimaha", "Price")}</th><th>24s</th><th>${T("Iibsi / iibin", "Buy / sell")}</th><th>Whales</th><th class="r">${T("Dadka", "Retail")}</th></tr></thead><tbody>` +
-      S.lsc.map((r) => `<tr><td><b>${r.c}</b></td><td>${isFinite(r.p) ? price(r.p) : "—"}</td><td class="${cls(r.ch)}">${pct(r.ch)}</td><td>${r.buy != null ? splitBar(r.buy, "150px") : "—"}</td><td>${pill(r.top)} <span class="lq-dim">${r.top != null ? r.top.toFixed(2) : ""}</span></td><td class="r ${r.acc != null ? cls(r.acc - 1) : ""}">${r.acc != null ? r.acc.toFixed(2) : "—"}</td></tr>`).join("") +
-      `</tbody></table><div class="lq-src">Binance futures · ${T("La cusboonaysiiyay", "Updated")} ${hm(S.at.lsc)}</div>`;
+    document.getElementById("lq-lsc").innerHTML = `<table class="lq-tt"><thead><tr><th>Coin</th><th>${T("Qiimaha", "Price")}</th><th>${T("24s", "24h")}</th><th>${T("Iibsi / iibin", "Buy / sell")}</th><th>Whales</th><th class="r">${T("Dadka", "Retail")}</th></tr></thead><tbody>` +
+      S.lsc.map((r) => `<tr><td><b>${r.c}</b></td><td class="lq-px" data-p="${r.c}">${isFinite(r.p) ? price(r.p) : "—"}</td><td class="${cls(r.ch)}" data-ch="${r.c}">${pct(r.ch)}</td><td>${r.buy != null ? splitBar(r.buy, "150px") : "—"}</td><td>${pill(r.top)} <span class="lq-dim">${r.top != null ? r.top.toFixed(2) : ""}</span></td><td class="r ${r.acc != null ? cls(r.acc - 1) : ""}">${r.acc != null ? r.acc.toFixed(2) : "—"}</td></tr>`).join("") +
+      `</tbody></table><div class="lq-src">Binance futures · ${T("Qiimaha: live (ilbiriqsi kasta)", "Price: live (every second)")} · ${T("Long/short: 5 daqiiqo kasta", "Long/short: every 5 min")} · ${hm(S.at.lsc)}</div>`;
+  }
+  // Qiimaha live (WebSocket): isbeddel kasta wuu iftiimayaa
+  function startPrices() {
+    ws("wss://fstream.binance.com/stream?streams=" + LSC.map((c) => c.toLowerCase() + "usdt@miniTicker").join("/"), () => {}, (m) => {
+      const x = m.data; if (!x || !S.lsc) return;
+      const c = x.s.replace("USDT", ""), r = S.lsc.find((q) => q.c === c); if (!r) return;
+      const p = +x.c, o = +x.o, ch = o ? (p / o - 1) * 100 : r.ch;
+      const td = document.querySelector(`#lq-lsc [data-p="${c}"]`), tc = document.querySelector(`#lq-lsc [data-ch="${c}"]`);
+      if (td && p !== r.p) { td.textContent = price(p); td.classList.remove("fu", "fd"); void td.offsetWidth; td.classList.add(p > r.p ? "fu" : "fd"); }
+      if (tc) { tc.textContent = pct(ch); tc.className = cls(ch); }
+      r.p = p; r.ch = ch;
+    });
   }
   L.add("lsc", { head: () => T("Coin kasta: long vs short", "Each coin: long vs short"), at: () => S.at.lsc, src: "Binance futures", body: () => {
     let s = tx(56, 72, T("Coin kasta: long vs short · 5 daqiiqo", "Each coin: long vs short · 5 min"), 32, { d: 1, w: 800 }) + box(56, 100, 1088, 450);
     const cx = [88, 200, 380, 520, 900, 1112];
-    [["COIN", 0], [T("QIIMAHA", "PRICE"), 1], ["24S", 2], [T("IIBSI / IIBIN", "BUY / SELL"), 3], ["WHALES", 4], [T("DADKA", "RETAIL"), 5]].forEach(([l, j]) => { s += tx(cx[j], 140, l, 15, { w: 700, c: K.mut, a: j === 5 ? "end" : null }); });
+    [["COIN", 0], [T("QIIMAHA", "PRICE"), 1], [T("24S", "24H"), 2], [T("IIBSI / IIBIN", "BUY / SELL"), 3], ["WHALES", 4], [T("DADKA", "RETAIL"), 5]].forEach(([l, j]) => { s += tx(cx[j], 140, l, 15, { w: 700, c: K.mut, a: j === 5 ? "end" : null }); });
     (S.lsc || []).forEach((r, i) => {
       const y = 190 + i * 45;
       s += tx(cx[0], y, r.c, 21, { w: 800 }) + tx(cx[1], y, isFinite(r.p) ? price(r.p) : "—", 19) + tx(cx[2], y, pct(r.ch), 19, { c: r.ch >= 0 ? G : R });
@@ -142,8 +156,8 @@
     const el = document.getElementById("lq-tr"), list = S.trades.filter((t) => S.trc === "ALL" || t.c === S.trc).slice(0, 14);
     if (!list.length) { el.innerHTML = `<div class="lq-load">${T("Waxaa la sugayaa ganacsi ≥ $100K…", "Waiting for trades ≥ $100K…")}</div>`; return; }
     el.innerHTML = `<div class="lq-trr lq-trh"><span>Coin · ${T("suuq", "exchange")}</span><span class="r">${T("Qiimaha", "Price")}</span><span class="r">${T("Lacagta", "Value")}</span><span class="r">${T("Waqti", "Time")}</span></div>` +
-      list.map((t) => { const d = new Date(t.ts); return `<div class="lq-trr ${t.buy ? "b" : "s"}${t.v >= BIG ? " big" : ""}"><span><b>${t.c}</b> · ${t.ex} <em>${t.buy ? T("iibsi", "buy") : T("iibin", "sell")}</em></span><span class="r">${price(t.p)}</span><span class="r"><b>${fmt(t.v)}</b></span><span class="r">${hm(d)}:${pad(d.getSeconds())}</span></div>`; }).join("") +
-      `<div class="lq-src">≥ $100K · ${T("cagaar = iibsi, casaan = iibin", "green = buy, red = sell")} · Binance, OKX, Bybit</div>`;
+      list.map((t) => { const d = new Date(t.ts), nw = renderTr.seen && !renderTr.seen.has(t); return `<div class="lq-trr ${t.buy ? "b" : "s"}${t.v >= BIG ? " big" : ""}${nw ? " nw" : ""}"><span><b>${t.c}</b> · ${t.ex} <em>${t.buy ? T("iibsi", "buy") : T("iibin", "sell")}</em></span><span class="r">${price(t.p)}</span><span class="r"><b>${fmt(t.v)}</b></span><span class="r">${hm(d)}:${pad(d.getSeconds())}</span></div>`; }).join("") +
+      (renderTr.seen = new Set(list), "") + `<div class="lq-src">≥ $100K · ${T("cagaar = iibsi, casaan = iibin", "green = buy, red = sell")} · Binance, OKX, Bybit</div>`;
   }
   function ws(url, onopen, onmsg) {
     let sock;
@@ -183,7 +197,7 @@
       okx(`contracts/long-short-account-ratio-contract?instId=${id}&period=5m&limit=1`).then((d) => { o.ok.acc = r1(d); }),
       okx(`contracts/long-short-account-ratio-contract-top-trader?instId=${id}&period=5m&limit=1`).then((d) => { o.ok.tacc = r1(d); }),
       okx(`contracts/long-short-position-ratio-contract-top-trader?instId=${id}&period=5m&limit=1`).then((d) => { o.ok.tpos = r1(d); }),
-      getj(`${BYB}account-ratio?category=linear&symbol=${s}&period=5min&limit=1`).then((j) => { const x = j.result.list[0]; o.by.acc = +x.buyRatio / +x.sellRatio; })
+      viaPx(`${BYB}account-ratio?category=linear&symbol=${s}&period=5min&limit=1`).then((j) => { const x = j.result.list[0]; o.by.acc = +x.buyRatio / +x.sellRatio; })
     ]);
     S.lsx[c] = o; S.at.lsx = new Date(); renderLsx();
   }
@@ -274,11 +288,12 @@
       card("ETH futures", eth && eth.v24, eth ? (eth.v24 / V.total * 100).toFixed(1) + T("% futures-ka", "% of futures") : "", eth && eth.c24) +
       card("BTC spot", V.spot, "Binance", null);
     const top = V.rows.slice(0, 20);
-    document.getElementById("lq-vt").innerHTML = `<table class="lq-tt lq-vtt"><thead><tr><th>#</th><th>Coin</th><th class="r">${T("Qiimaha", "Price")}</th><th class="r">${T("Qiimaha 24s", "Price 24h")}</th><th class="r">Volume 24s</th><th class="r">Vol 24s %</th><th class="r">Vol 1s %</th><th class="r">Vol 4s %</th><th class="r">Vol 30m %</th><th class="r">OI</th><th class="r">OI / Vol</th></tr></thead><tbody>` +
+    document.getElementById("lq-vt").innerHTML = `<table class="lq-tt lq-vtt"><thead><tr><th>#</th><th>Coin</th><th class="r">${T("Qiimaha", "Price")}</th><th class="r">${T("Qiimaha 24s", "Price 24h")}</th><th class="r">Volume ${T("24s", "24h")}</th><th class="r">Vol ${T("24s", "24h")} %</th><th class="r">Vol ${T("1s", "1h")} %</th><th class="r">Vol ${T("4s", "4h")} %</th><th class="r">Vol ${T("30m", "30d")} %</th><th class="r">OI</th><th class="r">OI / Vol</th></tr></thead><tbody>` +
       top.map((r, i) => `<tr><td class="lq-dim">${i + 1}</td><td><b>${esc(r.c)}</b></td><td class="r">${price(r.p)}</td><td class="r" style="${heat(r.ch * 5)}">${pct(r.ch)}</td><td class="r"><b>${fmt(r.v24)}</b></td><td class="r" style="${heat(r.c24)}">${pct(r.c24)}</td><td class="r" style="${heat(r.c1)}">${pct(r.c1)}</td><td class="r" style="${heat(r.c4)}">${pct(r.c4)}</td><td class="r" style="${heat(r.c30)}">${pct(r.c30)}</td><td class="r">${r.oi != null ? fmt(r.oi) : "—"}</td><td class="r">${r.oi != null ? (r.oi / r.v24).toFixed(2) : "—"}</td></tr>`).join("") +
       `</tbody></table><div class="lq-src">Binance futures (USDT) · ${T("Vol 1s/4s/24s % = marka la barbardhigo muddadii ka horraysay · 30m = 30 maalin", "Vol 1h/4h/24h % vs the previous period · 30d = 30 days")} · ${T("La cusboonaysiiyay", "Updated")} ${hm(S.at.vol)}</div>`;
     const cols = HMC.map(by).filter(Boolean);
-    const rowsH = [["Volume 1s", "v1", 0], ["Vol 1s %", "c1", 1], ["Volume 4s", "v4", 0], ["Vol 4s %", "c4", 1], ["Volume 12s", "v12", 0], ["Vol 12s %", "c12", 1], ["Volume 24s", "v24", 0], ["Vol 24s %", "c24", 1], ["Volume 30m", "v30", 0], ["Vol 30m %", "c30", 1]];
+    const u = (so, en) => T(so, en);
+    const rowsH = [["Volume " + u("1s", "1h"), "v1", 0], ["Vol " + u("1s", "1h") + " %", "c1", 1], ["Volume " + u("4s", "4h"), "v4", 0], ["Vol " + u("4s", "4h") + " %", "c4", 1], ["Volume " + u("12s", "12h"), "v12", 0], ["Vol " + u("12s", "12h") + " %", "c12", 1], ["Volume " + u("24s", "24h"), "v24", 0], ["Vol " + u("24s", "24h") + " %", "c24", 1], ["Volume " + u("30m", "30d"), "v30", 0], ["Vol " + u("30m", "30d") + " %", "c30", 1]];
     document.getElementById("lq-vh").innerHTML = `<table class="lq-tt lq-vhm"><thead><tr><th></th>${cols.map((r) => `<th class="c">${esc(r.c)}</th>`).join("")}</tr></thead><tbody>` +
       rowsH.map(([l, f, isP]) => `<tr><td class="lq-dim">${l}</td>${cols.map((r) => isP ? `<td class="c" style="${heat(r[f])}">${pct(r[f])}</td>` : `<td class="c" style="${heat(r[f.replace("v", "c")])}"><b>${r[f] != null ? fmt(r[f]) : "—"}</b></td>`).join("")}</tr>`).join("") + `</tbody></table>`;
   }
@@ -319,7 +334,7 @@
 
   // ---------- Bilow + cusboonaysiin ----------
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderHist, 150); });
-  loadEx(); loadLsc(); loadLsx(); loadHist(); loadVol(); seedTrades().then(startTrades);
+  loadEx(); loadLsc().then(startPrices); loadLsx(); loadHist(); loadVol(); seedTrades().then(startTrades);
   setInterval(loadEx, 60e3); setInterval(loadLsc, 5 * 60e3); setInterval(loadLsx, 5 * 60e3); setInterval(loadHist, 30 * 60e3); setInterval(loadVol, 5 * 60e3);
   window.XCLacagtaPro = { S, renderHist };
 })();

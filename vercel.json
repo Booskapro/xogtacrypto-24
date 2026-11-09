@@ -23,5 +23,8 @@
     "api/macro.js": {
       "maxDuration": 60
     }
-  }
+  },
+  "regions": [
+    "fra1"
+  ]
 }
