@@ -9,7 +9,9 @@
     { href: "wararka.html",     key: "wararka",    label: "Wararka",        en: "News" },
     { href: "kalandarka.html",  key: "kalandarka", label: "Kalandarka",     en: "Calendar" },
     { href: "charts.html",      key: "charts",     label: "Charts",         en: "Charts" },
-    { href: "lacagta.html",     key: "lacagta",    label: "Lacagta",        en: "Money Flow", nu: 1 },
+    { href: "lacagta.html",     key: "lacagta",    label: "Lacagta",        en: "Money Flow", nu: 1, sub: [
+      ["#sec-flow", "Lacagta soo gashay / baxday", "Money in / out"], ["#sec-ls", "Long / Short", "Long / Short"], ["#sec-tr", "Ganacsiyada waaweyn", "Large trades"],
+      ["#sec-vol", "Volume (futures / spot)", "Volume (futures / spot)"], ["#sec-cex", "Exchange-yada: soo galay / baxay", "Exchange inflows / outflows"], ["#sec-heat", "Heatmap", "Heatmap"], ["#lq-side", "Coins (1,000)", "Coins (1,000)"], ["#lq-faq", "Su'aalo", "FAQ"]] },
     { href: "taariikhda.html",  key: "taariikhda", label: "Taariikhda FED", en: "Fed History" },
     { href: "fahanka-fed.html", key: "fahanka",    label: "Fahanka FED",    en: "Learn the Fed" },
     { href: "ku-saabsan.html",  key: "ku-saabsan", label: "Ku saabsan",     en: "About" }
@@ -105,7 +107,9 @@
       if (n.key === "ku-saabsan") {
         return '<button type="button" class="nav-drop" id="about-btn" aria-expanded="false" aria-controls="mega-about"' + (n.key === active ? ' aria-current="page"' : "") + ">" + label + icon.chev + "</button>";
       }
-      return '<a href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + label + (n.nu ? ' <span class="nbadge">' + (LANG === "en" ? "NEW" : "CUSUB") + "</span>" : "") + "</a>";
+      const a = '<a href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + label + (n.nu ? ' <span class="nbadge">' + (LANG === "en" ? "NEW" : "CUSUB") + "</span>" : "") + (n.sub ? icon.chev : "") + "</a>";
+      if (!n.sub) return a;
+      return '<span class="nav-dd">' + a + '<span class="nav-ddm" role="menu">' + n.sub.map(function (x) { return '<a role="menuitem" href="' + n.href + x[0] + '">' + (LANG === "en" ? x[2] : x[1]) + "</a>"; }).join("") + "</span></span>";
     }).join("");
     return (
       '<div class="wrap header-row" style="position:relative">' +
@@ -203,7 +207,8 @@
   function buildDrawer(active) {
     const T = window.I18N.tx, s = window.SITE;
     const big = NAV.map(function (n) {
-      return '<a class="dr-big" href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + (LANG === "en" ? n.en : n.label) + (n.nu ? ' <span class="nbadge">' + (LANG === "en" ? "NEW" : "CUSUB") + "</span>" : "") + "</a>";
+      return '<a class="dr-big" href="' + n.href + '"' + (n.key === active ? ' aria-current="page"' : "") + ">" + (LANG === "en" ? n.en : n.label) + (n.nu ? ' <span class="nbadge">' + (LANG === "en" ? "NEW" : "CUSUB") + "</span>" : "") + "</a>" +
+        (n.sub ? '<div class="dr-sub">' + n.sub.map(function (x) { return '<a href="' + n.href + x[0] + '">' + (LANG === "en" ? x[2] : x[1]) + "</a>"; }).join("") + "</div>" : "");
     }).join("");
     function sec(title, links) {
       return '<div class="dr-label">' + title + "</div>" + links.map(function (l) {

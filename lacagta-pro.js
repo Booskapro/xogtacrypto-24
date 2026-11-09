@@ -34,30 +34,34 @@
 
   // ---------- Qaabka ----------
   host.innerHTML =
-    H(T("Iibsi vs iibin: suuq kasta", "Buy vs sell by exchange"), tabs("exc", [["BTC", "BTC"], ["ETH", "ETH"]], "BTC") + tabs("ext", [["1", T("1 saac", "1h")], ["4", T("4 saac", "4h")], ["24", T("24 saac", "24h")]], "4") + CAM("ex")) +
+    `<div id="sec-ls" class="lq-anchor"></div>` + H(T("Iibsi vs iibin: suuq kasta", "Buy vs sell by exchange"), tabs("exc", [["BTC", "BTC"], ["ETH", "ETH"]], "BTC") + tabs("ext", [["1", T("1 saac", "1h")], ["4", T("4 saac", "4h")], ["24", T("24 saac", "24h")]], "4") + CAM("ex")) +
     `<div class="lq-card" id="lq-ex"><div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div>` +
     `<div class="lq-2">` +
       `<div>${H(T("Coin kasta: long vs short", "Each coin: long vs short"), `<span class="lq-live sm"><b class="pulse"></b>Live</span>` + CAM("lsc"))}<div class="lq-card lq-tw2" id="lq-lsc"><div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div></div>` +
-      `<div>${H(T("Ganacsiyada waaweyn", "Large trades"), `<span class="lq-live sm"><b class="pulse"></b>Live</span>` + tabs("trc", [["ALL", T("Dhammaan", "All")], ["BTC", "BTC"], ["ETH", "ETH"], ["SOL", "SOL"]], "ALL"))}<div class="lq-card lq-tr" id="lq-tr"><div class="lq-load">${T("Waxaa la sugayaa ganacsi ≥ $100K…", "Waiting for trades ≥ $100K…")}</div></div></div>` +
+      `<div><div id="sec-tr" class="lq-anchor"></div>${H(T("Ganacsiyada waaweyn", "Large trades"), `<span class="lq-live sm"><b class="pulse"></b>Live</span>` + tabs("trc", [["ALL", T("Dhammaan", "All")], ["BTC", "BTC"], ["ETH", "ETH"], ["SOL", "SOL"]], "ALL"))}<div class="lq-card lq-tr" id="lq-tr"><div class="lq-load">${T("Waxaa la sugayaa ganacsi ≥ $100K…", "Waiting for trades ≥ $100K…")}</div></div></div>` +
     `</div>` +
     H(T("Dadka vs whales: suuq kasta", "Retail vs whales by exchange"), tabs("xlc", [["BTC", "BTC"], ["ETH", "ETH"]], "BTC") + CAM("lsx")) +
     `<div class="lq-3" id="lq-lsx"><div class="lq-card lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div>` +
     `<p class="lq-note">${T("Saamiga 2.0 = 2 long, 1 short. <b>Dadka</b> = akoonnada caadiga ah · <b>Whales</b> = ganacsatada ugu waaweyn. Talo iibsi ama iibin ma aha.", "Ratio 2.0 = 2 longs per short. <b>Retail</b> = regular accounts · <b>Whales</b> = biggest traders. Not a buy or sell signal.")}</p>` +
     H(T("Long/short iyo qiimaha", "Long/short vs price"), tabs("hc", [["BTC", "BTC"], ["ETH", "ETH"]], "BTC") + tabs("hm", [["acc", T("Dadka", "Retail")], ["top", "Whales"]], "acc") + `<span class="lq-dim">${T("30 maalin · 4 saac", "30 days · 4h")}</span>`) +
     `<div class="lq-card" id="lq-hist"><div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div>` +
-    H(T("Volume-ka futures", "Futures volume"), `<span class="lq-dim">Binance · 24 ${T("saac", "h")}</span>` + CAM("vol")) +
+    `<div id="sec-vol" class="lq-anchor"></div>` + H("Volume", tabs("vm", [["fut", "Futures"], ["spot", "Spot"]], "fut") + `<span class="lq-dim">Binance · 24 ${T("saac", "h")} · ${T("crypto oo kaliya", "crypto only")}</span>` + CAM("vol")) +
     `<div class="lq-4" id="lq-vk"></div>` +
     `<div class="lq-card lq-tw2" id="lq-vt"><div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div>` +
-    H(T("Heatmap-ka volume-ka", "Volume heatmap"), `<span class="lq-dim">${T("cagaar = kordhay · casaan = yaraaday", "green = up · red = down")}</span>`) +
-    `<div class="lq-card lq-tw2" id="lq-vh"></div>`;
+    `<div id="sec-cex" class="lq-anchor"></div>` + H(T("Exchange-yada: lacagta soo gashay iyo tan baxday", "Exchanges: money in and out"), tabs("cxp", [["d1", T("24 saac", "24h")], ["d7", T("7 maalin", "7d")], ["d30", T("30 maalin", "30d")]], "d1") + CAM("cex")) +
+    `<div class="lq-card lq-tw2" id="lq-cex"><div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div>` +
+    `<div id="sec-heat" class="lq-anchor"></div>` + H(T("Heatmap-ka volume-ka", "Volume heatmap"), `<span class="lq-dim">${T("cagaar = kordhay · casaan = yaraaday", "green = up · red = down")}</span>` + CAM("vh")) +
+    `<div class="lq-card" id="lq-vh"></div>`;
 
-  const S = { exc: "BTC", ext: "4", xlc: "BTC", trc: "ALL", hc: "BTC", hm: "acc", ex: {}, lsc: null, lsx: {}, hist: {}, vol: null, trades: [], at: {} };
+  const S = { vm: "fut", cxp: "d1", exc: "BTC", ext: "4", xlc: "BTC", trc: "ALL", hc: "BTC", hm: "acc", ex: {}, lsc: null, lsx: {}, hist: {}, vol: null, trades: [], at: {} };
   host.addEventListener("click", (e) => {
     const b = e.target.closest(".lq-mini button"); if (!b) return;
     const g = b.parentElement.dataset.g; S[g] = b.dataset.v;
     b.parentElement.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
     if (g === "exc") loadEx(); if (g === "ext") renderEx(); if (g === "xlc") loadLsx(); if (g === "trc") renderTr();
     if (g === "hc" || g === "hm") loadHist();
+    if (g === "vm") { if (S.vm === "spot" && !S.V.spot) loadVolSpot(); else renderVol(); }
+    if (g === "cxp") renderCex();
   });
 
   // ================= A) Iibsi vs iibin: suuq kasta =================
@@ -125,6 +129,7 @@
     // Suuqa oo dhan, ilbiriqsi kasta (Binance futures !miniTicker@arr)
     ws("wss://fstream.binance.com/ws/!miniTicker@arr", () => {}, (arr) => {
       if (!Array.isArray(arr)) return;
+      wsVol(S.V && S.V.fut, arr);
       arr.forEach((x) => {
         if (!/USDT$/.test(x.s)) return;
         const c = x.s.replace(/USDT$/, ""), p = +x.c, o = +x.o, ch = o ? (p / o - 1) * 100 : null, q = +x.q;
@@ -133,13 +138,6 @@
           if (p !== r1.p) { const td = document.querySelector(`#lq-lsc [data-p="${c}"]`); if (td) { td.textContent = price(p); flash(td, p > r1.p); } }
           const tc = document.querySelector(`#lq-lsc [data-ch="${c}"]`); if (tc && ch != null) { tc.textContent = pct(ch); tc.className = cls(ch); }
           r1.p = p; if (ch != null) r1.ch = ch;
-        }
-        const r2 = S.vol && S.vol.rows.find((r) => r.c === c);
-        if (r2) {
-          if (p !== r2.p) { const td = document.querySelector(`#lq-vt [data-p="${c}"]`); if (td) { td.textContent = price(p); td.dataset.x = c + " · " + T("Qiimaha", "Price") + ": $" + p; flash(td, p > r2.p); } }
-          if (ch != null) { const tc = document.querySelector(`#lq-vt [data-pc="${c}"]`); if (tc) { tc.textContent = pct(ch); tc.setAttribute("style", heat(ch * 5)); } r2.ch = ch; }
-          if (q && q !== r2.v24) { const tv = document.querySelector(`#lq-vt [data-v="${c}"]`); if (tv) { tv.innerHTML = "<b>" + fmt(q) + "</b>"; tv.dataset.x = c + " · Volume 24s: $" + Math.round(q).toLocaleString("en-US"); flash(tv, q > r2.v24); } r2.v24 = q; }
-          r2.p = p;
         }
       });
     });
@@ -270,69 +268,222 @@
     svg.addEventListener("mouseleave", () => { tip.hidden = true; cx.style.display = "none"; });
   }
 
-  // ================= F) Volume =================
+  // ================= F) Volume (futures / spot · crypto oo kaliya) =================
   const HMC = ["BTC", "ETH", "SOL", "XRP", "BNB", "DOGE"];
+  const NOTCRYPTO = /^(XAU|XAG|XAUT|PAXG|XPT|XPD|CL|BZ|NG|SPX|NDX|DJI)$/;
   async function pool(items, n, fn) { const out = new Array(items.length); let i = 0; await Promise.all(new Array(n).fill(0).map(async () => { while (i < items.length) { const j = i++; try { out[j] = await fn(items[j]); } catch (e) { out[j] = null; } } })); return out; }
+  let CRYPTO = null;
+  async function cryptoPerps() {
+    if (CRYPTO) return CRYPTO;
+    try {
+      const j = await getj(FAPI + "exchangeInfo");
+      CRYPTO = new Set(j.symbols.filter((x) => {
+        const ut = String(x.underlyingType || "COIN").toUpperCase(), sub = (x.underlyingSubType || []).join(",").toUpperCase();
+        return x.contractType === "PERPETUAL" && x.quoteAsset === "USDT" && x.status === "TRADING" && ut === "COIN" && !/TRADFI|STOCK|EQUIT|COMMODIT|METAL|INDEX|FOREX/.test(sub) && !NOTCRYPTO.test(x.baseAsset);
+      }).map((x) => x.symbol));
+    } catch (e) { CRYPTO = null; }
+    return CRYPTO;
+  }
+  const isCrypto = (sym) => { const c = sym.replace(/USDT$/, ""); if (NOTCRYPTO.test(c)) return false; const cg = window.XCCoinSet; return !cg || !cg.size || cg.has(c); };
+  // ---- Kaydka live: suuqa oo dhan (futures / spot) — dib u kala horaynta ilbiriqsiyo kasta ----
+  const TOPN = 100;
+  S.V = { fut: null, spot: null };
+  const curV = () => S.V[S.vm];
+  const mkV = (mode) => ({ mode, uni: new Map(), det: new Map(), total: 0, at: null, q: [], busy: 0 });
+  function needDet(M, syms, force) {
+    syms.forEach((s) => { if (force || !M.det.has(s)) { if (!M.det.has(s)) M.det.set(s, null); if (!M.q.includes(s)) M.q.push(s); } });
+    const base = M.mode === "fut" ? FAPI : SPOT;
+    const run = async () => {
+      if (M.busy >= 6 || !M.q.length) return; M.busy++;
+      const s = M.q.shift();
+      try {
+        const [h, dd, oi] = await Promise.all([getj(`${base}klines?symbol=${s}&interval=1h&limit=49`), getj(`${base}klines?symbol=${s}&interval=1d&limit=61`), M.mode === "fut" ? getj(`${FAPI}openInterest?symbol=${s}`).catch(() => null) : null]);
+        const hv = h.slice(0, -1).map((k) => +k[7]), dv = dd.slice(0, -1).map((k) => +k[7]), sm = (x) => x.reduce((u, v) => u + v, 0);
+        const win = (x, n) => [sm(x.slice(-n)), sm(x.slice(-2 * n, -n))], ch = ([u, v]) => (v > 0 && u > 0 ? (u / v - 1) * 100 : null);
+        const w1 = win(hv, 1), w4 = win(hv, 4), w12 = win(hv, 12), w24 = win(hv, 24), w30 = win(dv, 30);
+        M.det.set(s, { v1: w1[0], v4: w4[0], v12: w12[0], v30: w30[0], c1: ch(w1), c4: ch(w4), c12: ch(w12), c24: ch(w24), c30: ch(w30), oiq: oi ? +oi.openInterest : null });
+      } catch (e) { /* ignore */ }
+      M.busy--; run();
+    };
+    for (let i = 0; i < 6; i++) run();
+  }
+  function rowOf(M, u) {
+    const d = M.det.get(u.s) || {};
+    const r = Object.assign({}, u, d); r.oi = d.oiq != null ? d.oiq * u.p : null; r.oiv = r.oi != null && u.v24 ? r.oi / u.v24 : null; return r;
+  }
+  function ordered(M) {
+    const sk = S.vsort || "v24", sd = S.vdir || -1;
+    const all = [...M.uni.values()].filter((u) => isCrypto(u.s)).map((u) => rowOf(M, u));
+    all.sort((x, y) => sk === "c" ? sd * String(x.c).localeCompare(y.c) : sd * ((x[sk] == null ? -Infinity : x[sk]) - (y[sk] == null ? -Infinity : y[sk])) || y.v24 - x.v24);
+    return all;
+  }
+  const topByVol = (M, n) => [...M.uni.values()].filter((u) => isCrypto(u.s)).sort((x, y) => y.v24 - x.v24).slice(0, n).map((u) => u.s);
   async function loadVol() {
     try {
-      TICKAt = 0; const tk = await tickers();
-      const perps = Object.values(tk).filter((x) => /USDT$/.test(x.symbol) && +x.quoteVolume > 0 && +x.count > 0);
-      const total = perps.reduce((s, x) => s + +x.quoteVolume, 0);
-      const top = perps.sort((a, b) => +b.quoteVolume - +a.quoteVolume).slice(0, 20).map((x) => x.symbol);
-      HMC.forEach((c) => { if (!top.includes(c + "USDT") && tk[c + "USDT"]) top.push(c + "USDT"); });
-      const rows = await pool(top, 6, async (s) => {
-        const [h, dd, oi] = await Promise.all([getj(`${FAPI}klines?symbol=${s}&interval=1h&limit=49`), getj(`${FAPI}klines?symbol=${s}&interval=1d&limit=61`), getj(`${FAPI}openInterest?symbol=${s}`).catch(() => null)]);
-        const hv = h.slice(0, -1).map((k) => +k[7]), dv = dd.slice(0, -1).map((k) => +k[7]), sm = (a) => a.reduce((x, y) => x + y, 0);
-        const win = (a, n) => [sm(a.slice(-n)), sm(a.slice(-2 * n, -n))], ch = ([a, b]) => (b > 0 ? (a / b - 1) * 100 : null);
-        const t = tk[s], p = +t.lastPrice, w1 = win(hv, 1), w4 = win(hv, 4), w12 = win(hv, 12), w24 = win(hv, 24), w30 = win(dv, 30);
-        return { s, c: s.replace(/USDT$/, ""), p, ch: +t.priceChangePercent, v24: +t.quoteVolume, v1: w1[0], v4: w4[0], v12: w12[0], v30: w30[0], c1: ch(w1), c4: ch(w4), c12: ch(w12), c24: ch(w24), c30: ch(w30), oi: oi ? +oi.openInterest * p : null };
+      TICKAt = 0; const [tk, cs] = await Promise.all([tickers(), cryptoPerps()]);
+      const M = S.V.fut || (S.V.fut = mkV("fut"));
+      Object.values(tk).forEach((x) => {
+        if (!/USDT$/.test(x.symbol) || !(+x.quoteVolume > 0) || !(+x.count > 0) || (cs && !cs.has(x.symbol))) return;
+        const u = M.uni.get(x.symbol) || { s: x.symbol, c: x.symbol.replace(/USDT$/, "") };
+        u.p = +x.lastPrice; u.ch = +x.priceChangePercent; u.v24 = +x.quoteVolume; M.uni.set(x.symbol, u);
       });
-      let spot = null; try { spot = await getj(`${SPOT}ticker/24hr?symbol=BTCUSDT`); } catch (e) { /* ignore */ }
-      S.vol = { total, rows: rows.filter(Boolean), spot: spot ? +spot.quoteVolume : null }; S.at.vol = new Date(); renderVol();
-    } catch (e) { if (!S.vol) document.getElementById("lq-vt").innerHTML = `<div class="lq-load">${T("Xogta hadda lama heli karo.", "Data unavailable.")}</div>`; }
+      M.total = [...M.uni.values()].filter((u) => isCrypto(u.s)).reduce((t, u) => t + u.v24, 0); M.at = new Date(); S.at.volF = M.at;
+      needDet(M, topByVol(M, TOPN).concat(HMC.map((c) => c + "USDT")), true);
+      if (S.vm === "fut") renderVol();
+    } catch (e) { if (!S.V.fut && S.vm === "fut") document.getElementById("lq-vt").innerHTML = `<div class="lq-load">${T("Xogta hadda lama heli karo.", "Data unavailable.")}</div>`; }
+  }
+  const STABLE = /^(USDC|FDUSD|TUSD|BUSD|DAI|USDP|USDE|USDS|USD1|BFUSD|RLUSD|PYUSD|EUR|EURI|AEUR|TRY|BRL|GBP|ARS|ZAR|JPY|MXN|PLN|RON|UAH|CZK|COP|IDRT|BIDR|PAXG|XAUT|U)USDT$/, LEV = /(UP|DOWN|BULL|BEAR)USDT$/;
+  async function loadVolSpot() {
+    if (!S.V.spot) document.getElementById("lq-vt").innerHTML = `<div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div>`;
+    try {
+      const a = await getj(SPOT + "ticker/24hr?type=MINI");
+      const M = S.V.spot || (S.V.spot = mkV("spot"));
+      a.forEach((x) => {
+        if (!/USDT$/.test(x.symbol) || STABLE.test(x.symbol) || LEV.test(x.symbol) || !(+x.quoteVolume > 0)) return;
+        const u = M.uni.get(x.symbol) || { s: x.symbol, c: x.symbol.replace(/USDT$/, "") }, p = +x.lastPrice, o = +x.openPrice;
+        u.p = p; u.ch = o ? (p / o - 1) * 100 : null; u.v24 = +x.quoteVolume; M.uni.set(x.symbol, u);
+      });
+      M.total = [...M.uni.values()].filter((u) => isCrypto(u.s)).reduce((t, u) => t + u.v24, 0); M.at = new Date(); S.at.volS = M.at;
+      needDet(M, topByVol(M, TOPN).concat(HMC.map((c) => c + "USDT")), true);
+      if (S.vm === "spot") renderVol();
+    } catch (e) { if (!S.V.spot && S.vm === "spot") document.getElementById("lq-vt").innerHTML = `<div class="lq-load">${T("Xogta hadda lama heli karo.", "Data unavailable.")}</div>`; }
+  }
+  // WebSocket → kaydka (DOM-ka waxaa cusboonaysiiya liveVol)
+  function wsVol(M, arr) {
+    if (!M) return;
+    arr.forEach((x) => {
+      if (!/USDT$/.test(x.s)) return;
+      let u = M.uni.get(x.s);
+      if (!u) { if (M.mode === "fut" && CRYPTO && !CRYPTO.has(x.s)) return; if (M.mode === "spot" && (STABLE.test(x.s) || LEV.test(x.s))) return; u = { s: x.s, c: x.s.replace(/USDT$/, ""), v24: 0 }; M.uni.set(x.s, u); }
+      const p = +x.c, o = +x.o, q = +x.q;
+      if (p) u.p = p; if (o && p) u.ch = (p / o - 1) * 100;
+      if (q) { if (isCrypto(u.s)) M.total += q - (u.v24 || 0); u.v24 = q; }
+    });
   }
   const heat = (v) => { if (v == null || !isFinite(v)) return ""; const a = Math.min(1, Math.abs(v) / 100) * 0.55 + 0.08; return `background:${v >= 0 ? `rgba(43,214,123,${a})` : `rgba(240,90,95,${a})`}`; };
-  function renderVol() {
-    const V = S.vol, by = (c) => V.rows.find((r) => r.c === c), btc = by("BTC"), eth = by("ETH");
-    const card = (l, v, sub, chg) => `<div class="lq-card lq-vc"><span>${l}</span><b>${v != null ? fmt(v) : "—"}${chg != null ? ` <em class="${cls(chg)}">${pct(chg)}</em>` : ""}</b><small>${sub || ""}</small></div>`;
-    document.getElementById("lq-vk").innerHTML =
-      card(T("Futures · dhammaan coin-ka", "Futures · all coins"), V.total, "Binance USDT", null) +
-      card("BTC futures", btc && btc.v24, btc ? (btc.v24 / V.total * 100).toFixed(1) + T("% futures-ka", "% of futures") : "", btc && btc.c24) +
-      card("ETH futures", eth && eth.v24, eth ? (eth.v24 / V.total * 100).toFixed(1) + T("% futures-ka", "% of futures") : "", eth && eth.c24) +
-      card("BTC spot", V.spot, "Binance", null);
-    const COLS = [["c", "Coin", 0], ["p", T("Qiimaha", "Price"), 1], ["ch", T("Qiimaha 24s", "Price 24h"), 1], ["v24", "Volume " + T("24s", "24h"), 1], ["c24", "Vol " + T("24s", "24h") + " %", 1], ["c1", "Vol " + T("1s", "1h") + " %", 1], ["c4", "Vol " + T("4s", "4h") + " %", 1], ["c30", "Vol " + T("30m", "30d") + " %", 1], ["oi", "OI", 1], ["oiv", "OI / Vol", 1]];
-    const sk = S.vsort || "v24", sd = S.vdir || -1;
-    const top = V.rows.slice(0, 20).map((r) => Object.assign(r, { oiv: r.oi != null ? r.oi / r.v24 : null })).sort((x, y) => sk === "c" ? sd * String(x.c).localeCompare(y.c) : sd * ((x[sk] == null ? -Infinity : x[sk]) - (y[sk] == null ? -Infinity : y[sk])));
-    const ex$ = (v) => "$" + Math.round(v).toLocaleString("en-US"), exP = (v) => v == null ? "—" : (v > 0 ? "+" : "") + v.toFixed(4) + "%";
-    const cell = (r, k, html, style, tip) => `<td class="r"${style ? ` style="${style}"` : ""} data-x="${esc(r.c + " · " + tip)}">${html}</td>`;
-    document.getElementById("lq-vt").innerHTML = `<table class="lq-tt lq-vtt"><thead><tr><th>#</th>${COLS.map(([k, l, r]) => `<th class="${r ? "r " : ""}lq-sort${k === sk ? " on" : ""}" data-k="${k}">${esc(l)}${k === sk ? (sd < 0 ? " ▼" : " ▲") : ""}</th>`).join("")}</tr></thead><tbody>` +
-      top.map((r, i) => `<tr><td class="lq-dim">${i + 1}</td><td><b>${esc(r.c)}</b></td>` +
-        `<td class="r lq-px" data-p="${esc(r.c)}" data-x="${esc(r.c + " · " + T("Qiimaha", "Price") + ": $" + r.p)}">${price(r.p)}</td>` +
-        `<td class="r" style="${heat(r.ch * 5)}" data-pc="${esc(r.c)}" data-x="${esc(r.c + " · 24s: " + exP(r.ch))}">${pct(r.ch)}</td>` +
-        `<td class="r lq-px" data-v="${esc(r.c)}" data-x="${esc(r.c + " · Volume 24s: " + ex$(r.v24))}"><b>${fmt(r.v24)}</b></td>` +
-        cell(r, "c24", pct(r.c24), heat(r.c24), "Vol 24s: " + exP(r.c24) + " · " + ex$(r.v24)) +
-        cell(r, "c1", pct(r.c1), heat(r.c1), "Vol 1s: " + exP(r.c1) + " · " + ex$(r.v1)) +
-        cell(r, "c4", pct(r.c4), heat(r.c4), "Vol 4s: " + exP(r.c4) + " · " + ex$(r.v4)) +
-        cell(r, "c30", pct(r.c30), heat(r.c30), "Vol 30m: " + exP(r.c30) + " · " + ex$(r.v30)) +
-        cell(r, "oi", r.oi != null ? fmt(r.oi) : "—", "", "Open interest: " + (r.oi != null ? ex$(r.oi) : "—")) +
-        cell(r, "oiv", r.oiv != null ? r.oiv.toFixed(2) : "—", "", "OI / Vol: " + (r.oiv != null ? r.oiv.toFixed(4) : "—")) + `</tr>`).join("") +
-      `</tbody></table><div class="lq-src">Binance futures (USDT) · ${T("Qiimaha iyo Volume 24s: live", "Price & 24h volume: live")} · ${T("Riix cinwaanka si aad u kala soocdo · dul mar si aad u aragto tirada saxda ah", "Click a header to sort · hover for exact values")} · ${hm(S.at.vol)}</div>`;
-    const cols = HMC.map(by).filter(Boolean);
-    const u = (so, en) => T(so, en);
-    const rowsH = [["Volume " + u("1s", "1h"), "v1", 0], ["Vol " + u("1s", "1h") + " %", "c1", 1], ["Volume " + u("4s", "4h"), "v4", 0], ["Vol " + u("4s", "4h") + " %", "c4", 1], ["Volume " + u("12s", "12h"), "v12", 0], ["Vol " + u("12s", "12h") + " %", "c12", 1], ["Volume " + u("24s", "24h"), "v24", 0], ["Vol " + u("24s", "24h") + " %", "c24", 1], ["Volume " + u("30m", "30d"), "v30", 0], ["Vol " + u("30m", "30d") + " %", "c30", 1]];
-    document.getElementById("lq-vh").innerHTML = `<table class="lq-tt lq-vhm"><thead><tr><th></th>${cols.map((r) => `<th class="c">${esc(r.c)}</th>`).join("")}</tr></thead><tbody>` +
-      rowsH.map(([l, f, isP]) => `<tr><td class="lq-dim">${l}</td>${cols.map((r) => isP ? `<td class="c" style="${heat(r[f])}" data-x="${esc(r.c + " · " + l + ": " + (r[f] == null ? "—" : (r[f] > 0 ? "+" : "") + r[f].toFixed(4) + "%"))}">${pct(r[f])}</td>` : `<td class="c" style="${heat(r[f.replace("v", "c")])}" data-x="${esc(r.c + " · " + l + ": $" + (r[f] != null ? Math.round(r[f]).toLocaleString("en-US") : "—"))}"><b>${r[f] != null ? fmt(r[f]) : "—"}</b></td>`).join("")}</tr>`).join("") + `</tbody></table>`;
+  const tileBg = (v) => { if (v == null || !isFinite(v)) return "background:var(--card-2)"; const a = Math.min(1, Math.abs(v) / 60) * 0.7 + 0.14; return `background:${v >= 0 ? `rgba(43,214,123,${a})` : `rgba(240,90,95,${a})`}`; };
+  const HMR = [["1s", "1h", "v1", "c1"], ["4s", "4h", "v4", "c4"], ["12s", "12h", "v12", "c12"], ["24s", "24h", "v24", "c24"], ["30 maalin", "30d", "v30", "c30"]];
+  const ex$ = (v) => "$" + Math.round(v).toLocaleString("en-US"), exP = (v) => v == null ? "—" : (v > 0 ? "+" : "") + v.toFixed(4) + "%";
+  const COLSV = () => [["c", "Coin", 0], ["p", T("Qiimaha", "Price"), 1], ["ch", T("Qiimaha 24s", "Price 24h"), 1], ["v24", "Volume " + T("24s", "24h"), 1], ["c24", "Vol " + T("24s", "24h") + " %", 1], ["c1", "Vol " + T("1s", "1h") + " %", 1], ["c4", "Vol " + T("4s", "4h") + " %", 1], ["c30", "Vol " + T("30m", "30d") + " %", 1]].concat(S.vm === "spot" ? [] : [["oi", "OI", 1], ["oiv", "OI / Vol", 1]]);
+  const dash = `<span class="lq-dim">…</span>`;
+  function rowCells(r, i) {
+    const spot = S.vm === "spot", has = M0(r);
+    const cell = (html, style, tip) => `<td class="r"${style ? ` style="${style}"` : ""} data-x="${esc(r.c + " · " + tip)}">${html}</td>`;
+    return `<td class="lq-dim lq-rk">${i + 1}</td><td><b>${esc(r.c)}</b></td>` +
+      `<td class="r lq-px" data-x="${esc(r.c + " · " + T("Qiimaha", "Price") + ": $" + r.p)}">${price(r.p)}</td>` +
+      `<td class="r" style="${heat(r.ch * 5)}" data-x="${esc(r.c + " · 24s: " + exP(r.ch))}">${pct(r.ch)}</td>` +
+      `<td class="r lq-px lq-v" data-x="${esc(r.c + " · Volume 24s: " + ex$(r.v24))}"><b>${fmt(r.v24)}</b></td>` +
+      (has ? cell(pct(r.c24), heat(r.c24), "Vol 24s: " + exP(r.c24)) + cell(pct(r.c1), heat(r.c1), "Vol 1s: " + exP(r.c1) + " · " + ex$(r.v1)) + cell(pct(r.c4), heat(r.c4), "Vol 4s: " + exP(r.c4) + " · " + ex$(r.v4)) + cell(pct(r.c30), heat(r.c30), "Vol 30m: " + exP(r.c30) + " · " + ex$(r.v30))
+        : `<td class="r">${dash}</td><td class="r">${dash}</td><td class="r">${dash}</td><td class="r">${dash}</td>`) +
+      (spot ? "" : has ? cell(r.oi != null ? fmt(r.oi) : "—", "", "Open interest: " + (r.oi != null ? ex$(r.oi) : "—")) + cell(r.oiv != null ? r.oiv.toFixed(2) : "—", "", "OI / Vol: " + (r.oiv != null ? r.oiv.toFixed(4) : "—")) : `<td class="r">${dash}</td><td class="r">${dash}</td>`);
   }
-  L.add("vol", { head: () => T("Volume-ka futures", "Futures volume"), at: () => S.at.vol, src: "Binance futures", body: () => {
-    const V = S.vol || { rows: [] }; let s = tx(56, 72, T("Volume-ka futures · 24 saac", "Futures volume · 24h"), 32, { d: 1, w: 800 }) + box(56, 100, 1088, 450);
+  const M0 = (r) => r.c24 !== undefined || r.c1 !== undefined;
+  function renderCards(M, list) {
+    const spot = M.mode === "spot", btc = list.find((r) => r.c === "BTC"), eth = list.find((r) => r.c === "ETH");
+    const card = (l, v, sub, chg) => `<div class="lq-card lq-vc"><span>${l}</span><b>${v != null ? fmt(v) : "—"}${chg != null ? ` <em class="${cls(chg)}">${pct(chg)}</em>` : ""}</b><small>${sub || ""}</small></div>`;
+    const of = T(spot ? "% spot-ka" : "% futures-ka", spot ? "% of spot" : "% of futures");
+    const other = S.V[spot ? "fut" : "spot"];
+    document.getElementById("lq-vk").innerHTML =
+      card(spot ? T("Spot · dhammaan coin-ka", "Spot · all coins") : T("Futures · dhammaan coin-ka", "Futures · all coins"), M.total, "Binance USDT · " + T("crypto oo kaliya", "crypto only"), null) +
+      card(spot ? "BTC spot" : "BTC futures", btc && btc.v24, btc ? (btc.v24 / M.total * 100).toFixed(1) + of : "", btc && btc.c24) +
+      card(spot ? "ETH spot" : "ETH futures", eth && eth.v24, eth ? (eth.v24 / M.total * 100).toFixed(1) + of : "", eth && eth.c24) +
+      `<div class="lq-card lq-vc"><span>${spot ? T("Spot / futures", "Spot / futures") : T("Coin-ka la raacayo", "Coins tracked")}</span><b>${spot ? (other && other.total ? (M.total / other.total * 100).toFixed(1) + "%" : "—") : [...M.uni.values()].filter((u) => isCrypto(u.s)).length.toLocaleString("en-US")}</b><small>${spot ? T("spot marka la barbardhigo futures", "spot relative to futures") : "Binance futures · live"}</small></div>`;
+  }
+  function renderHeat(M, list) {
+    const cols = HMC.map((c) => list.find((r) => r.c === c)).filter(Boolean);
+    document.getElementById("lq-vh").innerHTML = `<div class="lq-hmg" style="grid-template-columns:96px repeat(${cols.length},minmax(0,1fr))"><div></div>${cols.map((r) => `<div class="lq-hmh">${esc(r.c)}</div>`).join("")}` +
+      HMR.map(([so, en, vk, ck]) => `<div class="lq-hml">${T(so, en)}</div>` + cols.map((r) => `<div class="lq-hmt" style="${tileBg(r[ck])}" data-x="${esc(r.c + " · " + T(so, en) + ": $" + (r[vk] != null ? Math.round(r[vk]).toLocaleString("en-US") : "—") + " · " + (r[ck] == null ? "—" : (r[ck] > 0 ? "+" : "") + r[ck].toFixed(2) + "%"))}"><b>${r[vk] != null ? fmt(r[vk]) : "—"}</b><span>${pct(r[ck], 1)}</span></div>`).join("")).join("") +
+      `</div><div class="lq-src">Binance ${M.mode === "spot" ? "spot" : "futures"} · ${T("% = marka la barbardhigo muddadii ka horraysay · Volume 24s: live", "% vs the previous period · 24h volume: live")}</div>`;
+  }
+  function renderVol() {
+    const M = curV(); if (!M) return;
+    const sk = COLSV().some((c) => c[0] === S.vsort) ? S.vsort : "v24", sd = S.vdir || -1; S.vsort = sk;
+    document.getElementById("lq-vt").innerHTML = `<div class="lq-vscroll"><table class="lq-tt lq-vtt"><thead><tr><th>#</th>${COLSV().map(([k, l, r]) => `<th class="${r ? "r " : ""}lq-sort${k === sk ? " on" : ""}" data-k="${k}">${esc(l)}${k === sk ? (sd < 0 ? " ▼" : " ▲") : ""}</th>`).join("")}</tr></thead><tbody></tbody></table></div>` +
+      `<div class="lq-src">Binance ${M.mode === "spot" ? "spot" : "futures"} (USDT) · <b>Top ${TOPN}</b> · ${T("live: qiimaha iyo volume-ka ilbiriqsi kasta, kala horaynta 2 ilbiriqsi kasta — coin-ka hoos u dhaca wuu baxaa, kan kor u kacaa wuu soo galaa", "live: price & volume every second, re-ranked every 2 seconds — coins drop out and enter as the market moves")} · ${T("crypto oo kaliya", "crypto only")} · ${T("riix cinwaanka si aad u kala soocdo", "click a header to sort")}</div>`;
+    liveVol(true);
+  }
+  function liveVol(first) {
+    const M = curV(); if (!M) return;
+    const tb = document.querySelector("#lq-vt tbody"); if (!tb) return;
+    const list = ordered(M), top = list.slice(0, TOPN);
+    needDet(M, top.map((r) => r.s));
+    const old = new Map(); tb.querySelectorAll("tr").forEach((tr) => old.set(tr.dataset.s, tr));
+    const pos = new Map(); if (!first) old.forEach((tr, k) => pos.set(k, tr.getBoundingClientRect().top));
+    const keep = new Set(top.map((r) => r.s));
+    old.forEach((tr, k) => { if (!keep.has(k)) tr.remove(); });
+    const frag = [];
+    top.forEach((r, i) => {
+      let tr = old.get(r.s), isNew = false;
+      if (!tr) { tr = document.createElement("tr"); tr.dataset.s = r.s; isNew = !first; }
+      const sig = [i, r.p, r.ch && r.ch.toFixed(2), r.v24, r.c1, r.c4, r.c24, r.c30, r.oi].join("|");
+      if (tr._sig !== sig) {
+        const pp = tr._p, pv = tr._v; tr.innerHTML = rowCells(r, i); tr._sig = sig; tr._p = r.p; tr._v = r.v24;
+        if (pp != null && r.p !== pp) flash(tr.querySelector(".lq-px"), r.p > pp);
+        if (pv != null && r.v24 !== pv) flash(tr.querySelector(".lq-v"), r.v24 > pv);
+      }
+      if (isNew) tr._new = true;
+      frag.push(tr);
+    });
+    frag.forEach((tr) => tb.appendChild(tr));
+    if (!first && tb.animate) frag.forEach((tr) => {
+      if (tr._new) { tr._new = false; tr.animate([{ opacity: 0, background: "rgba(43,214,123,.35)" }, { opacity: 1, background: "transparent" }], { duration: 900, easing: "ease-out" }); return; }
+      const y0 = pos.get(tr.dataset.s); if (y0 == null) return;
+      const dy = y0 - tr.getBoundingClientRect().top;
+      if (Math.abs(dy) > 1) tr.animate([{ transform: `translateY(${dy}px)`, background: dy > 0 ? "rgba(43,214,123,.18)" : "rgba(240,90,95,.18)" }, { transform: "none", background: "transparent" }], { duration: 650, easing: "cubic-bezier(.2,.7,.2,1)" });
+    });
+    renderCards(M, list); renderHeat(M, list);
+  }
+  // Kaliya marka qaybtu muuqato (ma culaysiiyo taleefanka)
+  let volVis = true;
+  if ("IntersectionObserver" in window) new IntersectionObserver((es) => { volVis = es.some((e) => e.isIntersecting); }).observe(document.getElementById("lq-vt"));
+  setInterval(() => { if (volVis && !document.hidden && curV()) liveVol(false); }, 2000);
+  L.add("vh", { head: () => T("Heatmap-ka volume-ka", "Volume heatmap"), at: () => S.vm === "spot" ? S.at.volS : S.at.volF, src: "Binance", body: () => {
+    const M = curV(), list = M ? ordered(M) : [], cols = HMC.map((c) => list.find((r) => r.c === c)).filter(Boolean);
+    let s = tx(56, 72, T(`Heatmap-ka volume-ka · ${S.vm === "spot" ? "spot" : "futures"}`, `Volume heatmap · ${S.vm === "spot" ? "spot" : "futures"}`), 32, { d: 1, w: 800 });
+    const x0 = 196, cw = (1144 - x0) / Math.max(1, cols.length), rh = 84;
+    cols.forEach((r, j) => { s += tx(x0 + j * cw + cw / 2, 128, r.c, 18, { w: 800, c: K.mut, a: "middle" }); });
+    HMR.forEach(([so, en, vk, ck], i) => {
+      const y = 145 + i * rh; s += tx(56, y + 50, T(so, en), 19, { c: K.mut });
+      cols.forEach((r, j) => { const v = r[ck], a = v == null ? 0 : Math.min(1, Math.abs(v) / 60) * 0.7 + 0.14, fill = v == null ? K.card : v >= 0 ? `rgba(43,214,123,${a})` : `rgba(240,90,95,${a})`;
+        s += `<rect x="${x0 + j * cw + 4}" y="${y + 4}" width="${cw - 8}" height="${rh - 8}" rx="12" fill="${fill}"/>` + tx(x0 + j * cw + cw / 2, y + 40, r[vk] != null ? fmt(r[vk]) : "—", 21, { d: 1, w: 800, a: "middle" }) + tx(x0 + j * cw + cw / 2, y + 64, pct(v, 1), 15, { a: "middle" }); });
+    });
+    return s;
+  } });
+  L.add("vol", { head: () => "Volume " + (S.vm === "spot" ? "spot" : "futures"), at: () => S.vm === "spot" ? S.at.volS : S.at.volF, src: "Binance", body: () => {
+    const M = curV(), V = { rows: M ? ordered(M) : [] }; let s = tx(56, 72, T(`Volume ${S.vm === "spot" ? "spot" : "futures"} · 24 saac`, `${S.vm === "spot" ? "Spot" : "Futures"} volume · 24h`), 32, { d: 1, w: 800 }) + box(56, 100, 1088, 450);
     const cx = [88, 300, 520, 760, 1112];
-    [["COIN", 0], [T("QIIMAHA", "PRICE"), 1], ["VOLUME 24S", 2], ["VOL 24S %", 3], ["OI", 4]].forEach(([l, j]) => { s += tx(cx[j], 140, l, 15, { w: 700, c: K.mut, a: j === 4 ? "end" : null }); });
-    V.rows.slice(0, 8).forEach((r, i) => { const y = 190 + i * 45; s += tx(cx[0], y, r.c, 21, { w: 800 }) + tx(cx[1], y, price(r.p), 19) + tx(cx[2], y, fmt(r.v24), 21, { d: 1, w: 800 }) + tx(cx[3], y, pct(r.c24), 20, { w: 700, c: r.c24 >= 0 ? G : R }) + tx(cx[4], y, r.oi != null ? fmt(r.oi) : "—", 20, { a: "end" }); });
+    [["COIN", 0], [T("QIIMAHA", "PRICE"), 1], [T("VOLUME 24S", "VOLUME 24H"), 2], [T("VOL 24S %", "VOL 24H %"), 3], [S.vm === "spot" ? T("QIIMAHA 24S", "PRICE 24H") : "OI", 4]].forEach(([l, j]) => { s += tx(cx[j], 140, l, 15, { w: 700, c: K.mut, a: j === 4 ? "end" : null }); });
+    V.rows.slice().sort((a, b) => b.v24 - a.v24).slice(0, 8).forEach((r, i) => { const y = 190 + i * 45; s += tx(cx[0], y, r.c, 21, { w: 800 }) + tx(cx[1], y, price(r.p), 19) + tx(cx[2], y, fmt(r.v24), 21, { d: 1, w: 800 }) + tx(cx[3], y, pct(r.c24), 20, { w: 700, c: r.c24 >= 0 ? G : R }) + tx(cx[4], y, S.vm === "spot" ? pct(r.ch) : r.oi != null ? fmt(r.oi) : "—", 20, { a: "end", c: S.vm === "spot" ? (r.ch >= 0 ? G : R) : K.ink }); });
+    return s;
+  } });
+
+  // ================= Exchange-yada: lacagta soo gashay / baxday (DefiLlama, server-ka) =================
+  async function loadCex() {
+    try {
+      const j = await getj("/api/member?op=cex");
+      if (!j || !Array.isArray(j.ex) || !j.ex.length) throw new Error("cex");
+      S.cex = j; S.at.cex = j.at ? new Date(j.at) : new Date(); renderCex();
+    } catch (e) { if (!S.cex) document.getElementById("lq-cex").innerHTML = `<div class="lq-load">${T("Xogta exchange-yada hadda lama heli karo. Saacad kasta ayaa mar kale la isku dayayaa.", "Exchange flow data is unavailable right now. Retrying hourly.")}</div>`; }
+  }
+  function renderCex() {
+    if (!S.cex) return;
+    const k = S.cxp, rows = S.cex.ex.slice().sort((a, b) => b.assets - a.assets), mx = Math.max(1, ...rows.map((r) => Math.abs(r[k] || 0)));
+    const lab = { d1: T("24 saac", "24h"), d7: T("7 maalin", "7d"), d30: T("30 maalin", "30d") }, ex$ = (v) => (v >= 0 ? "+$" : "−$") + Math.round(Math.abs(v)).toLocaleString("en-US");
+    const c = (r, f) => { const v = r[f]; return v == null ? `<td class="r lq-dim">—</td>` : `<td class="r ${cls(v)}${f === k ? " lq-cxk" : ""}" style="${f === k ? heat(v / mx * 90) : ""}" data-x="${esc(r.name + " · " + lab[f] + ": " + ex$(v))}">${f === k ? `<b>${fmt(v, true)}</b><i class="lq-cxb" style="width:${Math.max(3, Math.abs(v) / mx * 90)}px;background:${v >= 0 ? G : R}"></i>` : fmt(v, true)}</td>`; };
+    document.getElementById("lq-cex").innerHTML = `<table class="lq-tt"><thead><tr><th>Exchange</th><th class="r">${T("Hantida (kaydka)", "Assets")}</th><th class="r">${lab.d1}</th><th class="r">${lab.d7}</th><th class="r">${lab.d30}</th></tr></thead><tbody>` +
+      rows.map((r) => `<tr><td><b>${esc(r.name)}</b></td><td class="r" data-x="${esc(r.name + " · " + T("Hantida", "Assets") + ": $" + Math.round(r.assets).toLocaleString("en-US"))}">${fmt(r.assets)}</td>${c(r, "d1")}${c(r, "d7")}${c(r, "d30")}</tr>`).join("") +
+      `</tbody></table><div class="lq-src">${T("Cagaar = lacag ayaa soo gashay exchange-ka (deposit) · Casaan = lacag ayaa baxday (withdraw) · qiimaha isbeddelka lama tiriyo", "Green = deposits into the exchange · Red = withdrawals · price changes are excluded")} · ${T("Isha", "Source")}: DefiLlama (${T("wallet-yada exchange-ka", "exchange wallets")}) · ${T("saacad kasta", "hourly")} · ${hm(S.at.cex)}</div>`;
+  }
+  L.add("cex", { head: () => T("Exchange-yada: lacagta soo gashay iyo tan baxday", "Exchanges: money in and out"), at: () => S.at.cex, src: "DefiLlama", body: () => {
+    const rows = ((S.cex && S.cex.ex) || []).slice().sort((a, b) => b.assets - a.assets).slice(0, 8), k = S.cxp, mx = Math.max(1, ...rows.map((r) => Math.abs(r[k] || 0)));
+    const lab = { d1: T("24 saac", "24h"), d7: T("7 maalin", "7d"), d30: T("30 maalin", "30d") };
+    let s = tx(56, 72, T(`Exchange-yada · soo gashay / baxday · ${lab[k]}`, `Exchanges · in / out · ${lab[k]}`), 32, { d: 1, w: 800 }) + box(56, 100, 1088, 450);
+    rows.forEach((r, i) => { const y = 160 + i * 50, v = r[k] || 0, w = Math.abs(v) / mx * 380; s += tx(88, y, r.name, 22, { w: 800 }) + tx(420, y, fmt(r.assets), 19, { c: K.mut, a: "end" }) + `<rect x="${v >= 0 ? 700 : 700 - w}" y="${y - 18}" width="${Math.max(3, w)}" height="22" rx="6" fill="${v >= 0 ? G : R}" opacity=".85"/>` + `<line x1="700" x2="700" y1="${y - 24}" y2="${y + 8}" stroke="${K.line}"/>` + tx(1112, y, fmt(v, true), 22, { d: 1, w: 800, a: "end", c: v >= 0 ? G : R }); });
     return s;
   } });
 
   document.getElementById("lq-vt").addEventListener("click", (e) => {
-    const th = e.target.closest("th[data-k]"); if (!th || !S.vol) return;
+    const th = e.target.closest("th[data-k]"); if (!th) return;
     const k = th.dataset.k; S.vdir = S.vsort === k ? -(S.vdir || -1) : -1; S.vsort = k; renderVol();
   });
   // Tooltip: tirada saxda ah marka la dul maro
@@ -373,7 +524,18 @@
 
   // ---------- Bilow + cusboonaysiin ----------
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderHist, 150); });
-  loadEx(); loadLsc().then(startPrices); loadLsx(); loadHist(); loadVol(); seedTrades().then(startTrades);
+  loadEx(); loadLsc().then(startPrices); loadLsx(); loadHist(); loadVol(); loadCex(); seedTrades().then(startTrades); startSpot();
+  setInterval(() => { if (S.vm === "spot") loadVolSpot(); }, 5 * 60e3); setInterval(loadCex, 60 * 60e3);
   setInterval(loadEx, 60e3); setInterval(loadLsc, 5 * 60e3); setInterval(loadLsx, 5 * 60e3); setInterval(loadHist, 30 * 60e3); setInterval(loadVol, 5 * 60e3);
+  // Spot: suuqa oo dhan ilbiriqsi kasta → liiska volume-ka (spot) + liiska coins (lacagta-coins.js)
+  function startSpot() {
+    ws("wss://data-stream.binance.vision/ws/!miniTicker@arr", () => {}, (arr) => {
+      if (!Array.isArray(arr)) return;
+      document.dispatchEvent(new CustomEvent("xc-spot", { detail: arr }));
+      wsVol(S.V.spot, arr);
+    });
+  }
+  // Marka liiska CoinGecko yimaado: hubi in volume-ku yahay crypto oo kaliya
+  document.addEventListener("xc-coins", () => { if (curV()) renderVol(); });
   window.XCLacagtaPro = { S, renderHist };
 })();
