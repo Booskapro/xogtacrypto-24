@@ -80,6 +80,18 @@ module.exports = async function handler(req, res) {
   if (!TOKEN || !CHAT) return send(500, { error: "TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID ma jiraan" });
   const op = String((req.query && req.query.op) || ""), body = (req.body && typeof req.body === "object") ? req.body : (() => { try { return JSON.parse(req.body || "{}"); } catch (e) { return {}; } })();
   try {
+    if (op === "px") {
+      // Proxy: OKX iyo Bybit (browser-ka si toos ah uma oggola) — liis go'an oo kaliya
+      const u = String((req.query && req.query.u) || "");
+      const OK = ["https://www.okx.com/api/v5/rubik/stat/", "https://api.bybit.com/v5/market/account-ratio?"];
+      if (!OK.some((a) => u.startsWith(a)) || u.length > 400) return send(400, { error: "url" });
+      try {
+        const r = await fetch(u, { headers: { "User-Agent": "Mozilla/5.0 (XogtaCrypto)", Accept: "application/json" } });
+        const txt = await r.text();
+        res.setHeader("Cache-Control", "public, s-maxage=55, stale-while-revalidate=120");
+        res.statusCode = r.status; return res.end(txt);
+      } catch (e) { return send(502, { error: "upstream" }); }
+    }
     if (op === "bot") {
       let u = await kv(["GET", "xc:botname"]);
       if (!u) { const me = await tg("getMe"); u = me.ok ? me.result.username : ""; if (u) await kv(["SET", "xc:botname", u, "EX", 86400]); }
