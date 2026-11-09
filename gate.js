@@ -28,6 +28,9 @@
   // Tijaabo: ?qufulka → qufulka si toos ah ayuu u muuqdaa (wax lama kaydiyo, waa la xiri karaa)
   const TEST = /[?&]qufulka/.test(location.search);
 
+  // ---------- 0) Labada tallaabo waa la riixay (Follow X + Join Telegram) → furan ----------
+  if (!TEST && get("xc-xf") === "1" && get("xc-tg") === "1") { hit("member"); return; }
+
   // ---------- 1) Xubin horay u ah ----------
   const tok = get("xc-mem");
   if (tok && !TEST) {
@@ -99,7 +102,7 @@
   // ---------- 3) Qufulka ----------
   function openGate(dismissable) {
     if (document.getElementById("xg")) return;
-    const xDone = get("xc-xf") === "1";
+    const xDone = get("xc-xf") === "1", tDone = get("xc-tg") === "1";
     const m = document.createElement("div");
     m.id = "xg"; m.className = "xg"; m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true");
     m.innerHTML = `<div class="xg-box">
@@ -112,40 +115,33 @@
         <div class="xg-tx"><b>${T("Follow X", "Follow on X")}</b><span>${esc(XH)}</span></div>
         <a class="xg-b xg-bx" href="${esc(XURL)}" target="_blank" rel="noopener">${xDone ? T("La sameeyay", "Done") : XI + " Follow"}</a>
       </div>
-      <div class="xg-st" id="xg-s2">
-        <span class="xg-n xg-tg">2</span>
+      <div class="xg-st${tDone ? " ok" : ""}" id="xg-s2">
+        <span class="xg-n xg-tg">${tDone ? CHECK : "2"}</span>
         <div class="xg-tx"><b>${T("Ku biir Telegram", "Join Telegram")}</b><span>${esc(TGH)}</span></div>
-        <a class="xg-b xg-bt" href="${esc(TGURL)}" target="_blank" rel="noopener">${TGI} ${T("Ku biir", "Join")}</a>
+        <a class="xg-b xg-bt" href="${esc(TGURL)}" target="_blank" rel="noopener">${tDone ? T("La sameeyay", "Done") : TGI + " " + T("Ku biir", "Join")}</a>
       </div>
-      <div class="xg-login"><span>${T("Kadib (ama haddii aad horay ugu jirtay): xaqiiji Telegram-ka", "Then (or if you're already a member): verify with Telegram")}</span><div id="xg-w"><span class="xg-wait">…</span></div></div>
       <div class="xg-msg" id="xg-msg" hidden></div>
-      <p class="xg-fine">${T("Waxaan kaydinaa magacaaga iyo @username-kaaga Telegram oo kaliya, si aan u ogaanno xubnaha. Lambarkaaga lama arko.", "We only store your Telegram name and @username to know our members. Your phone number is never shared.")}</p>
+      <p class="xg-fine">${T("Riix labada badhan. Markaad dib ugu soo noqoto bogga, si toos ah ayuu kuu furmayaa — lambar iyo login midna lagama rabo.", "Tap both buttons. When you come back, the page unlocks automatically — no phone number or login needed.")}</p>
       ${dismissable ? "" : `<a class="xg-back" href="/">${T("← Ku noqo bogga hore (bilaash)", "← Back to the home page (free)")}</a>`}
     </div>`;
     document.body.appendChild(m);
     if (!dismissable) document.body.classList.add("xg-locked");
     const close = () => { m.remove(); document.body.classList.remove("xg-locked"); };
     const xb = m.querySelector(".xg-x"); if (xb) xb.addEventListener("click", close);
-    m.querySelector(".xg-bx").addEventListener("click", () => {
-      setTimeout(() => {
-        set("xc-xf", "1");
-        const s1 = m.querySelector("#xg-s1"); s1.classList.add("ok");
-        s1.querySelector(".xg-n").innerHTML = CHECK; s1.querySelector(".xg-bx").textContent = T("La sameeyay", "Done");
-      }, 1500);
-    });
-    // Login with Telegram (widget-ka rasmiga ah)
-    const loadWidget = (bot) => {
-      const w = m.querySelector("#xg-w"); w.innerHTML = "";
-      const sc = document.createElement("script");
-      sc.async = true; sc.src = "https://telegram.org/js/telegram-widget.js?22";
-      sc.setAttribute("data-telegram-login", bot); sc.setAttribute("data-size", "large"); sc.setAttribute("data-radius", "12");
-      sc.setAttribute("data-userpic", "false"); sc.setAttribute("data-lang", EN ? "en" : "en"); sc.setAttribute("data-onauth", "XCGate.onAuth(user)");
-      w.appendChild(sc);
+    const done = (id, btn, key) => {
+      set(key, "1");
+      const st = m.querySelector(id); st.classList.add("ok");
+      st.querySelector(".xg-n").innerHTML = CHECK; st.querySelector(btn).textContent = T("La sameeyay", "Done");
+      if (get("xc-xf") === "1" && get("xc-tg") === "1") {
+        msg(T("Mahadsanid! ✓ Wax walba waa kuu furan yihiin.", "Thank you! ✓ Everything is unlocked."), "ok");
+        hit("member");
+        setTimeout(() => { close(); document.querySelectorAll(".xg-pill").forEach((p) => p.remove()); }, 1200);
+      }
     };
-    const cached = get("xc-bot");
-    if (cached) loadWidget(cached);
-    api("bot").then((r) => { if (r && r.bot) { if (r.bot !== cached) loadWidget(r.bot); set("xc-bot", r.bot); } else msg(T("Login-ka Telegram hadda lama heli karo.", "Telegram login is unavailable right now."), "bad"); })
-      .catch(() => { if (!cached) msg(T("Login-ka Telegram hadda lama heli karo.", "Telegram login is unavailable right now."), "bad"); });
+    m.querySelector(".xg-bx").addEventListener("click", () => setTimeout(() => done("#xg-s1", ".xg-bx", "xc-xf"), 1500));
+    m.querySelector(".xg-bt").addEventListener("click", () => setTimeout(() => done("#xg-s2", ".xg-bt", "xc-tg"), 1500));
+    // Haddii labaduba horay loo riixay (tusaale ?qufulka) → isla markiiba fur
+    if (xDone && tDone && !TEST) done("#xg-s2", ".xg-bt", "xc-tg");
   }
   function msg(t, kind) { const e = document.getElementById("xg-msg"); if (!e) return; e.hidden = false; e.className = "xg-msg " + (kind || ""); e.innerHTML = t; }
 
