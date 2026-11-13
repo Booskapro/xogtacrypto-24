@@ -8,12 +8,17 @@
   const F = window.FedCore, T = F.T, esc = F.esc, CAL = window.FED_CAL;
   const $ = function (id) { return document.getElementById(id); };
   const now = function () { return Date.now(); };
+  function guessCode(n) {
+    n = String(n || "");
+    if (/core PCE|PCE/i.test(n)) return "pce"; if (/JOLTS|job openings/i.test(n)) return "jolts"; if (/jobless claims|shaqo la'aanta \(toddobaadle\)/i.test(n)) return "claims";
+    if (/GDP/i.test(n)) return "gdp"; if (/PPI|producer/i.test(n)) return "ppi"; if (/retail/i.test(n)) return "retail"; return "";
+  }
   const KIND = { infl: T("Sicir-barar", "Inflation"), jobs: T("Shaqo", "Jobs"), growth: T("Koboc", "Growth"), fed: "FED" };
   const KCOL = { infl: "#F2A93B", jobs: "#5B9DFF", growth: "#1FBF86", fed: "#D97706" };
 
   function allEvents() {
     const items = CAL.upcoming.map(function (x) {
-      return { name: F.EN && x.name_en ? x.name_en : x.name, time: x.time, kind: x.kind || "infl", lvl: x.lvl || 2, src: x.src || "", url: x.url || "", fomc: false, code: x.code || "", period: x.period || "" };
+      return { name: F.EN && x.name_en ? x.name_en : x.name, time: x.time, kind: x.kind || "infl", lvl: x.lvl || 2, src: x.src || "", url: x.url || "", fomc: false, code: x.code || guessCode(x.name_en || x.name), period: x.period || "", qtr: (/Q([1-4])/.exec(x.name_en || x.name) || [])[1] || "" };
     });
     CAL.meetings.forEach(function (m) {
       items.push({ name: T("Go'aanka FED (FOMC)", "Fed decision (FOMC)") + (m.sep ? T(" + saadaasha", " + projections") : ""), time: m.time, kind: "fed", lvl: 3,
@@ -147,17 +152,37 @@
       const a = F.ACTION[o.action];
       return { text: a.short + " · " + F.fmtRange(o.to), cls: o.action === "hike" ? "up" : o.action === "cut" ? "down" : "flat" };
     }
-    if (!API || !x.period || !API.monthly) return null;
-    const r = API.monthly[x.period], pr = API.monthly[shiftM(x.period, -1)];
+    if (!API) return null;
+    const P = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "%";
+    const dirc = (a, b) => (b == null || Math.abs(a - b) < 1e-9 ? "flat" : a > b ? "up" : "down");
+    const was = (b, f) => (b == null ? "" : T(" · hore ", " · prev ") + f(b));
+    if (x.code === "claims" && API.weekly && API.weekly.claims) {
+      // Thursday release -> toddobaadka ku dhammaaday Sabtidii hore
+      const t = new Date(x.time).getTime(), c = API.weekly.claims.filter((d) => { const dt = Date.parse(d[0] + "T12:00:00Z"); return dt < t && t - dt < 9 * 864e5; }).pop();
+      if (!c) return null;
+      const i = API.weekly.claims.indexOf(c), pv = i > 0 ? API.weekly.claims[i - 1][1] : null, k = (v) => Math.round(v / 1000) + "K";
+      return { text: k(c[1]) + was(pv, k), cls: dirc(c[1], pv) };
+    }
+    if (x.code === "gdp" && API.quarterly && API.quarterly.gdp && x.qtr) {
+      const d = new Date(x.time), y = +x.qtr === 4 && d.getMonth() < 4 ? d.getFullYear() - 1 : d.getFullYear();
+      const key = y + "-" + F.pad((+x.qtr - 1) * 3 + 1), g = API.quarterly.gdp, i = g.findIndex((r) => r[0].slice(0, 7) === key);
+      if (i < 0) return null;
+      return { text: P(g[i][1]) + T(" sannadle", " annualized") + was(i > 0 ? g[i - 1][1] : null, P), cls: g[i][1] >= 0 ? "up" : "down" };
+    }
+    if (!x.period || !API.monthly) return null;
+    const r = API.monthly[x.period], pr = API.monthly[shiftM(x.period, -1)] || {};
     if (!r) return null;
     if (x.code === "cpi" && r.cpi != null) {
-      const d = pr && pr.cpi != null ? r.cpi - pr.cpi : null;
-      return { text: r.cpi.toFixed(1) + "%" + (pr && pr.cpi != null ? T(" (hore ", " (prev ") + pr.cpi.toFixed(1) + "%)" : ""), cls: d == null || Math.abs(d) < 1e-9 ? "flat" : d > 0 ? "up" : "down" };
+      return { text: r.cpi.toFixed(1) + "%" + (r.cpiM != null ? T(" · bishan ", " · m/m ") + P(r.cpiM) : "") + (pr.cpi != null ? T(" (hore ", " (prev ") + pr.cpi.toFixed(1) + "%)" : ""), cls: dirc(r.cpi, pr.cpi) };
     }
     if (x.code === "nfp" && r.nfp != null) {
       const k = function (v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(Math.round(v)) + "K"; };
       return { text: k(r.nfp) + (r.un != null ? T(" · shaqo la'aan ", " · unemployment ") + r.un.toFixed(1) + "%" : ""), cls: r.nfp >= 0 ? "up" : "down" };
     }
+    if (x.code === "ppi" && r.ppi != null) return { text: P(r.ppi) + T(" bishan", " m/m") + (r.ppiY != null ? " · " + r.ppiY.toFixed(1) + T("% sannadle", "% y/y") : "") + was(pr.ppi, P), cls: dirc(r.ppi, pr.ppi) };
+    if (x.code === "retail" && r.retail != null) return { text: P(r.retail) + T(" bishan", " m/m") + was(pr.retail, P), cls: r.retail >= 0 ? "up" : "down" };
+    if (x.code === "pce" && r.pce != null) return { text: r.pce.toFixed(1) + "%" + (r.corePce != null ? T(" · aasaasi ", " · core ") + r.corePce.toFixed(1) + "%" : "") + was(pr.pce, (v) => v.toFixed(1) + "%"), cls: dirc(r.pce, pr.pce) };
+    if (x.code === "jolts" && r.jolts != null) { const m = (v) => (v / 1000).toFixed(2) + "M"; return { text: m(r.jolts) + was(pr.jolts, m), cls: dirc(r.jolts, pr.jolts) }; }
     return null;
   }
 
@@ -245,6 +270,8 @@
   window.XCKal = { events: allEvents, KIND: KIND, KCOL: KCOL, api: function () { return API; }, shiftM: shiftM };
   function renderAll() { renderHero(); renderStats(); renderCalendar(); }
   F.load().then(function (api) { if (api) { API = api; renderCalendar(); } });
+  // Natiijooyinka cusub: 1 daqiiqo kasta dib u soo qaad (xogta soo baxda isla markiiba ayay muuqataa)
+  setInterval(function () { if (document.hidden) return; F.load(true).then(function (api) { if (api) { API = api; renderCalendar(); } }); }, 60000);
   renderAll();
   setInterval(function () { renderStats(); renderCalendar(); }, 60000);
 })();

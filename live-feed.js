@@ -340,7 +340,9 @@
     if (!all && !home) return;
     if (location.protocol === "file:") return;
     fetch("/api/news", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
-      const items = (j && j.items) || [];
+      // Af-Soomaali: kaliya wararka la turjumay (English lama muujiyo)
+      const items = ((j && j.items) || []).filter(function (n) { return EN || n.title_so; });
+      const CAT = { fed: "🏛 FED", macro: "📊 " + T("Dhaqaalaha", "Economy"), btc: "₿ Crypto", ai: "🤖 AI", stocks: "📈 " + T("Saham", "Stocks"), privacy: "🔐 Privacy", world: "🌍 " + T("Adduunka", "World"), top: "📰 " + T("Guud", "Top") };
       function row(n) {
         const title = EN ? n.title : (n.title_so || n.title);
         const isNew = Date.now() - Date.parse(n.date) < 3 * 3600e3;
@@ -348,7 +350,8 @@
           '<span class="media-meta">' + (n.official ? '<span class="chip ok">🏛 Federal Reserve</span>' : '<span class="media-src">' + esc(n.source || "") + "</span>") +
           (isNew ? '<span class="new-badge">' + T("CUSUB", "NEW") + "</span>" : "") +
           '<span class="small muted">' + esc(ago(n.date)) + "</span></span>" +
-          '<span class="media-title">' + esc(title) + "</span></a>";
+          (n.cat && CAT[n.cat] ? '<span class="chip">' + CAT[n.cat] + "</span>" : "") + (n.imp >= 9 ? '<span class="new-badge">⚡ ' + T("CULUS", "MAJOR") + "</span>" : "") +
+          '<span class="media-title">' + esc(title) + "</span>" + (!EN && n.sum_so ? '<span class="media-sum">' + esc(n.sum_so) + "</span>" : "") + "</a>";
       }
       const empty = '<p class="muted">' + T("Wararka lama heli karo hadda. Waxaan isku dayi doonnaa mar kale.", "News is not available right now. We will try again shortly.") + "</p>";
       if (all) all.innerHTML = items.length ? items.map(row).join("") : empty;

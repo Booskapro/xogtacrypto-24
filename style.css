@@ -1379,3 +1379,5 @@ main.lq-wide { max-width: 1480px; }
 .lq-vscroll thead th { position: sticky; top: 0; z-index: 2; background: var(--card); }
 .lq-vtt tbody tr { will-change: transform; }
 .lq-v.fu, .lq-v.fd { animation-duration: 1.2s; }
+.media-sum { display: block; margin-top: 4px; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+.media-item .chip { margin: 0 6px 4px 0; display: inline-block; }
