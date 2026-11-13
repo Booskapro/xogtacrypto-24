@@ -116,7 +116,7 @@ async function gtSomali(text) {
 async function geminiSomali(text) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) { AI_ERR.gemini = "GEMINI_API_KEY Vercel kuma jiro"; return null; }
-  for (const model of [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash"].filter(Boolean)) {
+  for (const model of [process.env.GEMINI_MODEL, "gemini-3.8-flash", "gemini-flash-latest"].filter(Boolean)) {
     try {
       const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
         method: "POST", headers: { "x-goog-api-key": key, "content-type": "application/json" },
@@ -153,7 +153,7 @@ async function translateNews(title, desc, kvf) {
   let o = await geminiSomali(src);
   if (!o || !trOk(title, o.t)) o = await claudeSomali(src);
   if (o && !trOk(title, o.t)) { AI_ERR.check = "turjumaaddu ma gudbin hubinta: " + String(o.t).slice(0, 80); o = null; }
-  if (!o) { const g = await gtSomali(title); if (g && trOk(title, g.t)) o = g; }
+  if (!o) { const g = await gtSomali(title); if (g && trOk(title, g.t)) o = g; else if (g) AI_ERR.gtcheck = String(g.t).slice(0, 80); }
   try {
     await kvf(o ? ["SET", key, JSON.stringify(o), "EX", 60 * 60 * 24 * 14] : ["SET", key, "-", "EX", 600]);
     if (o) await kvf(["SET", "xc:tr3:" + hash(title), o.t, "EX", 60 * 60 * 24 * 14]); // bogga wararka (news.js)
