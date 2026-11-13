@@ -36,7 +36,8 @@ function parseTg(html, ch) {
     const m = /tgme_widget_message_text[^>]*>([\s\S]*?)<\/div>/.exec(b), t = /<time[^>]*datetime="([^"]+)"/.exec(b);
     if (!m || !t) return null;
     const text = decode(m[1].replace(/<br\s*\/?>/g, " ")).replace(/@\w+/g, "").replace(/^\s*(JUST IN|BREAKING|NEW)\s*:\s*/i, "").replace(/\s+/g, " ").trim();
-    return text ? { title: text.slice(0, 280), link: "https://t.me/" + id, date: t[1], desc: "" } : null;
+    const im = /message_photo_wrap[^>]*background-image:url\('([^']+)'\)/.exec(b);
+    return text ? { title: text.slice(0, 280), link: "https://t.me/" + id, date: t[1], desc: "", img: im ? im[1] : "" } : null;
   }).filter(Boolean).slice(-15);
 }
 const FED_RSS = ["https://www.federalreserve.gov/feeds/press_monetary.xml", "https://www.federalreserve.gov/feeds/speeches.xml"];
@@ -46,10 +47,17 @@ function decode(s) {
   return String(s || "").replace(/<!\[CDATA\[|\]\]>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/<[^>]+>/g, "").trim();
 }
+function pickImg(raw) {
+  const r = String(raw || "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
+  const pats = [/<media:content[^>]*url="([^"]+)"/i, /<media:thumbnail[^>]*url="([^"]+)"/i, /<enclosure[^>]*url="([^"]+\.(?:jpe?g|png|webp)[^"]*)"/i,
+    /<News:Image>\s*([^<\s]+)\s*<\/News:Image>/i, /<img[^>]+src="(https?:[^"]+)"/i];
+  for (const p of pats) { const m = p.exec(r); if (m && /^https?:/i.test(m[1]) && !/\.(gif|svg)(\?|$)/i.test(m[1]) && !/pixel|tracking|feedburner|1x1/i.test(m[1])) return /bing\.com\/th/.test(m[1]) ? m[1] + "&w=800&h=450&c=14" : m[1]; }
+  return "";
+}
 function parseRss(xml) {
   return (String(xml).match(/<item>[\s\S]*?<\/item>/g) || []).map((it) => {
     const tag = (t) => { const m = new RegExp("<" + t + "[^>]*>([\\s\\S]*?)</" + t + ">").exec(it); return m ? decode(m[1]) : ""; };
-    return { title: tag("title"), link: tag("link"), date: tag("pubDate"), source: tag("News:Source") || tag("source"), desc: tag("description").slice(0, 600) };
+    return { title: tag("title"), link: tag("link"), date: tag("pubDate"), source: tag("News:Source") || tag("source"), desc: tag("description").slice(0, 600), img: pickImg(it) };
   });
 }
 function hash(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36); }
@@ -68,7 +76,7 @@ async function fetchNews() {
     const link = realLink(n.link);
     if (/news\.google\.com/.test(link)) return;
     if (!f.cat && f.src && !FED_WORDS.test(n.title)) return;
-    list.push({ title: n.title.replace(/ - [^-]{2,40}$/, ""), link, date: n.date, desc: n.desc, source: f.src || n.source || siteName(link), cat: f.cat || "fed", official: false });
+    list.push({ title: n.title.replace(/ - [^-]{2,40}$/, ""), link, date: n.date, desc: n.desc, img: n.img || "", source: f.src || n.source || siteName(link), cat: f.cat || "fed", official: false });
   }));
   texts.slice(FEEDS.length).forEach((x) => parseRss(x).forEach((n) => {
     if (SKIP_FED.test(n.title)) return;
@@ -165,6 +173,13 @@ async function translateNews(title, desc, kvf) {
 
 module.exports = async function handler(req, res) {
   try {
+    // Hal war (bogga wararka.html?id=) — bot-ka Telegram ayaa kaydiya
+    const qid = String((req.query || {}).id || "").replace(/[^a-z0-9]/g, "").slice(0, 16);
+    if (qid) {
+      let it = null; try { it = JSON.parse((await kv(["GET", "xc:post:" + qid])) || "null"); } catch (e) {}
+      res.setHeader("Cache-Control", it ? "s-maxage=600, stale-while-revalidate=3600" : "s-maxage=30");
+      return res.status(it ? 200 : 404).json({ item: it });
+    }
     // Tweet-yada X (notify.js ayaa KV ku kaydiya marka X_BEARER_TOKEN jiro)
     let xs = []; try { xs = JSON.parse((await kv(["GET", "xc:xfeed"])) || "[]"); } catch (e) {}
     const items = xs.concat(await fetchNews()).sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, MAX);
@@ -175,6 +190,7 @@ module.exports = async function handler(req, res) {
       const c = await kv(["GET", "xc:tr4:" + hash(n.title)]);
       if (c && c !== "-") { try { o = JSON.parse(c); } catch (e) {} }
       else if (!c && budget-- > 0) o = await translateNews(n.title, n.desc, kv);
+      n.id = hash(n.link);
       if (o) { n.title_so = o.t; n.sum_so = o.s || ""; n.imp = o.i || 5; if (o.c) n.cat = o.c; }
       delete n.desc;
     }));

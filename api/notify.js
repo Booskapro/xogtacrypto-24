@@ -44,6 +44,23 @@ async function send(text, previewUrl) {
   if (!j.ok) throw new Error("Telegram: " + j.description);
 }
 
+async function tg(method, body) {
+  const r = await fetch("https://api.telegram.org/bot" + env("TELEGRAM_BOT_TOKEN") + "/" + method, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ chat_id: env("TELEGRAM_CHAT_ID"), parse_mode: "HTML" }, body))
+  });
+  const j = await r.json();
+  if (!j.ok) throw new Error("Telegram: " + j.description);
+  return j;
+}
+// Sawir + qoraal + badhamo. Haddii sawirku fashilmo -> sawirka bogga (og-image), kadibna qoraal oo kaliya.
+async function sendPost(caption, img, buttons) {
+  const reply_markup = { inline_keyboard: [buttons] };
+  for (const photo of img === false ? [] : [img, SITE + "/og-image.png"].filter(Boolean)) {
+    try { return await tg("sendPhoto", { photo, caption: caption.slice(0, 1024), reply_markup }); } catch (e) { /* sawirka xiga */ }
+  }
+  return tg("sendMessage", { text: caption, reply_markup, link_preview_options: { is_disabled: true } });
+}
+
 // ---------- Fariimaha ----------
 function msgFomc(f) {
   const word = { hike: "KOR U QAADAY", cut: "DHIMAY", hold: "HAYAY (isma beddelin)" }[f.action];
@@ -124,7 +141,8 @@ function parseTg(html, ch) {
     const m = /tgme_widget_message_text[^>]*>([\s\S]*?)<\/div>/.exec(b), t = /<time[^>]*datetime="([^"]+)"/.exec(b);
     if (!m || !t) return null;
     const text = decode(m[1].replace(/<br\s*\/?>/g, " ")).replace(/@\w+/g, "").replace(/^\s*(JUST IN|BREAKING|NEW)\s*:\s*/i, "").replace(/\s+/g, " ").trim();
-    return text ? { title: text.slice(0, 280), link: "https://t.me/" + id, date: t[1], desc: "" } : null;
+    const im = /message_photo_wrap[^>]*background-image:url\('([^']+)'\)/.exec(b);
+    return text ? { title: text.slice(0, 280), link: "https://t.me/" + id, date: t[1], desc: "", img: im ? im[1] : "" } : null;
   }).filter(Boolean).slice(-15);
 }
 const FED_RSS = ["https://www.federalreserve.gov/feeds/press_monetary.xml", "https://www.federalreserve.gov/feeds/speeches.xml"];
@@ -134,10 +152,17 @@ function decode(s) {
   return String(s || "").replace(/<!\[CDATA\[|\]\]>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/<[^>]+>/g, "").trim();
 }
+function pickImg(raw) {
+  const r = String(raw || "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
+  const pats = [/<media:content[^>]*url="([^"]+)"/i, /<media:thumbnail[^>]*url="([^"]+)"/i, /<enclosure[^>]*url="([^"]+\.(?:jpe?g|png|webp)[^"]*)"/i,
+    /<News:Image>\s*([^<\s]+)\s*<\/News:Image>/i, /<img[^>]+src="(https?:[^"]+)"/i];
+  for (const p of pats) { const m = p.exec(r); if (m && /^https?:/i.test(m[1]) && !/\.(gif|svg)(\?|$)/i.test(m[1]) && !/pixel|tracking|feedburner|1x1/i.test(m[1])) return /bing\.com\/th/.test(m[1]) ? m[1] + "&w=800&h=450&c=14" : m[1]; }
+  return "";
+}
 function parseRss(xml) {
   return (String(xml).match(/<item>[\s\S]*?<\/item>/g) || []).map((it) => {
     const tag = (t) => { const m = new RegExp("<" + t + "[^>]*>([\\s\\S]*?)</" + t + ">").exec(it); return m ? decode(m[1]) : ""; };
-    return { title: tag("title"), link: tag("link"), date: tag("pubDate"), source: tag("News:Source") || tag("source"), desc: tag("description").slice(0, 600) };
+    return { title: tag("title"), link: tag("link"), date: tag("pubDate"), source: tag("News:Source") || tag("source"), desc: tag("description").slice(0, 600), img: pickImg(it) };
   });
 }
 function hash(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36); }
@@ -157,7 +182,7 @@ async function fetchNews() {
     const link = realLink(n.link);
     if (/news\.google\.com/.test(link)) return;
     if (!f.cat && f.src && !FED_WORDS.test(n.title)) return; // ilaha guud: kaliya wararka FED
-    list.push({ title: n.title.replace(/ - [^-]{2,40}$/, ""), link, date: n.date, desc: n.desc, source: f.src || n.source || siteName(link), cat: f.cat || "fed", official: false });
+    list.push({ title: n.title.replace(/ - [^-]{2,40}$/, ""), link, date: n.date, desc: n.desc, img: n.img || "", source: f.src || n.source || siteName(link), cat: f.cat || "fed", official: false });
   }));
   texts.slice(FEEDS.length).forEach((x) => parseRss(x).forEach((n) => {
     if (SKIP_FED.test(n.title)) return;
@@ -378,11 +403,67 @@ async function msgNews(n) {
   const CAT = { fed: "🏛 FED", macro: "📊 DHAQAALAHA", btc: "₿ CRYPTO", ai: "🤖 AI", stocks: "📈 SAHAMKA", privacy: "🔐 PRIVACY", world: "🌍 ADDUUNKA" };
   const tag = CAT[so.c] || CAT[n.cat] || "📰 WARKA";
   const head = n.official ? "🏛 <b>FEDERAL RESERVE · RASMI</b>" : (so.i >= 9 || URGENT.test(n.title) ? "⚡ <b>WAR DEGDEG AH · " : "<b>") + tag + "</b>";
-  return head + "\n" + LINE + "\n\n" +
-    "<b>" + esc(so.t) + "</b>\n" + (so.s ? "\n" + esc(so.s) + "\n" : "") + "\n" +
-    "🗞 <b>Isha:</b> " + esc(n.source || siteName(n.link)) + ' · <a href="' + esc(n.link) + '">akhri</a>\n' +
-    LINE + "\n" +
-    '📊 <a href="' + SITE + '">Xogta Crypto 24/7</a> · <a href="https://t.me/Xogtacrypto24_7">Telegram</a>';
+  const id = hash(n.link), src = n.source || siteName(n.link);
+  const page = SITE + "/wararka.html?id=" + id;
+  const text = head + "\n\n" +
+    "<b>" + esc(so.t) + "</b>\n" + (so.s ? "\n" + esc(so.s.slice(0, 600)) + "\n" : "") + "\n" +
+    "🗞 " + esc(src) + "\n" +
+    '📊 <a href="' + page + '">Xogta Crypto 24/7</a> · <a href="https://t.me/Xogtacrypto24_7">Telegram</a>';
+  // Bogga web-ka (wararka.html?id=) wuxuu akhriyaa kaydkan
+  const post = { id, title: n.title, title_so: so.t, sum_so: so.s || "", img: n.img || "", link: n.link, source: src, cat: so.c || n.cat || "", imp: so.i, date: new Date(Date.parse(n.date) || Date.now()).toISOString(), official: !!n.official };
+  return { text, img: n.img, page, post, buttons: [{ text: "📖 Ku akhri web-ka", url: page }, { text: "🗞 Isha asalka", url: n.link }] };
+}
+
+// ================= Liquidations waaweyn (OKX — API bilaash ah oo server-ka ka shaqeeya) =================
+const LIQ_MIN = +(process.env.LIQ_MIN_USD || 500000);     // amar kasta oo ka weyn -> war
+const LIQ_WAVE = +(process.env.LIQ_WAVE_USD || 3000000);  // wadarta daqiiqad gudaheed -> war
+const LIQ_GAP_MIN = 3;
+const LIQ_COINS = ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "SUI", "HYPE", "ADA", "LINK", "AVAX", "LTC"];
+const usd = (v) => v >= 1e9 ? "$" + (v / 1e9).toFixed(2) + "B" : v >= 1e6 ? "$" + (v / 1e6).toFixed(2) + "M" : "$" + Math.round(v / 1e3) + "K";
+const px = (p) => "$" + (p >= 100 ? Math.round(p).toLocaleString("en-US") : p >= 1 ? p.toFixed(2) : p.toPrecision(4));
+async function okxCt() {
+  try { const c = await kv(["GET", "xc:okxct"]); if (c) return JSON.parse(c); } catch (e) {}
+  const j = await (await fetch("https://www.okx.com/api/v5/public/instruments?instType=SWAP")).json();
+  const m = {}; (j.data || []).forEach((x) => { m[x.instId] = [+x.ctVal, x.ctValCcy === "USD" ? 1 : 0]; });
+  if (Object.keys(m).length) await kv(["SET", "xc:okxct", JSON.stringify(m), "EX", 86400]);
+  return m;
+}
+async function pollLiq(out) {
+  const ct = await okxCt();
+  const lastTs = Number(await get("liq:ts")) || 0;
+  const res = await Promise.all(LIQ_COINS.map((c) => fetch("https://www.okx.com/api/v5/public/liquidation-orders?instType=SWAP&state=filled&instFamily=" + c + "-USDT")
+    .then((r) => r.json()).catch(() => null)));
+  const rows = []; let maxTs = lastTs;
+  res.forEach((j) => (j && j.data || []).forEach((g) => {
+    const k = ct[g.instId]; if (!k) return;
+    (g.details || []).forEach((d) => {
+      const ts = +d.ts, p = +d.bkPx, sz = +d.sz; if (!ts || !p || !sz) return;
+      if (ts > maxTs) maxTs = ts;
+      if (ts <= lastTs) return;
+      rows.push({ c: g.instId.split("-")[0], long: d.posSide ? d.posSide === "long" : d.side === "sell", p, v: k[1] ? sz * k[0] : sz * k[0] * p, ts });
+    });
+  }));
+  if (maxTs > lastTs) await set("liq:ts", maxTs);
+  if (!lastTs) { out.skipped.push("liq (bilow)"); return; }
+  // Kuwa waaweyn waa la kaydiyaa ilaa la diro (10 daqiiqo)
+  let pend = []; try { pend = JSON.parse((await get("liq:pend")) || "[]"); } catch (e) {}
+  pend = pend.concat(rows.filter((r) => r.v >= LIQ_MIN)).filter((r) => Date.now() - r.ts < 10 * 60e3);
+  const wave = rows.reduce((s, r) => s + r.v, 0), wl = rows.filter((r) => r.long).reduce((s, r) => s + r.v, 0);
+  const big = pend.reduce((m, r) => Math.max(m, r.v), 0);
+  const last = Number(await get("liq:last")) || 0;
+  const ready = Date.now() - last >= LIQ_GAP_MIN * 60e3 || big >= LIQ_MIN * 4;
+  out.liq = { orders: rows.length, total: Math.round(wave), pending: pend.length };
+  if (!(pend.length || wave >= LIQ_WAVE) || !ready) { await set("liq:pend", JSON.stringify(pend)); return; }
+  const top = pend.sort((a, b) => b.v - a.v).slice(0, 6);
+  const text = "💥 <b>LIQUIDATIONS WAAWEYN</b>" + (big >= LIQ_MIN * 4 ? " ⚡" : "") + "\n\n" +
+    top.map((r) => (r.long ? "🔴 " : "🟢 ") + "<b>" + r.c + " " + (r.long ? "LONG" : "SHORT") + "</b> la xiray · <b>" + usd(r.v) + "</b> @ " + px(r.p)).join("\n") +
+    (wave >= 1e5 ? (top.length ? "\n\n" : "") + "📊 Daqiiqaddii u dambeysay: <b>" + usd(wave) + "</b> · 🔴 Long " + usd(wl) + " · 🟢 Short " + usd(wave - wl) : "") + "\n\n" +
+    "<i>🔴 Long la xiray = qiimaha ayaa hoos u dhacay · 🟢 Short la xiray = kor u kacay · Isha: OKX</i>";
+  try {
+    await sendPost(text, false, [{ text: "💥 Liquidations live", url: SITE + "/lacagta.html#sec-liq" }]);
+    await set("liq:last", Date.now()); await set("liq:pend", "[]");
+    out.sent.push("liq: " + usd(big || wave));
+  } catch (e) { await set("liq:pend", JSON.stringify(pend)); out.errors.push("liq: " + e.message); }
 }
 
 module.exports = async function handler(req, res) {
@@ -463,12 +544,18 @@ module.exports = async function handler(req, res) {
           if (!text) { out.skipped.push("news (turjumaad sug): " + n.title.slice(0, 50)); if (++tries >= 4) break; continue; }
           if (text === "skip") { await kv(["SET", key, "low", "EX", 60 * 60 * 72]); out.skipped.push("news (muhiim ma aha): " + n.title.slice(0, 50)); if (++tries >= 4) break; continue; }
           if ((await kv(["SET", key, Date.now(), "NX", "EX", 60 * 60 * 72])) !== "OK") continue;
-          try { await send(text); await set("news:last", Date.now()); out.sent.push("news: " + n.title.slice(0, 60)); }
+          try {
+            await kv(["SET", "xc:post:" + text.post.id, JSON.stringify(text.post), "EX", 60 * 60 * 24 * 60]);
+            await sendPost(text.text, text.img, text.buttons); await set("news:last", Date.now()); out.sent.push("news: " + n.title.slice(0, 60));
+          }
           catch (e) { await kv(["DEL", key]); out.errors.push("news: " + e.message); }
           break; // hal war oo kaliya daqiiqaddan
         }
       } else out.skipped.push("news (sug)");
     }
+
+    // Liquidations waaweyn
+    try { await pollLiq(out); } catch (e) { out.errors.push("liq: " + String(e.message || e)); }
 
     if (Object.keys(AI_ERR).length) out.ai = AI_ERR;
     return res.status(200).json(out);
@@ -477,4 +564,4 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(out);
   }
 };
-module.exports._internal = { msgFomc, msgCpi, msgNfp, msgOdds, parseRss, msgNews, trOk, realLink, fetchBls, msgCpiBls, msgNfpBls, blsWindow, parseAi };
+module.exports._internal = { pickImg, parseTg, pollLiq, msgFomc, msgCpi, msgNfp, msgOdds, parseRss, msgNews, trOk, realLink, fetchBls, msgCpiBls, msgNfpBls, blsWindow, parseAi };
