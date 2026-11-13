@@ -110,8 +110,23 @@ const FEEDS = [
   { url: BING("bitcoin OR ethereum OR crypto ETF OR stablecoin"), src: null, cat: "btc" },
   { url: BING('"artificial intelligence" OR OpenAI OR Nvidia OR "AI chips" OR Anthropic'), src: null, cat: "ai" },
   { url: BING('"stock market" OR "S&P 500" OR Nasdaq OR "Wall Street"'), src: null, cat: "stocks" },
-  { url: BING('"data privacy" OR "data breach" OR surveillance OR encryption OR cyberattack'), src: null, cat: "privacy" }
+  { url: BING('"data privacy" OR "data breach" OR surveillance OR encryption OR cyberattack'), src: null, cat: "privacy" },
+  // Akoonnada X ee la doortay (ilahooda bilaashka ah)
+  { url: "https://t.me/s/WatcherGuru", src: "Watcher Guru", cat: "top", tg: "WatcherGuru" },
+  { url: "https://www.thestreet.com/.rss/full/", src: "TheStreet", cat: "stocks" },
+  { url: "https://www.rand.org/blog.xml", src: "RAND", cat: "world" },
+  { url: "https://tokenterminal.substack.com/feed", src: "Token Terminal", cat: "btc" }
 ];
+// Telegram channel-ka dadweynaha (t.me/s/…): fariimaha u dambeeyay
+function parseTg(html, ch) {
+  return String(html).split('data-post="').slice(1).map((b) => {
+    const id = b.slice(0, b.indexOf('"'));
+    const m = /tgme_widget_message_text[^>]*>([\s\S]*?)<\/div>/.exec(b), t = /<time[^>]*datetime="([^"]+)"/.exec(b);
+    if (!m || !t) return null;
+    const text = decode(m[1].replace(/<br\s*\/?>/g, " ")).replace(/@\w+/g, "").replace(/^\s*(JUST IN|BREAKING|NEW)\s*:\s*/i, "").replace(/\s+/g, " ").trim();
+    return text ? { title: text.slice(0, 280), link: "https://t.me/" + id, date: t[1], desc: "" } : null;
+  }).filter(Boolean).slice(-15);
+}
 const FED_RSS = ["https://www.federalreserve.gov/feeds/press_monetary.xml", "https://www.federalreserve.gov/feeds/speeches.xml"];
 const SKIP_FED = /enforcement action|termination of enforcement|discount rate|request for comment|applications|approval of|bank holding/i;
 
@@ -138,7 +153,7 @@ async function fetchNews() {
   const get = (u) => fetch(u, ua).then((r) => (r.ok ? r.text() : "")).catch(() => "");
   const texts = await Promise.all(FEEDS.map((f) => get(f.url)).concat(FED_RSS.map(get)));
   const list = [];
-  FEEDS.forEach((f, i) => parseRss(texts[i]).forEach((n) => {
+  FEEDS.forEach((f, i) => (f.tg ? parseTg(texts[i], f.tg) : parseRss(texts[i])).forEach((n) => {
     const link = realLink(n.link);
     if (/news\.google\.com/.test(link)) return;
     if (!f.cat && f.src && !FED_WORDS.test(n.title)) return; // ilaha guud: kaliya wararka FED
