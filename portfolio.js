@@ -10,20 +10,30 @@
   const dstr = (s) => { const d = new Date(s + "T12:00:00Z"); return d.getUTCDate() + " " + MO[d.getUTCMonth()] + " " + d.getUTCFullYear(); };
 
   // ---------- Xogta (warbixinnada rasmiga ah; marka ay cusboonaadaan halkan ayaa la beddelaa) ----------
-  // avg = celceliska qiimaha iibka (null = lama shaacin / waa la qoday)
   const PF = [
-    { k: "satoshi", name: "Satoshi Nakamoto", who: T("Abuuraha Bitcoin", "Bitcoin's creator"), ic: "₿", col: "#F7931A", coin: "BTC", qty: 1096000, avg: null,
+    { k: "satoshi", name: "Satoshi Nakamoto", who: T("Abuuraha Bitcoin", "Bitcoin's creator"), ic: "₿", col: "#F7931A", coin: "BTC", qty: 1096000,
       note: T("Waa la qoday (mined) 2009–2010, kharash iib ma jiro. Tiradu waa qiyaas.", "Mined in 2009–2010, no purchase cost. The amount is an estimate."), src: "Arkham", asOf: "2026-06-01", est: 1 },
-    { k: "strategy", name: "Strategy (MSTR)", who: "Michael Saylor", ic: "S", col: "#FF7A00", coin: "BTC", qty: 850364, avg: 75456,
-      src: "SEC 8-K", asOf: "2026-11-08" },
-    { k: "ibit", name: "BlackRock IBIT", who: T("ETF-ga Bitcoin ee ugu weyn", "Largest Bitcoin ETF"), ic: "B", col: "#E8EDF3", coin: "BTC", qty: 806037, avg: null,
-      note: T("ETF: maalgashadayaasha ayaa iska leh. Celcelis iib lama shaaciyo.", "ETF held for investors. No purchase average is published."), src: "BitcoinTreasuries", asOf: "2026-10-07" },
-    { k: "bitmine", name: "Bitmine (BMNR)", who: "Tom Lee", ic: "Ξ", col: "#7B8CFF", coin: "ETH", qty: 6070092, avg: 3380,
-      avgNote: T("10-K, 31 Og 2026", "10-K, Aug 31 2026"), src: "Bitmine · SEC 10-K", asOf: "2026-11-08" },
-    { k: "usgov", name: T("Dowladda Mareykanka", "US Government"), who: T("Bitcoin la qabtay", "Seized bitcoin"), ic: "US", col: "#5B8DEF", coin: "BTC", qty: 328372, avg: null,
+    { k: "strategy", name: "Strategy (MSTR)", who: "Michael Saylor", ic: "S", col: "#FF7A00", coin: "BTC", qty: 850364,
+      note: T("Strategy wallet-yadeeda ma shaacin. On-chain waxaa muuqda inta Arkham garatay oo kaliya.", "Strategy does not publish its wallets. On-chain shows only what Arkham has identified."), src: "SEC 8-K", asOf: "2026-11-08" },
+    { k: "ibit", name: "BlackRock IBIT", who: T("ETF-ga Bitcoin ee ugu weyn", "Largest Bitcoin ETF"), ic: "B", col: "#E8EDF3", coin: "BTC", qty: 806037,
+      note: T("ETF: Bitcoin-ka waxaa iska leh maalgashadayaasha ETF-ga.", "Bitcoin held for the ETF's investors."), src: "BitcoinTreasuries", asOf: "2026-10-07" },
+    { k: "bitmine", name: "Bitmine (BMNR)", who: "Tom Lee", ic: "Ξ", col: "#7B8CFF", coin: "ETH", qty: 6070092,
+      note: T("ETH-da staked-ka ah qayb ka mid ah waxaa laga yaabaa inaysan on-chain ku muuqan.", "Part of the staked ETH may not show on-chain."), src: "Bitmine", asOf: "2026-11-08" },
+    { k: "usgov", name: T("Dowladda Mareykanka", "US Government"), who: T("Bitcoin la qabtay", "Seized bitcoin"), ic: "US", col: "#5B8DEF", coin: "BTC", qty: 328372,
       note: T("Lacag dembiyo laga qabtay, lama iibsan.", "Seized in criminal cases, not bought."), src: "BitcoinTreasuries", asOf: "2026-10-16", est: 1 }
   ];
   const PX = { BTC: { p: 0, o: 0 }, ETH: { p: 0, o: 0 } };
+  // ON-CHAIN (Arkham, /api/member?op=pf): marka uu jiro, tirada kor ku qoran waa la beddelaa
+  let OC = null;
+  async function onchain() {
+    try {
+      const j = await (await fetch("/api/member?op=pf")).json();
+      if (j && j.ok && j.items) { OC = j; PF.forEach((x) => { const it = j.items[x.k]; if (it && it.qty > 0) { x.qty = it.qty; x.oc = it; } }); }
+    } catch (e) { /* ignore */ }
+    paintSrc(); render();
+  }
+  const qfmt = (q) => Math.round(q).toLocaleString("en-US");
+  const chg = (v, c) => (v > 0 ? "+" : v < 0 ? "−" : "±") + qfmt(Math.abs(v)) + " " + c;
   let at = null;
 
   const money = (v, sign) => { const a = Math.abs(v), s = v < 0 ? "−" : sign && v > 0 ? "+" : ""; return s + "$" + (a >= 1e9 ? (a / 1e9).toFixed(2) + "B" : a >= 1e6 ? (a / 1e6).toFixed(1) + "M" : a >= 1e3 ? Math.round(a / 1e3) + "K" : Math.round(a)); };
@@ -31,8 +41,7 @@
   const pct = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "%";
   function calc(x) {
     const q = PX[x.coin], val = x.qty * q.p, d24 = x.qty * (q.p - q.o), d24p = q.o ? (q.p / q.o - 1) * 100 : 0;
-    const pl = x.avg ? val - x.qty * x.avg : null, plp = x.avg ? (q.p / x.avg - 1) * 100 : null;
-    return { val, d24, d24p, pl, plp, p: q.p };
+    return { val, d24, d24p, p: q.p };
   }
 
   // ---------- Qaabka ----------
@@ -68,15 +77,22 @@
         </div>
         <div class="pf-val"><b class="pf-v">—</b><span class="pf-d"></span></div>
         <div class="pf-g">
-          <div><span>${T("Haysta", "Holds")}</span><b>${x.qty.toLocaleString("en-US")} ${x.coin}</b></div>
-          <div><span>${T("Celceliska iibka", "Avg. buy price")}</span><b>${x.avg ? "$" + x.avg.toLocaleString("en-US") : "—"}</b>${x.avgNote ? `<small>${esc(x.avgNote)}</small>` : ""}</div>
+          <div><span>${T("Haysta", "Holds")}</span><b class="pf-q">${qfmt(x.qty)} ${x.coin}</b></div>
+          <div><span>${T("Isbeddel 7 maalin", "7-day change")}</span><b class="pf-c7">—</b></div>
           <div><span>${T("Qiimaha", "Price")} ${x.coin}</span><b class="pf-p">—</b></div>
         </div>
-        ${x.avg ? `<div class="pf-pl"><span>${T("Faa'iido / khasaare guud", "Total profit / loss")}</span><b class="pf-plv">—</b></div><div class="pf-bar"><i></i></div>`
-          : `<p class="pf-note">${esc(x.note || "")}</p>`}
-        <p class="pf-src">${T("Isha", "Source")}: ${esc(x.src)} · ${dstr(x.asOf)}${x.est ? " · " + T("qiyaas", "estimate") : ""}</p>
+        <p class="pf-note">${esc(x.note || "")}</p>
+        <p class="pf-src"></p>
       </article>`).join("")}
     </div>`;
+
+  function hm(t) { const d = new Date(t); return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+  function srcText(x) {
+    return x.oc ? "⛓ On-chain · Arkham · " + T("la cusbooneysiiyay ", "updated ") + hm(OC.at)
+      : "⚠ " + T("On-chain wali lama xirin · ku meel gaar: ", "Not on-chain yet · temporary: ") + x.src + " · " + dstr(x.asOf);
+  }
+  function paintSrc() { PF.forEach((x) => { const el = document.querySelector("#pf-" + x.k + " .pf-src"); if (el) { el.textContent = srcText(x); el.classList.toggle("oc", !!x.oc); } }); }
+  paintSrc();
 
   // ---------- Cusbooneysiin (ilbiriqsi kasta) ----------
   const last = {};
@@ -96,11 +112,9 @@
       const d = el.querySelector(".pf-d");
       d.textContent = money(c.d24, true) + " (" + pct(c.d24p) + ") · 24h"; d.className = "pf-d " + (c.d24 >= 0 ? "up" : "dn");
       el.querySelector(".pf-p").textContent = price(c.p);
-      if (r.x.avg) {
-        const pl = el.querySelector(".pf-plv");
-        pl.textContent = money(c.pl, true) + " (" + pct(c.plp) + ")"; pl.className = "pf-plv " + (c.pl >= 0 ? "up" : "dn");
-        const b = el.querySelector(".pf-bar i"); b.style.width = Math.min(100, Math.abs(c.plp) * 2) + "%"; b.className = c.pl >= 0 ? "up" : "dn";
-      }
+      el.querySelector(".pf-q").textContent = qfmt(r.x.qty) + " " + r.x.coin;
+      const c7 = el.querySelector(".pf-c7"), d7 = r.x.oc && r.x.oc.d7;
+      c7.textContent = d7 != null ? chg(d7, r.x.coin) : "—"; c7.className = "pf-c7 " + (d7 > 0 ? "up" : d7 < 0 ? "dn" : "");
     });
     const tv = rows.reduce((s, r) => s + r.c.val, 0), td = rows.reduce((s, r) => s + r.c.d24, 0);
     document.getElementById("pf-tv").textContent = money(tv);
@@ -123,7 +137,8 @@
     s.onmessage = (m) => { try { const d = JSON.parse(m.data).data; const k = d.s.replace("USDT", ""); PX[k] = { p: +d.c, o: +d.o }; at = new Date(); dirty = true; } catch (e) { /* ignore */ } };
     s.onclose = () => setTimeout(live, 3000);
   }
-  rest(); live();
+  rest(); live(); onchain();
+  setInterval(onchain, 10 * 60000);
   setInterval(() => { if (dirty) { dirty = false; render(); } }, 1000);
   setInterval(rest, 60000);
 
@@ -153,16 +168,11 @@
     s += tx(1144, 92, "● LIVE", 22, { w: 700, c: G, a: "end" }) + tx(1144, 126, T("Qiimaha portfolio-ga", "Portfolio value"), 20, { c: K.mut, a: "end" });
     s += tx(56, 262, money(c.val), 112, { d: 1, w: 800 });
     s += tx(56, 312, money(c.d24, true) + " (" + pct(c.d24p) + ") " + T("24 saac", "24h"), 30, { w: 700, c: c.d24 >= 0 ? G : R });
-    const cells = [[T("Haysta", "Holds"), x.qty.toLocaleString("en-US") + " " + x.coin], [T("Celceliska iibka", "Avg. buy price"), x.avg ? "$" + x.avg.toLocaleString("en-US") : "—"], [T("Qiimaha ", "Price ") + x.coin, price(c.p)]];
+    const d7 = x.oc && x.oc.d7;
+    const cells = [[T("Haysta", "Holds"), qfmt(x.qty) + " " + x.coin], [T("Isbeddel 7 maalin", "7-day change"), d7 != null ? chg(d7, x.coin) : "—"], [T("Qiimaha ", "Price ") + x.coin, price(c.p)]];
     cells.forEach((cl, i) => { const bx = 56 + i * 370; s += box(bx, 352, 348, 112) + tx(bx + 28, 394, cl[0], 20, { c: K.mut }) + tx(bx + 28, 440, cl[1], 34, { d: 1, w: 800 }); });
-    if (x.avg) {
-      const up = c.pl >= 0;
-      s += box(56, 486, 1088, 102, up ? "rgba(43,214,123,.12)" : "rgba(240,90,95,.12)", up ? "rgba(43,214,123,.45)" : "rgba(240,90,95,.45)");
-      s += tx(88, 546, T("Faa'iido / khasaare guud", "Total profit / loss"), 26, { w: 700, c: K.mut }) + tx(1112, 554, money(c.pl, true) + " (" + pct(c.plp) + ")", 50, { d: 1, w: 800, a: "end", c: up ? G : R });
-    } else {
-      s += box(56, 486, 1088, 102) + tx(88, 546, x.note || "", 24, { c: K.mut });
-    }
-    return { s, src: x.src + " · " + dstr(x.asOf) + " · Binance" };
+    s += box(56, 486, 1088, 102, x.oc ? "rgba(43,214,123,.08)" : K.card, x.oc ? "rgba(43,214,123,.35)" : null) + tx(88, 546, x.oc ? T("⛓ Xogta on-chain · Arkham", "⛓ On-chain data · Arkham") : (x.note || ""), 24, { c: x.oc ? G : K.mut, w: x.oc ? 700 : 400 });
+    return { s, src: (x.oc ? "On-chain (Arkham)" : x.src + " · " + dstr(x.asOf)) + " · Binance" };
   }
   function bodyAll() {
     const rows = PF.map((x) => ({ x, c: calc(x) })).sort((a, b) => b.c.val - a.c.val);
@@ -170,12 +180,11 @@
     rows.forEach((r, i) => {
       const y = 106 + i * 98, c = r.c, x = r.x;
       s += box(56, y, 1088, 84) + `<circle cx="104" cy="${y + 42}" r="26" fill="${x.col}" fill-opacity=".14"/>` + tx(104, y + 51, x.ic, x.ic.length > 1 ? 20 : 26, { w: 800, c: x.col, a: "middle", d: 1 });
-      s += tx(148, y + 38, (i + 1) + ". " + x.name, 26, { w: 700 }) + tx(148, y + 66, x.qty.toLocaleString("en-US") + " " + x.coin + " · " + x.who, 18, { c: K.mut });
+      s += tx(148, y + 38, (i + 1) + ". " + x.name, 26, { w: 700 }) + tx(148, y + 66, qfmt(x.qty) + " " + x.coin + " · " + x.who, 18, { c: K.mut });
       s += tx(770, y + 52, money(c.val), 34, { d: 1, w: 800, a: "end" });
-      s += x.avg ? tx(1112, y + 40, money(c.pl, true), 26, { d: 1, w: 800, a: "end", c: c.pl >= 0 ? G : R }) + tx(1112, y + 66, T("guud ", "total ") + pct(c.plp), 18, { a: "end", c: K.mut })
-        : tx(1112, y + 40, money(c.d24, true), 26, { d: 1, w: 800, a: "end", c: c.d24 >= 0 ? G : R }) + tx(1112, y + 66, "24h " + pct(c.d24p), 18, { a: "end", c: K.mut });
+      s += tx(1112, y + 40, money(c.d24, true), 26, { d: 1, w: 800, a: "end", c: c.d24 >= 0 ? G : R }) + tx(1112, y + 66, "24h " + pct(c.d24p), 18, { a: "end", c: K.mut });
     });
-    return { s, src: "SEC · Arkham · BitcoinTreasuries · Binance" };
+    return { s, src: (OC ? "On-chain (Arkham)" : "SEC · Arkham · BitcoinTreasuries") + " · Binance" };
   }
   async function shotSVG(k) {
     const [fc, logo] = await Promise.all([fonts(), LOGO || dataURI("logo.svg").then((u) => (LOGO = u)).catch(() => "")]);
@@ -202,7 +211,7 @@
     if (a === "menu") { const m = w.querySelector(".xcc-menu"), o = m.hidden; closeAll(); m.hidden = !o; b.classList.toggle("on", o); return; }
     closeAll(); if (!PX.BTC.p) return;
     const x = PF.find((p) => p.k === k), url = location.origin + "/portfolio" + (x ? "#pf-" + k : "");
-    const text = (x ? x.name + " · " + money(calc(x).val) + (x.avg ? " · " + T("faa'iido/khasaare ", "P/L ") + money(calc(x).pl, true) : "") : T("5-ta portfolio crypto ee ugu waaweyn · live", "The 5 biggest crypto portfolios · live")) + "\n\n" + url + (window.SITE && window.SITE.x_handle ? "\n" + window.SITE.x_handle : "");
+    const text = (x ? x.name + " · " + money(calc(x).val) + " · 24h " + money(calc(x).d24, true) : T("5-ta portfolio crypto ee ugu waaweyn · live", "The 5 biggest crypto portfolios · live")) + "\n\n" + url + (window.SITE && window.SITE.x_handle ? "\n" + window.SITE.x_handle : "");
     const name = `xogta-crypto-portfolio-${k}-${new Date().toISOString().slice(0, 10)}.png`;
     try {
       if (a === "link") { await navigator.clipboard.writeText(url); toast(T("Link-ga waa la koobiyeeyay", "Link copied")); return; }

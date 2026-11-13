@@ -1462,3 +1462,5 @@ main.lq-wide { max-width: 1240px; }
 @keyframes pfUp { 0% { background: rgba(43,214,123,.35); } 100% { background: transparent; } }
 @keyframes pfDn { 0% { background: rgba(240,90,95,.35); } 100% { background: transparent; } }
 @media (max-width: 560px) { .pf-list { grid-template-columns: 1fr; } .pf-v { font-size: 1.8rem; } .pf-ta { margin-left: 0; } }
+.pf-src.oc { color: #2BD67B; opacity: 1; font-weight: 600; }
+.pf-note:empty { display: none; }
