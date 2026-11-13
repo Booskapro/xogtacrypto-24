@@ -248,17 +248,19 @@ function msgNfpBls(n, u) {
 // ---------- Turjumaadda ----------
 // 1) AI (Claude) haddii ANTHROPIC_API_KEY uu Vercel ku jiro -> af-Soomaali dabiici ah
 // 2) Haddii kale: turjumaad mashiin oo bilaash ah (MyMemory), oo la hubiyo
-const BAD_SO = /xasan|sheekh|khayre|farmaajo|madaxweyne|ra'iisul|somaliland|puntland|muqdisho|al-shabaab|xamar|dahabshiil|hormuud|amal|world remit|xawaala/i;
+const BAD_SO = /\b(xasan sheekh|khayre|farmaajo|somaliland|puntland|muqdisho|al-shabaab|xamar|dahabshiil|hormuud|world remit|xawaala)\b/i;
+let TR_WHY = "";
 function trOk(src, so) {
   if (!so) return false;
   const r = so.length / Math.max(1, src.length);
-  if (r < 0.5 || r > 2.4) return false;
-  if (BAD_SO.test(so) && !BAD_SO.test(src) && !/somal/i.test(src)) return false;
+  TR_WHY = "";
+  if (r < 0.4 || r > 2.6) { TR_WHY = "dherer " + r.toFixed(2); return false; }
+  if (BAD_SO.test(so) && !BAD_SO.test(src) && !/somal/i.test(src)) { TR_WHY = "magac Soomaali"; return false; }
   // Ingiriis lama aqbalo: haddii erayada badankoodu la mid yihiin asalka
   const ws = (x) => String(x).toLowerCase().match(/[a-z]{3,}/g) || [], sw = new Set(ws(src)), ow = ws(so);
-  if (ow.length && ow.filter((w) => sw.has(w)).length / ow.length > 0.5) return false;
+  if (ow.length > 2 && ow.filter((w) => sw.has(w)).length / ow.length > 0.6) { TR_WHY = "Ingiriis"; return false; }
   const sn = so.replace(/(\d),(\d)/g, "$1.$2");
-  for (const n of (src.match(/\d+(?:\.\d+)?/g) || [])) if (sn.indexOf(n) === -1 && so.indexOf(n) === -1) return false;
+  for (const n of (src.match(/\d+(?:\.\d+)?/g) || [])) if (sn.indexOf(n) === -1 && so.indexOf(n) === -1 && sn.indexOf(n.replace(".", ",")) === -1) { TR_WHY = "tiro " + n; return false; }
   return true;
 }
 const AI_RULES = "You are a Somali financial journalist. Translate the news into clear, natural Somali for crypto and market traders. Return ONLY JSON: {\"t\":\"<Somali headline>\",\"s\":\"<1-2 short Somali sentences: what happened and why it matters for the Fed, the dollar, stocks or crypto>\",\"i\":<importance 1-10 for global markets: 9-10 = Fed decision, CPI/jobs surprise, war or major attack, crash/surge, huge hack; 7-8 = important Fed speech, big company/AI/crypto news that moves markets; 1-6 = routine, opinion, small company or analysis>,\"c\":\"<one of: fed, macro, btc, ai, stocks, privacy, world>\"}. Rules: keep names, tickers, numbers and % exactly as in the source; write 'FED' for the Federal Reserve; use common Somali terms (dulsaar = interest rate, sicir-barar = inflation, suuqa saamiyada = stock market, dahab = gold, shidaal = oil, shaqo la'aan = unemployment). Do not invent facts that are not in the source. Never mention Somali companies, people or places unless they are in the source.";
@@ -276,7 +278,7 @@ async function gtSomali(text) {
     const r = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=so&dt=t&q=" + encodeURIComponent(text.slice(0, 450)));
     const j = await r.json(); const so = (j && j[0] || []).map((x) => x[0]).join("").trim();
     if (!so) { AI_ERR.gt = "madhan"; return null; }
-    return { t: so, s: "", i: /\b(rate (hike|cut)|war|attack|crash|plunge|surge|emergency|record|default|hack|exploit|tariffs?|recession|Fed (raises|cuts|holds))\b/i.test(text) ? 8 : 6, c: "" };
+    return { t: so, s: "", i: /\b(rate (hike|cut)|war|attack|crash|plunge|surge|emergency|record|default|hack(ed|ers?)?|exploit|stole|tariffs?|recession|bankrupt|ETF|SEC|ban|all-time high|billion|Fed (raises|cuts|holds)|Powell|CPI|inflation|jobs report)\b/i.test(text) ? 8 : 6, c: "" };
   } catch (e) { AI_ERR.gt = String(e.message || e).slice(0, 100); return null; }
 }
 async function geminiSomali(text) {
@@ -316,10 +318,15 @@ async function translateNews(title, desc, kvf) {
   const key = "xc:tr4:" + hash(title);
   try { const c = await kvf(["GET", key]); if (c) return c === "-" ? null : JSON.parse(c); } catch (e) {}
   const src = "Headline: " + title + (desc ? "\nSummary: " + desc.slice(0, 600) : "");
-  let o = await geminiSomali(src);
+  let o = null, off = null;
+  try { off = await kvf(["GET", "xc:gem:off"]); } catch (e) {}
+  if (!off) {
+    o = await geminiSomali(src);
+    if (!o && /429|RESOURCE_EXHAUSTED/.test(AI_ERR.gemini || "")) { try { await kvf(["SET", "xc:gem:off", "1", "EX", 1800]); } catch (e) {} }
+  } else AI_ERR.gemini = "xadka Gemini waa dhammaaday -> Google Translate (30 daqiiqo)";
   if (!o || !trOk(title, o.t)) o = await claudeSomali(src);
   if (o && !trOk(title, o.t)) { AI_ERR.check = "turjumaaddu ma gudbin hubinta: " + String(o.t).slice(0, 80); o = null; }
-  if (!o) { const g = await gtSomali(title); if (g && trOk(title, g.t)) o = g; else if (g) AI_ERR.gtcheck = String(g.t).slice(0, 80); }
+  if (!o) { const g = await gtSomali(title); if (g && trOk(title, g.t)) o = g; else if (g) AI_ERR.gtcheck = TR_WHY + " | " + String(g.t).slice(0, 80); }
   try {
     await kvf(o ? ["SET", key, JSON.stringify(o), "EX", 60 * 60 * 24 * 14] : ["SET", key, "-", "EX", 600]);
     if (o) await kvf(["SET", "xc:tr3:" + hash(title), o.t, "EX", 60 * 60 * 24 * 14]); // bogga wararka (news.js)
