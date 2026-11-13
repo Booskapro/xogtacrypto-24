@@ -9,9 +9,10 @@
     { href: "wararka.html",     key: "wararka",    label: "Wararka",        en: "News" },
     { href: "kalandarka.html",  key: "kalandarka", label: "Kalandarka",     en: "Calendar" },
     { href: "charts.html",      key: "charts",     label: "Charts",         en: "Charts" },
-    { href: "lacagta.html",     key: "lacagta",    label: "Lacagta",        en: "Money Flow", nu: 1, sub: [
+    { href: "lacagta.html",     key: "lacagta",    label: "Lacagta",        en: "Money Flow", sub: [
       ["#sec-flow", "Lacagta soo gashay / baxday", "Money in / out"], ["#sec-liq", "Liquidations (live)", "Liquidations (live)"], ["#sec-cf", "Coin kasta: lacagta 24 saac", "Money flow by coin"], ["#sec-ls", "Long / Short", "Long / Short"], ["#sec-tr", "Ganacsiyada waaweyn", "Large trades"],
       ["#sec-vol", "Volume (futures / spot)", "Volume (futures / spot)"], ["#sec-flowheat", "Heatmap", "Heatmap"], ["#lq-faq", "Su'aalo", "FAQ"]] },
+    { href: "portfolio.html",   key: "portfolio",  label: "Portfolio",      en: "Portfolios", nu: 1 },
     { href: "taariikhda.html",  key: "taariikhda", label: "Taariikhda FED", en: "Fed History" },
     { href: "fahanka-fed.html", key: "fahanka",    label: "Fahanka FED",    en: "Learn the Fed" },
     { href: "ku-saabsan.html",  key: "ku-saabsan", label: "Ku saabsan",     en: "About" }
@@ -290,7 +291,7 @@
             '<div class="ff-social">' + socials + "</div>" +
           "</div>" +
           '<div class="ff-cols">' +
-            col(T("Xogta", "Data"), [["index.html", T("Maanta", "Today")], ["kalandarka.html", T("Kalandarka", "Calendar")], ["charts.html", T("Charts", "Charts")], ["lacagta.html", T("Lacagta", "Money Flow"), T("cusub", "new")], ["wararka.html", T("Wararka", "News")], ["taariikhda.html", T("Taariikhda FED", "Fed history")]]) +
+            col(T("Xogta", "Data"), [["index.html", T("Maanta", "Today")], ["kalandarka.html", T("Kalandarka", "Calendar")], ["charts.html", T("Charts", "Charts")], ["lacagta.html", T("Lacagta", "Money Flow"), T("cusub", "new")], ["portfolio.html", T("Portfolio", "Portfolios"), T("cusub", "new")], ["wararka.html", T("Wararka", "News")], ["taariikhda.html", T("Taariikhda FED", "Fed history")]]) +
             col(T("Waxbarasho", "Learn"), [["fahanka-fed.html", T("Fahanka FED", "Learn the Fed")], ["taariikhda.html", T("Go'aannadii hore", "Past decisions")]]) +
             col(T("Bulshada", "Community"), [[s.social.telegram || "#", T("Kooxda Telegram", "Telegram group")], [s.social.x || "#", s.x_handle || "X"], [s.founder.x || "#", s.founder.handle || s.founder.name]]) +
             col(T("Ku saabsan", "About"), [["ku-saabsan.html", T("Ku saabsan", "About us")], ["ku-saabsan.html#aasaasaha", T("Aasaasayaasha", "Founders")]]) +
