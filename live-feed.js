@@ -346,7 +346,8 @@
       function row(n) {
         const title = EN ? n.title : (n.title_so || n.title);
         const isNew = Date.now() - Date.parse(n.date) < 3 * 3600e3;
-        return '<a class="media-item" href="' + esc(n.link) + '" target="_blank" rel="noopener">' +
+        return '<a class="media-item' + (n.img ? " has-img" : "") + '" href="' + esc(n.link) + '" target="_blank" rel="noopener">' +
+          (n.img ? '<img class="media-img" src="' + esc(n.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">' : "") +
           '<span class="media-meta">' + (n.official ? '<span class="chip ok">🏛 Federal Reserve</span>' : '<span class="media-src">' + esc(n.source || "") + "</span>") +
           (isNew ? '<span class="new-badge">' + T("CUSUB", "NEW") + "</span>" : "") +
           '<span class="small muted">' + esc(ago(n.date)) + "</span></span>" +
@@ -358,6 +359,29 @@
       if (home) home.innerHTML = items.length ? items.slice(0, 6).map(row).join("") : empty;
       const up = $("media-updated");
       if (up && j) up.textContent = T("La cusbooneysiiyay ", "Updated ") + hhmm(new Date());
+    }).catch(function () {});
+  }
+
+  // ---------- Hal war (wararka.html?id=…) — link-ga bot-ka Telegram ----------
+  function loadOne() {
+    const box = $("war-one"); if (!box) return;
+    const id = new URLSearchParams(location.search).get("id"); if (!id) return;
+    fetch("/api/news?id=" + encodeURIComponent(id)).then(function (r) { return r.json(); }).then(function (j) {
+      const n = j && j.item;
+      if (!n) { box.hidden = false; box.innerHTML = '<p class="muted">' + T("Warkan lama helin (waa laga yaabaa inuu duugoobay). Hoos ka eeg wararka cusub.", "This story was not found (it may have expired). See the latest news below.") + "</p>"; return; }
+      const CAT = { fed: "🏛 FED", macro: "📊 " + T("Dhaqaalaha", "Economy"), btc: "₿ Crypto", ai: "🤖 AI", stocks: "📈 " + T("Saham", "Stocks"), privacy: "🔐 Privacy", world: "🌍 " + T("Adduunka", "World"), top: "📰 " + T("Guud", "Top") };
+      const title = EN ? n.title : (n.title_so || n.title);
+      box.hidden = false;
+      box.innerHTML = (n.img ? '<img class="war-one-img" src="' + esc(n.img) + '" alt="" referrerpolicy="no-referrer" onerror="this.remove()">' : "") +
+        '<div class="war-one-body">' +
+        '<div class="media-meta">' + (n.cat && CAT[n.cat] ? '<span class="chip">' + CAT[n.cat] + "</span>" : "") + (n.imp >= 9 ? '<span class="new-badge">⚡ ' + T("CULUS", "MAJOR") + "</span>" : "") +
+        '<span class="media-src">' + esc(n.source || "") + '</span><span class="small muted">' + esc(ago(n.date)) + "</span></div>" +
+        '<h2 class="war-one-title">' + esc(title) + "</h2>" +
+        (!EN && n.sum_so ? '<p class="war-one-sum">' + esc(n.sum_so) + "</p>" : "") +
+        (!EN && n.title_so ? '<p class="small muted" style="margin:0 0 14px">EN: ' + esc(n.title) + "</p>" : "") +
+        '<div class="war-one-btns"><a class="btn" href="' + esc(n.link) + '" target="_blank" rel="noopener">' + T("Akhri warka oo dhan · ", "Read the full story · ") + esc(n.source || "") + " →</a>" +
+        '<a class="btn ghost" href="https://t.me/Xogtacrypto24_7" target="_blank" rel="noopener">Telegram</a></div></div>';
+      document.title = title + " · Xogta Crypto 24/7";
     }).catch(function () {});
   }
 
@@ -375,6 +399,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+    loadOne();
     loadMedia();
     setInterval(loadMedia, 2 * 60 * 1000);
     if (!$("agent-feed") && !$("odds") && !$("news-list")) return;

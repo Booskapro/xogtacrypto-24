@@ -1421,3 +1421,14 @@ main.lq-wide { max-width: 1240px; }
 .lq-cfb i { display: block; height: 100%; border-radius: 4px; }
 .lsv-ctl[hidden], .lsv-p[hidden] { display: none; }
 .lsv-ctl { display: inline-flex; gap: 6px; }
+
+/* Hal war (link-ga Telegram) + sawirrada wararka */
+.war-one { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0; overflow: hidden; margin-bottom: 16px; }
+.war-one-img { width: 100%; max-height: 380px; object-fit: cover; display: block; background: var(--card-2, #111); }
+.war-one-body { padding: 18px 20px 20px; }
+.war-one-title { font-size: 1.45rem; line-height: 1.3; margin: 10px 0 8px; }
+.war-one-sum { font-size: 1.05rem; line-height: 1.6; margin: 0 0 10px; }
+.war-one-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (min-width: 860px) { .war-one { grid-template-columns: 46% 1fr; } .war-one-img { height: 100%; max-height: 340px; } }
+.media-item.has-img::after { content: ""; display: block; clear: both; }
+.media-item .media-img { float: right; width: 96px; height: 64px; object-fit: cover; border-radius: 8px; margin: 2px 0 6px 12px; }
