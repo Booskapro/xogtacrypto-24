@@ -428,9 +428,8 @@ async function okxCt() {
   if (Object.keys(m).length) await kv(["SET", "xc:okxct", JSON.stringify(m), "EX", 86400]);
   return m;
 }
-async function pollLiq(out) {
+async function liqRows(lastTs) {
   const ct = await okxCt();
-  const lastTs = Number(await get("liq:ts")) || 0;
   const res = await Promise.all(LIQ_COINS.map((c) => fetch("https://www.okx.com/api/v5/public/liquidation-orders?instType=SWAP&state=filled&instFamily=" + c + "-USDT")
     .then((r) => r.json()).catch(() => null)));
   const rows = []; let maxTs = lastTs;
@@ -443,6 +442,11 @@ async function pollLiq(out) {
       rows.push({ c: g.instId.split("-")[0], long: d.posSide ? d.posSide === "long" : d.side === "sell", p, v: k[1] ? sz * k[0] : sz * k[0] * p, ts });
     });
   }));
+  return { rows, maxTs };
+}
+async function pollLiq(out) {
+  const lastTs = Number(await get("liq:ts")) || 0;
+  const { rows, maxTs } = await liqRows(lastTs);
   if (maxTs > lastTs) await set("liq:ts", maxTs);
   if (!lastTs) { out.skipped.push("liq (bilow)"); return; }
   // Kuwa waaweyn waa la kaydiyaa ilaa la diro (10 daqiiqo)
@@ -473,6 +477,34 @@ module.exports = async function handler(req, res) {
     const secret = env("CRON_SECRET");
     if (secret && (req.query || {}).key !== secret) return res.status(401).json({ error: "key" });
     if (!env("TELEGRAM_BOT_TOKEN") || !env("TELEGRAM_CHAT_ID")) return res.status(200).json({ error: "TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID lama helin" });
+
+    // Tijaabo: /api/notify?test=liq ama ?test=news -> hal fariin TUSAALE ah (xog dhab ah), 5 daqiiqo mar
+    const test = String((req.query || {}).test || "");
+    if (test === "liq" || test === "news") {
+      if ((await kv(["SET", "xc:test", Date.now(), "NX", "EX", 300])) !== "OK") return res.status(200).json({ test, error: "sug 5 daqiiqo" });
+      const T = "🧪 <b>TUSAALE</b> (tijaabo)\n\n";
+      if (test === "liq") {
+        const { rows } = await liqRows(0);
+        const top = rows.sort((a, b) => b.v - a.v).slice(0, 5);
+        if (!top.length) return res.status(200).json({ test, error: "OKX xog ma soo celin" });
+        const text = T + "💥 <b>LIQUIDATIONS WAAWEYN</b>\n\n" +
+          top.map((r) => (r.long ? "🔴 " : "🟢 ") + "<b>" + r.c + " " + (r.long ? "LONG" : "SHORT") + "</b> la xiray · <b>" + usd(r.v) + "</b> @ " + px(r.p) + " · " + new Date(r.ts).toISOString().slice(11, 16) + " UTC").join("\n") +
+          "\n\n<i>🔴 Long la xiray = qiimaha ayaa hoos u dhacay · 🟢 Short la xiray = kor u kacay · Isha: OKX</i>";
+        await sendPost(text, false, [{ text: "💥 Liquidations live", url: SITE + "/lacagta.html#sec-liq" }]);
+        return res.status(200).json({ test, sent: top.length });
+      }
+      const all = await loadNews(); let tries = 0;
+      for (const n of all) {
+        const m = await msgNews(Object.assign({}, n, { official: true })).catch(() => null);
+        if (m && m !== "skip") {
+          await kv(["SET", "xc:post:" + m.post.id, JSON.stringify(m.post), "EX", 60 * 60 * 24 * 60]);
+          await sendPost(T + m.text, m.img, m.buttons);
+          return res.status(200).json({ test, sent: n.title, img: m.img || "og-image" });
+        }
+        if (++tries >= 6) break;
+      }
+      return res.status(200).json({ test, error: "turjumaad lama helin", ai: AI_ERR });
+    }
 
     const host = req.headers["x-forwarded-host"] || req.headers.host;
     const base = "https://" + host;
