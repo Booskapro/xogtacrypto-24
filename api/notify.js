@@ -415,9 +415,9 @@ async function msgNews(n) {
 }
 
 // ================= Liquidations waaweyn (OKX — API bilaash ah oo server-ka ka shaqeeya) =================
-const LIQ_MIN = +(process.env.LIQ_MIN_USD || 500000);     // amar kasta oo ka weyn -> war
-const LIQ_WAVE = +(process.env.LIQ_WAVE_USD || 3000000);  // wadarta daqiiqad gudaheed -> war
-const LIQ_GAP_MIN = 3;
+const LIQ_MIN = +(process.env.LIQ_MIN_USD || 1000000);     // amar kasta oo ka weyn -> war
+const LIQ_WAVE = +(process.env.LIQ_WAVE_USD || 10000000);  // wadarta daqiiqad gudaheed -> war
+const LIQ_GAP_MIN = 5;
 const LIQ_COINS = ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "SUI", "HYPE", "ADA", "LINK", "AVAX", "LTC"];
 const usd = (v) => v >= 1e9 ? "$" + (v / 1e9).toFixed(2) + "B" : v >= 1e6 ? "$" + (v / 1e6).toFixed(2) + "M" : "$" + Math.round(v / 1e3) + "K";
 const px = (p) => "$" + (p >= 100 ? Math.round(p).toLocaleString("en-US") : p >= 1 ? p.toFixed(2) : p.toPrecision(4));
