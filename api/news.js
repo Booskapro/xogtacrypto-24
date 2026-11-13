@@ -103,9 +103,19 @@ function parseAi(raw) {
   const line = String(raw).trim().split("\n")[0].replace(/^["“*]+|["”*]+$/g, "").trim();
   return line ? { t: line, s: "", i: 5, c: "" } : null;
 }
+const AI_ERR = {};
+// Kayd bilaash ah: Google Translate (cinwaan oo kaliya; muhiimadda waxaa go'aamiya erayada degdegga ah)
+async function gtSomali(text) {
+  try {
+    const r = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=so&dt=t&q=" + encodeURIComponent(text.slice(0, 450)));
+    const j = await r.json(); const so = (j && j[0] || []).map((x) => x[0]).join("").trim();
+    if (!so) { AI_ERR.gt = "madhan"; return null; }
+    return { t: so, s: "", i: /\b(rate (hike|cut)|war|attack|crash|plunge|surge|emergency|record|default|hack|exploit|tariffs?|recession|Fed (raises|cuts|holds))\b/i.test(text) ? 8 : 6, c: "" };
+  } catch (e) { AI_ERR.gt = String(e.message || e).slice(0, 100); return null; }
+}
 async function geminiSomali(text) {
   const key = process.env.GEMINI_API_KEY;
-  if (!key) return null;
+  if (!key) { AI_ERR.gemini = "GEMINI_API_KEY Vercel kuma jiro"; return null; }
   for (const model of [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash"].filter(Boolean)) {
     try {
       const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
@@ -114,10 +124,12 @@ async function geminiSomali(text) {
           generationConfig: { temperature: 0.2, maxOutputTokens: 400, responseMimeType: "application/json" } })
       });
       const j = await r.json();
+      if (!r.ok || j.error) { AI_ERR.gemini = model + ": " + r.status + " " + ((j.error && (j.error.status || "") + " " + (j.error.message || "")) || "").slice(0, 160); continue; }
       const parts = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
       const o = parseAi(parts && parts.map((x) => x.text || "").join(""));
       if (o) return o;
-    } catch (e) { /* model kale isku day */ }
+      AI_ERR.gemini = model + ": jawaab madhan (" + ((j.candidates && j.candidates[0] && j.candidates[0].finishReason) || "?") + ")";
+    } catch (e) { AI_ERR.gemini = model + ": " + String(e.message || e).slice(0, 120); }
   }
   return null;
 }
@@ -137,11 +149,11 @@ async function claudeSomali(text) {
 async function translateNews(title, desc, kvf) {
   const key = "xc:tr4:" + hash(title);
   try { const c = await kvf(["GET", key]); if (c) return c === "-" ? null : JSON.parse(c); } catch (e) {}
-  if (!process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY) return null;
   const src = "Headline: " + title + (desc ? "\nSummary: " + desc.slice(0, 600) : "");
   let o = await geminiSomali(src);
   if (!o || !trOk(title, o.t)) o = await claudeSomali(src);
-  if (o && !trOk(title, o.t)) o = null;
+  if (o && !trOk(title, o.t)) { AI_ERR.check = "turjumaaddu ma gudbin hubinta: " + String(o.t).slice(0, 80); o = null; }
+  if (!o) { const g = await gtSomali(title); if (g && trOk(title, g.t)) o = g; }
   try {
     await kvf(o ? ["SET", key, JSON.stringify(o), "EX", 60 * 60 * 24 * 14] : ["SET", key, "-", "EX", 600]);
     if (o) await kvf(["SET", "xc:tr3:" + hash(title), o.t, "EX", 60 * 60 * 24 * 14]); // bogga wararka (news.js)
@@ -151,7 +163,9 @@ async function translateNews(title, desc, kvf) {
 
 module.exports = async function handler(req, res) {
   try {
-    const items = (await fetchNews()).sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, MAX);
+    // Tweet-yada X (notify.js ayaa KV ku kaydiya marka X_BEARER_TOKEN jiro)
+    let xs = []; try { xs = JSON.parse((await kv(["GET", "xc:xfeed"])) || "[]"); } catch (e) {}
+    const items = xs.concat(await fetchNews()).sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, MAX);
     // Af-Soomaali: cinwaan + sharaxaad + muhiimad (isla kaydka bot-ka: xc:tr4)
     let budget = MAX_NEW_TR;
     await Promise.all(items.map(async (n) => {

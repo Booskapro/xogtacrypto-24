@@ -269,9 +269,19 @@ function parseAi(raw) {
   const line = String(raw).trim().split("\n")[0].replace(/^["“*]+|["”*]+$/g, "").trim();
   return line ? { t: line, s: "", i: 5, c: "" } : null;
 }
+const AI_ERR = {};
+// Kayd bilaash ah: Google Translate (cinwaan oo kaliya; muhiimadda waxaa go'aamiya erayada degdegga ah)
+async function gtSomali(text) {
+  try {
+    const r = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=so&dt=t&q=" + encodeURIComponent(text.slice(0, 450)));
+    const j = await r.json(); const so = (j && j[0] || []).map((x) => x[0]).join("").trim();
+    if (!so) { AI_ERR.gt = "madhan"; return null; }
+    return { t: so, s: "", i: /\b(rate (hike|cut)|war|attack|crash|plunge|surge|emergency|record|default|hack|exploit|tariffs?|recession|Fed (raises|cuts|holds))\b/i.test(text) ? 8 : 6, c: "" };
+  } catch (e) { AI_ERR.gt = String(e.message || e).slice(0, 100); return null; }
+}
 async function geminiSomali(text) {
   const key = process.env.GEMINI_API_KEY;
-  if (!key) return null;
+  if (!key) { AI_ERR.gemini = "GEMINI_API_KEY Vercel kuma jiro"; return null; }
   for (const model of [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash"].filter(Boolean)) {
     try {
       const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
@@ -280,10 +290,12 @@ async function geminiSomali(text) {
           generationConfig: { temperature: 0.2, maxOutputTokens: 400, responseMimeType: "application/json" } })
       });
       const j = await r.json();
+      if (!r.ok || j.error) { AI_ERR.gemini = model + ": " + r.status + " " + ((j.error && (j.error.status || "") + " " + (j.error.message || "")) || "").slice(0, 160); continue; }
       const parts = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
       const o = parseAi(parts && parts.map((x) => x.text || "").join(""));
       if (o) return o;
-    } catch (e) { /* model kale isku day */ }
+      AI_ERR.gemini = model + ": jawaab madhan (" + ((j.candidates && j.candidates[0] && j.candidates[0].finishReason) || "?") + ")";
+    } catch (e) { AI_ERR.gemini = model + ": " + String(e.message || e).slice(0, 120); }
   }
   return null;
 }
@@ -303,11 +315,11 @@ async function claudeSomali(text) {
 async function translateNews(title, desc, kvf) {
   const key = "xc:tr4:" + hash(title);
   try { const c = await kvf(["GET", key]); if (c) return c === "-" ? null : JSON.parse(c); } catch (e) {}
-  if (!process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY) return null;
   const src = "Headline: " + title + (desc ? "\nSummary: " + desc.slice(0, 600) : "");
   let o = await geminiSomali(src);
   if (!o || !trOk(title, o.t)) o = await claudeSomali(src);
-  if (o && !trOk(title, o.t)) o = null;
+  if (o && !trOk(title, o.t)) { AI_ERR.check = "turjumaaddu ma gudbin hubinta: " + String(o.t).slice(0, 80); o = null; }
+  if (!o) { const g = await gtSomali(title); if (g && trOk(title, g.t)) o = g; }
   try {
     await kvf(o ? ["SET", key, JSON.stringify(o), "EX", 60 * 60 * 24 * 14] : ["SET", key, "-", "EX", 600]);
     if (o) await kvf(["SET", "xc:tr3:" + hash(title), o.t, "EX", 60 * 60 * 24 * 14]); // bogga wararka (news.js)
@@ -315,9 +327,38 @@ async function translateNews(title, desc, kvf) {
   return o;
 }
 
+
+// ================= X (Twitter) — akoonnada la doortay =================
+// Wuxuu shaqeeyaa kaliya marka X_BEARER_TOKEN uu Vercel ku jiro (X API, developer.x.com).
+// Kharashka yareynta: daqiiqad kasta HAL akoon ayaa la eegaa (wareeg) -> akoon kasta ~7 daqiiqo kasta.
+// Tweet-yada waxaa lagu kaydiyaa KV (xc:xfeed) -> bot-ka iyo bogga wararka (news.js) labaduba way isticmaalaan.
+const X_USERS = (process.env.X_ACCOUNTS || "BullTheoryio,Polymarket,TheStreet,Kalshi,WatcherGuru,randgroup,tokenterminal").split(",").map((x) => x.trim().replace(/^@/, "")).filter(Boolean);
+async function pollX() {
+  const tok = env("X_BEARER_TOKEN"); if (!tok) return [];
+  const H = { headers: { Authorization: "Bearer " + tok } };
+  let ids = null; try { ids = JSON.parse((await kv(["GET", "xc:xids"])) || "null"); } catch (e) {}
+  if (!ids || Object.keys(ids).length !== X_USERS.length) {
+    const j = await (await fetch("https://api.x.com/2/users/by?usernames=" + X_USERS.join(","), H)).json();
+    ids = {}; (j.data || []).forEach((u) => { ids[u.username] = u.id; });
+    await kv(["SET", "xc:xids", JSON.stringify(ids), "EX", 7 * 864e2 * 10]);
+  }
+  const names = Object.keys(ids); if (!names.length) return [];
+  const turn = Number(await kv(["INCR", "xc:xturn"])) || 0, user = names[turn % names.length];
+  const since = await kv(["GET", "xc:xsince:" + user]);
+  const r = await fetch("https://api.x.com/2/users/" + ids[user] + "/tweets?max_results=5&exclude=retweets,replies&tweet.fields=created_at" + (since ? "&since_id=" + since : ""), H);
+  const j = await r.json(); const tw = j.data || [];
+  if (tw.length) await kv(["SET", "xc:xsince:" + user, tw[0].id]);
+  let feed = []; try { feed = JSON.parse((await kv(["GET", "xc:xfeed"])) || "[]"); } catch (e) {}
+  const add = tw.map((t) => ({ title: String(t.text).replace(/https?:\/\/t\.co\/\w+/g, "").replace(/@\w+/g, "").replace(/^\s*(JUST IN|BREAKING|NEW)\s*:\s*/i, "").replace(/\s+/g, " ").trim().slice(0, 280),
+    link: "https://x.com/" + user + "/status/" + t.id, date: t.created_at, desc: "", source: "@" + user + " (X)", cat: "top", official: false })).filter((n) => n.title.length > 15);
+  feed = add.concat(feed).filter((n) => Date.now() - Date.parse(n.date) < 48 * 3600e3).slice(0, 80);
+  await kv(["SET", "xc:xfeed", JSON.stringify(feed), "EX", 3 * 864e2 * 100]);
+  return feed;
+}
 async function loadNews() {
   const cut = Date.now() - NEWS_MAX_AGE_H * 3600e3;
-  return (await fetchNews()).filter((n) => Date.parse(n.date) > cut)
+  let xs = []; try { xs = await pollX(); } catch (e) { xs = []; }
+  return xs.concat(await fetchNews()).filter((n) => Date.parse(n.date) > cut)
     .sort((a, b) => (b.official - a.official) || (Date.parse(b.date) - Date.parse(a.date))); // rasmiga + kan ugu cusub marka hore
 }
 
@@ -422,6 +463,7 @@ module.exports = async function handler(req, res) {
       } else out.skipped.push("news (sug)");
     }
 
+    if (Object.keys(AI_ERR).length) out.ai = AI_ERR;
     return res.status(200).json(out);
   } catch (e) {
     out.errors.push(String(e.message || e));
