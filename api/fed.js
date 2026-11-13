@@ -114,6 +114,13 @@ async function buildPayload() {
     CPILFENS: fetchSeries("CPILFENS", "1956-01-01"),
     UNRATE: fetchSeries("UNRATE"),
     PAYEMS: fetchSeries("PAYEMS", "1953-12-01"),
+    PPIFIS: fetchSeries("PPIFIS", isoDaysAgo(800)),
+    RSAFS: fetchSeries("RSAFS", isoDaysAgo(800)),
+    PCEPI: fetchSeries("PCEPI", isoDaysAgo(800)),
+    PCEPILFE: fetchSeries("PCEPILFE", isoDaysAgo(800)),
+    JTSJOL: fetchSeries("JTSJOL", isoDaysAgo(800)),
+    ICSA: fetchSeries("ICSA", isoDaysAgo(200)),
+    GDPQ: fetchSeries("A191RL1Q225SBEA", isoDaysAgo(1200)),
     DGS10: fetchSeries("DGS10", isoDaysAgo(120)),
     DGS2: fetchSeries("DGS2", isoDaysAgo(120))
   };
@@ -148,6 +155,17 @@ async function buildPayload() {
     if (pay.has(k) && prevPay !== undefined) row.nfp = Math.round(pay.get(k) - prevPay); // kun (thousands)
     if (Object.keys(row).length) monthly[k] = row;
   });
+  // Xogta kale ee kalandarka (FRED): PPI, iibka tafaariiqda, PCE, JOLTS
+  const extra = { ppi: toMonthMap(S.PPIFIS), retail: toMonthMap(S.RSAFS), pce: toMonthMap(S.PCEPI), cpce: toMonthMap(S.PCEPILFE), jolts: toMonthMap(S.JTSJOL) };
+  const mm = (m, k) => (m.has(k) && m.has(shiftMonth(k, -1)) ? r1((m.get(k) / m.get(shiftMonth(k, -1)) - 1) * 100) : undefined);
+  const yy = (m, k) => (m.has(k) && m.has(shiftMonth(k, -12)) ? r1((m.get(k) / m.get(shiftMonth(k, -12)) - 1) * 100) : undefined);
+  new Set([...extra.ppi.keys(), ...extra.retail.keys(), ...extra.pce.keys(), ...extra.jolts.keys()]).forEach((k) => {
+    const row = monthly[k] || (monthly[k] = {});
+    const v = { ppi: mm(extra.ppi, k), ppiY: yy(extra.ppi, k), retail: mm(extra.retail, k), pce: yy(extra.pce, k), pceM: mm(extra.pce, k), corePce: yy(extra.cpce, k), jolts: extra.jolts.has(k) ? extra.jolts.get(k) : undefined };
+    Object.keys(v).forEach((f) => { if (v[f] !== undefined) row[f] = v[f]; });
+  });
+  const weekly = { claims: (S.ICSA || []).slice(-30) };
+  const quarterly = { gdp: (S.GDPQ || []).slice(-12) };
 
   // 3) Xogtii u dambeysay
   const monthsDesc = Object.keys(monthly).sort().reverse();
@@ -162,6 +180,8 @@ async function buildPayload() {
     source: "FRED, Federal Reserve Bank of St. Louis",
     target: { current: target.current, events: target.events },
     monthly,
+    weekly,
+    quarterly,
     latest: {
       cpi: latestOf("cpi"),
       core: latestOf("core"),
@@ -177,13 +197,32 @@ async function buildPayload() {
   };
 }
 
+// BLS (notify.js ayaa KV ku kaydiya daqiiqadda la daabaco) -> FRED ka hor
+async function blsOverlay(payload) {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL, token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token || !payload || !payload.latest) return false;
+  try {
+    const r = await fetch(url, { method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, body: JSON.stringify(["GET", "xc:bls"]) });
+    const b = JSON.parse((await r.json()).result || "null"); if (!b) return false;
+    const L = payload.latest, put = (k, v) => { if (v && v.value != null && (!L[k] || !L[k].month || v.month > L[k].month)) { L[k] = { month: v.month, value: v.value, prevMonth: shiftMonth(v.month, -1), prev: v.prev, src: "BLS" }; return true; } return false; };
+    const M = payload.monthly || {};
+    [["cpi", b.cpi], ["core", b.core], ["nfp", b.nfp], ["un", b.un]].forEach(([f, v]) => { if (v && v.value != null) { (M[v.month] = M[v.month] || {})[f] = v.value; if (v.prev != null) { const pm = shiftMonth(v.month, -1); (M[pm] = M[pm] || {}); if (M[pm][f] == null) M[pm][f] = v.prev; } } });
+    if (b.cpi && b.cpi.mom != null && M[b.cpi.month]) M[b.cpi.month].cpiM = b.cpi.mom;
+    return [put("cpi", b.cpi), put("core", b.core), put("nfp", b.nfp), put("un", b.un)].some(Boolean);
+  } catch (e) { return false; }
+}
+function nearRelease() {
+  const p = {}; new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date()).forEach((x) => { p[x.type] = x.value; });
+  const m = (+p.hour % 24) * 60 + +p.minute; return p.weekday !== "Sat" && p.weekday !== "Sun" && m >= 505 && m <= 660;
+}
 module.exports = async function handler(req, res) {
   try {
     const payload = await buildPayload();
+    await blsOverlay(payload);
     const ok = payload.target.current && Object.keys(payload.monthly).length > 0;
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     // Cache 15 daqiiqo; haddii FRED dhaco, xogtii hore ayaa la isticmaalaa ilaa 1 maalin
-    res.setHeader("Cache-Control", ok ? "public, s-maxage=900, stale-while-revalidate=86400" : "no-store");
+    res.setHeader("Cache-Control", ok ? (nearRelease() ? "public, s-maxage=30, stale-while-revalidate=60" : "public, s-maxage=900, stale-while-revalidate=86400") : "no-store");
     res.statusCode = ok ? 200 : 502;
     res.end(JSON.stringify(payload));
   } catch (e) {

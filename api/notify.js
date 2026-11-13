@@ -93,16 +93,24 @@ function msgOdds(o, hike, prev) {
 }
 
 // ---------- Wararka FED ----------
-const NEWS_GAP_MIN = 5;          // ugu yaraan 5 daqiiqo u dhexeeya war kasta
-const NEWS_MAX_AGE_H = 6;        // kaliya wararka 6-dii saac ee u dambeeyay
+const NEWS_GAP_MIN = 1;
+const NEWS_MIN_IMP = +(process.env.NEWS_MIN_IMPORTANCE || 7); // bot-ku wuxuu diraa kaliya wararka culus (7-10)          // ugu yaraan 5 daqiiqo u dhexeeya war kasta
+const NEWS_MAX_AGE_H = 2;        // kaliya wararka 6-dii saac ee u dambeeyay
 // ---------- Ilaha wararka (link toos ah) ----------
-const FED_WORDS = /\b(Fed|FOMC|Federal Reserve|Warsh|rate (hike|cut)s?|interest rates?|Treasury yields?)\b/i;
+const FED_WORDS = /\b(Fed|FOMC|Federal Reserve|Warsh|Powell|rate (hike|cut)s?|interest rates?|Treasury yields?|CPI|inflation|consumer prices|payrolls|jobs report|unemployment|PCE|GDP|tariffs?|recession)\b/i;
+const BING = (q) => "https://www.bing.com/news/search?q=" + encodeURIComponent(q) + "&format=rss&setlang=en-US&cc=US";
 const FEEDS = [
-  { url: "https://www.bing.com/news/search?q=%22Federal+Reserve%22+OR+FOMC+OR+Warsh+OR+%22Fed+rate%22&format=rss&setlang=en-US&cc=US", src: null },
+  { url: BING('"Federal Reserve" OR FOMC OR Warsh OR "Fed rate"'), src: null },
   { url: "https://www.cnbc.com/id/20910258/device/rss/rss.html", src: "CNBC" },
   { url: "https://www.fxstreet.com/rss/news", src: "FXStreet" },
   { url: "https://www.investing.com/rss/news_95.rss", src: "Investing.com" },
-  { url: "https://www.coindesk.com/arc/outboundfeeds/rss/", src: "CoinDesk" }
+  { url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", src: "CNBC", cat: "top" },
+  { url: "https://www.coindesk.com/arc/outboundfeeds/rss/", src: "CoinDesk", cat: "btc" },
+  { url: "https://cointelegraph.com/rss", src: "Cointelegraph", cat: "btc" },
+  { url: BING("bitcoin OR ethereum OR crypto ETF OR stablecoin"), src: null, cat: "btc" },
+  { url: BING('"artificial intelligence" OR OpenAI OR Nvidia OR "AI chips" OR Anthropic'), src: null, cat: "ai" },
+  { url: BING('"stock market" OR "S&P 500" OR Nasdaq OR "Wall Street"'), src: null, cat: "stocks" },
+  { url: BING('"data privacy" OR "data breach" OR surveillance OR encryption OR cyberattack'), src: null, cat: "privacy" }
 ];
 const FED_RSS = ["https://www.federalreserve.gov/feeds/press_monetary.xml", "https://www.federalreserve.gov/feeds/speeches.xml"];
 const SKIP_FED = /enforcement action|termination of enforcement|discount rate|request for comment|applications|approval of|bank holding/i;
@@ -114,7 +122,7 @@ function decode(s) {
 function parseRss(xml) {
   return (String(xml).match(/<item>[\s\S]*?<\/item>/g) || []).map((it) => {
     const tag = (t) => { const m = new RegExp("<" + t + "[^>]*>([\\s\\S]*?)</" + t + ">").exec(it); return m ? decode(m[1]) : ""; };
-    return { title: tag("title"), link: tag("link"), date: tag("pubDate"), source: tag("News:Source") || tag("source") };
+    return { title: tag("title"), link: tag("link"), date: tag("pubDate"), source: tag("News:Source") || tag("source"), desc: tag("description").slice(0, 600) };
   });
 }
 function hash(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36); }
@@ -133,12 +141,12 @@ async function fetchNews() {
   FEEDS.forEach((f, i) => parseRss(texts[i]).forEach((n) => {
     const link = realLink(n.link);
     if (/news\.google\.com/.test(link)) return;
-    if (f.src && !FED_WORDS.test(n.title)) return; // ilaha guud: kaliya wararka FED
-    list.push({ title: n.title.replace(/ - [^-]{2,40}$/, ""), link, date: n.date, source: f.src || n.source || siteName(link), official: false });
+    if (!f.cat && f.src && !FED_WORDS.test(n.title)) return; // ilaha guud: kaliya wararka FED
+    list.push({ title: n.title.replace(/ - [^-]{2,40}$/, ""), link, date: n.date, desc: n.desc, source: f.src || n.source || siteName(link), cat: f.cat || "fed", official: false });
   }));
   texts.slice(FEEDS.length).forEach((x) => parseRss(x).forEach((n) => {
     if (SKIP_FED.test(n.title)) return;
-    list.push({ title: n.title, link: n.link, date: n.date, source: "Federal Reserve", official: true });
+    list.push({ title: n.title, link: n.link, date: n.date, desc: n.desc, source: "Federal Reserve", cat: "fed", official: true });
   }));
   const seen = new Set();
   return list.filter((n) => {
@@ -146,6 +154,80 @@ async function fetchNews() {
     const k = n.title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 60);
     if (seen.has(k)) return false; seen.add(k); return true;
   });
+}
+
+
+// ================= BLS (rasmi, degdeg) =================
+// CPI iyo NFP waxay soo baxaan 8:30 New York (14:30 Berlin). BLS API wuu cusboonaadaa isla daqiiqadda.
+// cron-job.org daqiiqad kasta ayuu bogga furaa -> daaqadda sii-deynta ayaa BLS la weydiiyaa.
+// BLS_API_KEY (bilaash, ikhtiyaari): daqiiqad kasta 8:30-9:30; la'aanteed: 8:30-8:40 daqiiqad kasta + 8:45/9:00/9:15/9:30.
+const BLS = { cpi: "CUUR0000SA0", core: "CUUR0000SA0L1E", cpiSa: "CUSR0000SA0", coreSa: "CUSR0000SA0L1E", pay: "CES0000000001", un: "LNS14000000" };
+function nyNow() {
+  const p = {}; new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date()).forEach((x) => { p[x.type] = x.value; });
+  return { wd: p.weekday, min: (+p.hour % 24) * 60 + +p.minute };
+}
+function blsWindow() {
+  const t = nyNow(); if (t.wd === "Sat" || t.wd === "Sun") return false;
+  if (env("BLS_API_KEY")) return t.min >= 510 && t.min <= 570;
+  return (t.min >= 510 && t.min <= 520) || [525, 540, 555, 570].includes(t.min);
+}
+const ym = (y, m) => y + "-" + String(m).padStart(2, "0");
+const shiftYm = (k, d) => { const [y, m] = k.split("-").map(Number); const t = new Date(Date.UTC(y, m - 1 + d, 1)); return ym(t.getUTCFullYear(), t.getUTCMonth() + 1); };
+async function fetchBls() {
+  const key = env("BLS_API_KEY"), y = new Date().getUTCFullYear();
+  const body = { seriesid: Object.values(BLS), startyear: String(y - 2), endyear: String(y) };
+  if (key) body.registrationkey = key;
+  const r = await fetch("https://api.bls.gov/publicAPI/" + (key ? "v2" : "v1") + "/timeseries/data/", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json();
+  if (j.status !== "REQUEST_SUCCEEDED") throw new Error("BLS: " + ((j.message || []).join(" ") || j.status));
+  const M = {};
+  j.Results.series.forEach((se) => { const m = new Map(); se.data.forEach((d) => { if (/^M(0[1-9]|1[0-2])$/.test(d.period) && d.value !== "-") m.set(ym(d.year, +d.period.slice(1)), +d.value); }); M[se.seriesID] = m; });
+  const r1 = (v) => Math.round(v * 10) / 10;
+  const yoy = (m, k) => (m.has(k) && m.has(shiftYm(k, -12)) ? r1((m.get(k) / m.get(shiftYm(k, -12)) - 1) * 100) : null);
+  const mom = (m, k) => (m.has(k) && m.has(shiftYm(k, -1)) ? r1((m.get(k) / m.get(shiftYm(k, -1)) - 1) * 100) : null);
+  const last = (m) => [...m.keys()].sort().pop();
+  const out = { at: Date.now() };
+  const c = M[BLS.cpi], ck = c && last(c);
+  if (ck) {
+    out.cpi = { month: ck, value: yoy(c, ck), prev: yoy(c, shiftYm(ck, -1)), mom: mom(M[BLS.cpiSa], ck), prevMom: mom(M[BLS.cpiSa], shiftYm(ck, -1)) };
+    out.core = { month: ck, value: yoy(M[BLS.core], ck), prev: yoy(M[BLS.core], shiftYm(ck, -1)), mom: mom(M[BLS.coreSa], ck) };
+  }
+  const pay = M[BLS.pay], pk = pay && last(pay);
+  if (pk) {
+    const ch = (k) => (pay.has(k) && pay.has(shiftYm(k, -1)) ? Math.round(pay.get(k) - pay.get(shiftYm(k, -1))) : null);
+    out.nfp = { month: pk, value: ch(pk), prev: ch(shiftYm(pk, -1)) };
+    const u = M[BLS.un]; if (u && u.has(pk)) out.un = { month: pk, value: u.get(pk), prev: u.get(shiftYm(pk, -1)) ?? null };
+  }
+  return out;
+}
+const pp = (v) => (v == null ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "%");
+function msgCpiBls(c, core) {
+  const d = c.prev != null ? c.value - c.prev : 0;
+  const dir = Math.abs(d) < 0.05 ? "➖ isma beddelin" : d > 0 ? "🔺 wuu kacay" : "🔻 wuu dhacay";
+  const view = d > 0.05
+    ? "Sicir-bararku wuu kordhay. Taasi waxay FED-ka ku riixaysaa inuu dulsaarka sare ku hayo ama kor u qaado → dollar-ku wuu xoogaysan karaa, crypto-ga iyo saamiyaduna cadaadis ayay la kulmi karaan."
+    : d < -0.05
+    ? "Sicir-bararku wuu yaraaday. Taasi waxay u fududaynaysaa FED-ka inuu dulsaarka dhimo → badanaa way u fiican tahay crypto-ga iyo saamiyada."
+    : "Sicir-bararku wuu sii joogay. Suuqu wuxuu eegi doonaa aasaasiga (core) iyo hadalka FED-ka.";
+  return "⚡ <b>HADDA LA DAABACAY · SICIR-BARARKA (CPI)</b>\n<b>" + monthName(c.month) + "</b>\n" + LINE + "\n\n" +
+    "📊 Sannadle: <b>" + c.value.toFixed(1) + "%</b>" + (c.prev != null ? " (bishii hore " + c.prev.toFixed(1) + "%)" : "") + " · " + dir + "\n" +
+    (c.mom != null ? "📅 Bishan kaliya: <b>" + pp(c.mom) + "</b>" + (c.prevMom != null ? " (hore " + pp(c.prevMom) + ")" : "") + "\n" : "") +
+    (core && core.value != null ? "🔹 Aasaasiga (cunto iyo shidaal la'aan): <b>" + core.value.toFixed(1) + "%</b>" + (core.prev != null ? " (hore " + core.prev.toFixed(1) + "%)" : "") + (core.mom != null ? " · bishan " + pp(core.mom) : "") + "\n" : "") +
+    "🎯 Hadafka FED: 2%\n\n💡 " + view + "\n\n" +
+    '🏛 <b>Isha:</b> <a href="https://www.bls.gov/cpi/">BLS (rasmi)</a>\n' + LINE + "\n" +
+    '📊 <a href="' + SITE + '">Xogta Crypto 24/7</a> · <a href="https://t.me/Xogtacrypto24_7">Telegram</a>';
+}
+function msgNfpBls(n, u) {
+  const view = n.value >= 150
+    ? "Suuq shaqo oo xoog leh → FED-ku wuxuu u janjeeri karaa dulsaar sare. Badanaa dollar-ka ayuu xoojiyaa, crypto-guna cadaadis ayuu la kulmi karaa."
+    : n.value < 50 ? "Shaqo abuurku wuu gaabiyay → fursadda in FED-ku dulsaarka dhimo way kordhaysaa. Badanaa way u fiican tahay crypto-ga."
+    : "Shaqo abuurku waa dhexdhexaad: cadaadis xoog leh oo dhinac ah ma jiro.";
+  return "⚡ <b>HADDA LA DAABACAY · SHAQADA MAREYKANKA (NFP)</b>\n<b>" + monthName(n.month) + "</b>\n" + LINE + "\n\n" +
+    "👷 Shaqooyin cusub: <b>" + signK(n.value) + "</b>" + (n.prev != null ? " (bishii hore " + signK(n.prev) + ")" : "") + "\n" +
+    (u && u.value != null ? "📉 Shaqo la'aanta: <b>" + u.value.toFixed(1) + "%</b>" + (u.prev != null ? " (hore " + u.prev.toFixed(1) + "%)" : "") + "\n" : "") +
+    "\n💡 " + view + "\n\n" +
+    '🏛 <b>Isha:</b> <a href="https://www.bls.gov/ces/">BLS (rasmi)</a>\n' + LINE + "\n" +
+    '📊 <a href="' + SITE + '">Xogta Crypto 24/7</a> · <a href="https://t.me/Xogtacrypto24_7">Telegram</a>';
 }
 
 // ---------- Turjumaadda ----------
@@ -157,86 +239,85 @@ function trOk(src, so) {
   const r = so.length / Math.max(1, src.length);
   if (r < 0.5 || r > 2.4) return false;
   if (BAD_SO.test(so) && !BAD_SO.test(src) && !/somal/i.test(src)) return false;
-  for (const n of (src.match(/\d+/g) || [])) if (so.indexOf(n) === -1) return false;
+  // Ingiriis lama aqbalo: haddii erayada badankoodu la mid yihiin asalka
+  const ws = (x) => String(x).toLowerCase().match(/[a-z]{3,}/g) || [], sw = new Set(ws(src)), ow = ws(so);
+  if (ow.length && ow.filter((w) => sw.has(w)).length / ow.length > 0.5) return false;
+  const sn = so.replace(/(\d),(\d)/g, "$1.$2");
+  for (const n of (src.match(/\d+(?:\.\d+)?/g) || [])) if (sn.indexOf(n) === -1 && so.indexOf(n) === -1) return false;
   return true;
 }
-const AI_RULES = "You translate financial news headlines into clear, natural Somali for traders. Rules: keep it short like a headline; keep names, tickers, numbers and % unchanged; write 'FED' for the Federal Reserve/the Fed; use common Somali terms (dulsaar = interest rate, sicir-barar = inflation, suuqa saamiyada = stock market, dahab = gold, lacag/silver = silver, shidaal = oil). Never mention Somali companies, people or places unless they are in the headline. Output ONLY the Somali headline, nothing else.";
-function cleanAi(t) { return t ? String(t).trim().split("\n")[0].replace(/^["“*]+|["”*]+$/g, "").trim() : null; }
-// Google Gemini (sida SomTube) -> GEMINI_API_KEY
+const AI_RULES = "You are a Somali financial journalist. Translate the news into clear, natural Somali for crypto and market traders. Return ONLY JSON: {\"t\":\"<Somali headline>\",\"s\":\"<1-2 short Somali sentences: what happened and why it matters for the Fed, the dollar, stocks or crypto>\",\"i\":<importance 1-10 for global markets: 9-10 = Fed decision, CPI/jobs surprise, war or major attack, crash/surge, huge hack; 7-8 = important Fed speech, big company/AI/crypto news that moves markets; 1-6 = routine, opinion, small company or analysis>,\"c\":\"<one of: fed, macro, btc, ai, stocks, privacy, world>\"}. Rules: keep names, tickers, numbers and % exactly as in the source; write 'FED' for the Federal Reserve; use common Somali terms (dulsaar = interest rate, sicir-barar = inflation, suuqa saamiyada = stock market, dahab = gold, shidaal = oil, shaqo la'aan = unemployment). Do not invent facts that are not in the source. Never mention Somali companies, people or places unless they are in the source.";
+function parseAi(raw) {
+  if (!raw) return null;
+  const m = String(raw).match(/\{[\s\S]*\}/);
+  try { const j = JSON.parse(m ? m[0] : raw); if (j && j.t) return { t: String(j.t).trim(), s: j.s ? String(j.s).trim() : "", i: Math.max(1, Math.min(10, +j.i || 5)), c: String(j.c || "").toLowerCase() }; } catch (e) {}
+  const line = String(raw).trim().split("\n")[0].replace(/^["“*]+|["”*]+$/g, "").trim();
+  return line ? { t: line, s: "", i: 5, c: "" } : null;
+}
 async function geminiSomali(text) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
-  try {
-    const model = process.env.GEMINI_MODEL || "gemini-flash-latest";
-    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
-      method: "POST",
-      headers: { "x-goog-api-key": key, "content-type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: AI_RULES }] },
-        contents: [{ role: "user", parts: [{ text: text }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 200 }
-      })
-    });
-    const j = await r.json();
-    const parts = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
-    const so = cleanAi(parts && parts.map((x) => x.text || "").join(""));
-    return trOk(text, so) ? so : null;
-  } catch (e) { return null; }
+  for (const model of [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash"].filter(Boolean)) {
+    try {
+      const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
+        method: "POST", headers: { "x-goog-api-key": key, "content-type": "application/json" },
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: AI_RULES }] }, contents: [{ role: "user", parts: [{ text }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 400, responseMimeType: "application/json" } })
+      });
+      const j = await r.json();
+      const parts = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
+      const o = parseAi(parts && parts.map((x) => x.text || "").join(""));
+      if (o) return o;
+    } catch (e) { /* model kale isku day */ }
+  }
+  return null;
 }
-async function aiSomali(text) {
-  if (process.env.GEMINI_API_KEY) { const g = await geminiSomali(text); if (g) return g; }
+async function claudeSomali(text) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return null;
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({
-        model: process.env.ANTHROPIC_MODEL || "claude-haiku-5-5", max_tokens: 200,
-        system: AI_RULES,
-        messages: [{ role: "user", content: text }]
-      })
+      method: "POST", headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-haiku-5-5", max_tokens: 400, system: AI_RULES, messages: [{ role: "user", content: text }] })
     });
     const j = await r.json();
-    const so = cleanAi(j && j.content && j.content[0] && j.content[0].text);
-    return trOk(text, so) ? so : null;
+    return parseAi(j && j.content && j.content[0] && j.content[0].text);
   } catch (e) { return null; }
 }
-async function mtSomali(text) {
+// Natiijo: { t: cinwaan Soomaali, s: sharaxaad } ama null. Khalad -> 10 daqiiqo kadib mar kale.
+async function translateNews(title, desc, kvf) {
+  const key = "xc:tr4:" + hash(title);
+  try { const c = await kvf(["GET", key]); if (c) return c === "-" ? null : JSON.parse(c); } catch (e) {}
+  if (!process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY) return null;
+  const src = "Headline: " + title + (desc ? "\nSummary: " + desc.slice(0, 600) : "");
+  let o = await geminiSomali(src);
+  if (!o || !trOk(title, o.t)) o = await claudeSomali(src);
+  if (o && !trOk(title, o.t)) o = null;
   try {
-    const r = await fetch("https://api.mymemory.translated.net/get?mt=1&langpair=en|so&q=" + encodeURIComponent(text.slice(0, 450)));
-    const j = await r.json();
-    const m = ((j && j.matches) || []).find((x) => /^MT/i.test(String(x["created-by"] || "")));
-    const so = m ? decode(m.translation) : null;
-    return trOk(text, so) ? so : null;
-  } catch (e) { return null; }
-}
-async function translateSo(text, kvf) {
-  const ai = !!(process.env.GEMINI_API_KEY || process.env.ANTHROPIC_API_KEY);
-  const key = (ai ? "xc:tr3:" : "xc:tr2:") + hash(text);
-  try { const c = await kvf(["GET", key]); if (c) return c === "-" ? null : c; } catch (e) {}
-  // Turjumaadda bilaashka ah (MT) waa la joojiyay: way khaldan tahay (tusaale "gold" -> "Dahabshiil").
-  // AI la'aan -> Ingiriiska asalka ah ayaa la muujinayaa.
-  if (!ai) return null;
-  const so = await aiSomali(text);
-  try { await kvf(["SET", key, so || "-", "EX", 60 * 60 * 24 * 14]); } catch (e) {}
-  return so;
+    await kvf(o ? ["SET", key, JSON.stringify(o), "EX", 60 * 60 * 24 * 14] : ["SET", key, "-", "EX", 600]);
+    if (o) await kvf(["SET", "xc:tr3:" + hash(title), o.t, "EX", 60 * 60 * 24 * 14]); // bogga wararka (news.js)
+  } catch (e) {}
+  return o;
 }
 
 async function loadNews() {
   const cut = Date.now() - NEWS_MAX_AGE_H * 3600e3;
   return (await fetchNews()).filter((n) => Date.parse(n.date) > cut)
-    .sort((a, b) => Date.parse(a.date) - Date.parse(b.date)); // kii ugu horreeyay marka hore
+    .sort((a, b) => (b.official - a.official) || (Date.parse(b.date) - Date.parse(a.date))); // rasmiga + kan ugu cusub marka hore
 }
 
 const LINE = "━━━━━━━━━━━━━━";
+const URGENT = /\b(rate (hike|cut)|hikes?|cuts?|surge|plunge|crash|war|attack|emergency|record|unexpected|more than expected|less than expected|hotter|cooler|tariffs?|default)\b/i;
 async function msgNews(n) {
-  const so = await translateSo(n.title, kv);
-  const head = n.official ? "🏛 <b>FEDERAL RESERVE · RASMI</b>" : "📰 <b>WARKA FED-KA</b>";
+  const so = await translateNews(n.title, n.desc, kv);
+  if (!so) return null; // Ingiriis lama diro -> mar kale ayaa la isku dayi doonaa
+  if (!n.official && so.i < NEWS_MIN_IMP) return "skip";
+  const CAT = { fed: "🏛 FED", macro: "📊 DHAQAALAHA", btc: "₿ CRYPTO", ai: "🤖 AI", stocks: "📈 SAHAMKA", privacy: "🔐 PRIVACY", world: "🌍 ADDUUNKA" };
+  const tag = CAT[so.c] || CAT[n.cat] || "📰 WARKA";
+  const head = n.official ? "🏛 <b>FEDERAL RESERVE · RASMI</b>" : (so.i >= 9 || URGENT.test(n.title) ? "⚡ <b>WAR DEGDEG AH · " : "<b>") + tag + "</b>";
   return head + "\n" + LINE + "\n\n" +
-    "<b>" + esc(so || n.title) + "</b>\n\n" +
-    "🗞 <b>Isha:</b> " + esc(n.source || siteName(n.link)) + "\n" +
-    '🔗 <a href="' + esc(n.link) + '">' + esc(siteName(n.link) || "Akhri warka") + "</a>\n" +
+    "<b>" + esc(so.t) + "</b>\n" + (so.s ? "\n" + esc(so.s) + "\n" : "") + "\n" +
+    "🗞 <b>Isha:</b> " + esc(n.source || siteName(n.link)) + ' · <a href="' + esc(n.link) + '">akhri</a>\n' +
     LINE + "\n" +
     '📊 <a href="' + SITE + '">Xogta Crypto 24/7</a> · <a href="https://t.me/Xogtacrypto24_7">Telegram</a>';
 }
@@ -260,6 +341,19 @@ module.exports = async function handler(req, res) {
     const first = (await kv(["SET", "xc:init", Date.now(), "NX"])) === "OK";
 
     const jobs = [];
+    // BLS (rasmi, degdeg) — marka hore
+    if (blsWindow()) {
+      try {
+        const b = await fetchBls();
+        let prev = null; try { prev = JSON.parse((await kv(["GET", "xc:bls"])) || "null"); } catch (e) {}
+        await kv(["SET", "xc:bls", JSON.stringify(b), "EX", 60 * 60 * 24 * 40]);
+        // Kaliya marka bil cusub hadda soo baxdo (xog duug ah lama diro)
+        if (prev && b.cpi && b.cpi.value != null && (!prev.cpi || prev.cpi.month !== b.cpi.month)) jobs.push(["cpi:" + b.cpi.month, () => msgCpiBls(b.cpi, b.core)]);
+        if (prev && b.nfp && b.nfp.value != null && (!prev.nfp || prev.nfp.month !== b.nfp.month)) jobs.push(["nfp:" + b.nfp.month, () => msgNfpBls(b.nfp, b.un)]);
+        if (!prev) out.skipped.push("bls (bilow)");
+        out.bls = { cpi: b.cpi && b.cpi.month, nfp: b.nfp && b.nfp.month };
+      } catch (e) { out.errors.push(String(e.message || e)); }
+    }
     if (live && live.fomc && live.fomc.action && Date.now() - Date.parse(live.fomc.date) < 3 * 864e5) {
       jobs.push(["fomc:" + live.fomc.date.slice(0, 10), () => msgFomc(live.fomc)]);
     }
@@ -297,11 +391,16 @@ module.exports = async function handler(req, res) {
     } else {
       const last = Number(await get("news:last")) || 0;
       if (Date.now() - last >= NEWS_GAP_MIN * 60e3) {
+        let tries = 0;
         for (const n of news) {
           const key = "xc:sent:news:" + hash(n.link);
-          const ok = (await kv(["SET", key, Date.now(), "NX", "EX", 60 * 60 * 72])) === "OK";
-          if (!ok) continue;
-          try { await send(await msgNews(n), n.link); await set("news:last", Date.now()); out.sent.push("news: " + n.title.slice(0, 60)); }
+          if (await kv(["GET", key])) continue;
+          let text = null;
+          try { text = await msgNews(n); } catch (e) { text = null; }
+          if (!text) { out.skipped.push("news (turjumaad sug): " + n.title.slice(0, 50)); if (++tries >= 4) break; continue; }
+          if (text === "skip") { await kv(["SET", key, "low", "EX", 60 * 60 * 72]); out.skipped.push("news (muhiim ma aha): " + n.title.slice(0, 50)); if (++tries >= 4) break; continue; }
+          if ((await kv(["SET", key, Date.now(), "NX", "EX", 60 * 60 * 72])) !== "OK") continue;
+          try { await send(text); await set("news:last", Date.now()); out.sent.push("news: " + n.title.slice(0, 60)); }
           catch (e) { await kv(["DEL", key]); out.errors.push("news: " + e.message); }
           break; // hal war oo kaliya daqiiqaddan
         }
@@ -314,4 +413,4 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(out);
   }
 };
-module.exports._internal = { msgFomc, msgCpi, msgNfp, msgOdds, parseRss, msgNews, trOk, realLink };
+module.exports._internal = { msgFomc, msgCpi, msgNfp, msgOdds, parseRss, msgNews, trOk, realLink, fetchBls, msgCpiBls, msgNfpBls, blsWindow, parseAi };
