@@ -17,7 +17,7 @@
   const big = (v) => { if (v == null) return "—"; const a = Math.abs(v); return "$" + (a >= 1e12 ? (a / 1e12).toFixed(2) + "T" : a >= 1e9 ? (a / 1e9).toFixed(2) + "B" : a >= 1e6 ? (a / 1e6).toFixed(1) + "M" : Math.round(a / 1e3) + "K"); };
 
   // ---------- 1) Menu-ga bogga ----------
-  const ITEMS = [["sec-flow", T("Guud", "Overview")], ["sec-cf", T("Coin kasta", "By coin")], ["sec-ls", "Long / Short"], ["sec-tr", T("Ganacsiyada waaweyn", "Large trades")], ["sec-liq", "Liquidations"], ["sec-vol", "Volume"], ["sec-flowheat", "Heatmap"], ["lq-faq", T("Su'aalo", "FAQ")]];
+  const ITEMS = [["sec-flow", T("Guud", "Overview")], ["sec-liq", "Liquidations"], ["sec-cf", T("Coin kasta", "By coin")], ["sec-ls", "Long / Short"], ["sec-tr", T("Ganacsiyada waaweyn", "Large trades")], ["sec-vol", "Volume"], ["sec-flowheat", "Heatmap"], ["lq-faq", T("Su'aalo", "FAQ")]];
   sub.innerHTML = `<div class="lq-subin">${ITEMS.map(([id, l]) => `<a href="#${id}" data-id="${id}">${esc(l)}</a>`).join("")}</div>`;
   const hdr = document.querySelector(".site-header");
   const fixTop = () => { const h = hdr ? hdr.offsetHeight : 64; sub.style.top = h + "px"; document.documentElement.style.setProperty("--lq-top", (h + sub.offsetHeight + 12) + "px"); };

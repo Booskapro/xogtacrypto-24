@@ -34,6 +34,8 @@
 
   // ---------- Qaabka ----------
   host.innerHTML =
+    `<div id="sec-liq" class="lq-anchor"></div>` + H("Liquidations", `<span class="lq-dim">Binance · OKX · Bybit</span>`) +
+    `<div class="lq-liq" id="lq-liq"></div>` +
     `<div id="sec-cf" class="lq-anchor"></div>` + H(T("Coin kasta: lacagta soo gashay iyo baxday", "Each coin: money in and out"), tabs("cfw", [["1", T("1 saac", "1h")], ["4", T("4 saac", "4h")], ["24", T("24 saac", "24h")]], "24") + CAM("cf")) +
     `<div class="lq-2" id="lq-cf"><div class="lq-card lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div>` +
     `<div id="sec-ls" class="lq-anchor"></div>` + H("Long / Short", tabs("lsv", [["coins", "Coins"], ["ex", T("Suuqyada", "Exchanges")], ["hist", T("Chart 30 maalin", "30-day chart")]], "coins") + `<span class="lsv-ctl" data-v="ex">${tabs("xlc", [["BTC", "BTC"], ["ETH", "ETH"]], "BTC")}</span><span class="lsv-ctl" data-v="hist" hidden>${tabs("hc", [["BTC", "BTC"], ["ETH", "ETH"]], "BTC")}${tabs("hm", [["acc", T("Dadka", "Retail")], ["top", "Whales"]], "acc")}</span>` + CAM("lsc")) +
@@ -43,8 +45,6 @@
     `<p class="lq-note">${T("Saamiga 2.0 = 2 long, 1 short. <b>Dadka</b> = akoonnada caadiga ah · <b>Whales</b> = ganacsatada ugu waaweyn. Talo iibsi ama iibin ma aha.", "Ratio 2.0 = 2 longs per short. <b>Retail</b> = regular accounts · <b>Whales</b> = biggest traders. Not a buy or sell signal.")}</p>` +
     `<div id="sec-tr" class="lq-anchor"></div>` + H(T("Ganacsiyada waaweyn", "Large trades"), `<span class="lq-live sm"><b class="pulse"></b>Live</span>` + tabs("trc", [["ALL", T("Dhammaan", "All")], ["BTC", "BTC"], ["ETH", "ETH"], ["SOL", "SOL"]], "ALL")) +
     `<div class="lq-card lq-tr" id="lq-tr"><div class="lq-load">${T("Waxaa la sugayaa ganacsi ≥ $100K…", "Waiting for trades ≥ $100K…")}</div></div>` +
-    `<div id="sec-liq" class="lq-anchor"></div>` + H("Liquidations", `<span class="lq-dim">Binance · OKX · Bybit</span>`) +
-    `<div class="lq-liq" id="lq-liq"></div>` +
     `<div id="sec-vol" class="lq-anchor"></div>` + H("Volume", tabs("vm", [["fut", "Futures"], ["spot", "Spot"]], "fut") + `<span class="lq-dim">Binance · 24 ${T("saac", "h")} · ${T("crypto oo kaliya", "crypto only")}</span>` + CAM("vol")) +
     `<div class="lq-4" id="lq-vk"></div>` +
     `<div class="lq-card lq-tw2" id="lq-vt"><div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div>`;

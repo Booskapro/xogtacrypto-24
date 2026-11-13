@@ -10,8 +10,8 @@
     { href: "kalandarka.html",  key: "kalandarka", label: "Kalandarka",     en: "Calendar" },
     { href: "charts.html",      key: "charts",     label: "Charts",         en: "Charts" },
     { href: "lacagta.html",     key: "lacagta",    label: "Lacagta",        en: "Money Flow", nu: 1, sub: [
-      ["#sec-flow", "Lacagta soo gashay / baxday", "Money in / out"], ["#sec-cf", "Coin kasta: lacagta 24 saac", "Money flow by coin"], ["#sec-ls", "Long / Short", "Long / Short"], ["#sec-tr", "Ganacsiyada waaweyn", "Large trades"],
-      ["#sec-liq", "Liquidations (live)", "Liquidations (live)"], ["#sec-vol", "Volume (futures / spot)", "Volume (futures / spot)"], ["#sec-flowheat", "Heatmap", "Heatmap"], ["#lq-faq", "Su'aalo", "FAQ"]] },
+      ["#sec-flow", "Lacagta soo gashay / baxday", "Money in / out"], ["#sec-liq", "Liquidations (live)", "Liquidations (live)"], ["#sec-cf", "Coin kasta: lacagta 24 saac", "Money flow by coin"], ["#sec-ls", "Long / Short", "Long / Short"], ["#sec-tr", "Ganacsiyada waaweyn", "Large trades"],
+      ["#sec-vol", "Volume (futures / spot)", "Volume (futures / spot)"], ["#sec-flowheat", "Heatmap", "Heatmap"], ["#lq-faq", "Su'aalo", "FAQ"]] },
     { href: "taariikhda.html",  key: "taariikhda", label: "Taariikhda FED", en: "Fed History" },
     { href: "fahanka-fed.html", key: "fahanka",    label: "Fahanka FED",    en: "Learn the Fed" },
     { href: "ku-saabsan.html",  key: "ku-saabsan", label: "Ku saabsan",     en: "About" }
