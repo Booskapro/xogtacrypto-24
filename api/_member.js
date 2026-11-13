@@ -92,6 +92,58 @@ module.exports = async function handler(req, res) {
         res.statusCode = r.status; return res.end(txt);
       } catch (e) { return send(502, { error: "upstream" }); }
     }
+    if (op === "pf") {
+      // Portfolio-yada: haraaga ON-CHAIN (Arkham API) — saacad kasta, kayd KV. Furaha: ARKHAM_API_KEY (Vercel)
+      const KEY = env("ARKHAM_API_KEY"), dbg = !!(req.query && req.query.debug);
+      res.setHeader("Cache-Control", dbg ? "no-store" : "public, s-maxage=300, stale-while-revalidate=900");
+      if (!KEY) return send(200, { ok: false, error: "ARKHAM_API_KEY Vercel kuma jiro" });
+      if (!dbg) { try { const h = JSON.parse((await kv(["GET", "xc:pf"])) || "null"); if (h && Date.now() - h.at < 3600e3) return send(200, h); } catch (e) {} }
+      // Magacyada entity-ga Arkham (haddii mid khaldan yahay: Vercel ARKHAM_ENTITIES = {"strategy":["..."]})
+      const ENT = { satoshi: ["satoshi-nakamoto"], strategy: ["microstrategy", "strategy"], ibit: ["blackrock"], bitmine: ["bitmine", "bitmine-immersion-technologies", "bitmine-immersion"], usgov: ["usg", "us-government", "united-states-government"] };
+      try { Object.assign(ENT, JSON.parse(env("ARKHAM_ENTITIES") || "{}")); } catch (e) {}
+      const COIN = { satoshi: "btc", strategy: "btc", ibit: "btc", bitmine: "eth", usgov: "btc" };
+      const IDS = { btc: ["bitcoin"], eth: ["ethereum", "weth", "staked-ether", "lido-staked-ether", "wrapped-steth", "rocket-pool-eth", "coinbase-wrapped-staked-eth", "staked-eth"] };
+      const sumCoin = (j, c) => {
+        let q = 0; const seen = new Set();
+        const walk = (o, d) => {
+          if (!o || typeof o !== "object" || d > 6) return;
+          if (Array.isArray(o)) return o.forEach((x) => walk(x, d + 1));
+          const pid = String(o.pricingID || o.pricingId || o.id || "").toLowerCase(), sym = String(o.symbol || "").toLowerCase();
+          if (typeof o.balance === "number" && (IDS[c].includes(pid) || (!pid && sym === c))) { const key = pid + sym + o.balance + (o.chain || ""); if (!seen.has(key)) { seen.add(key); q += o.balance; } return; }
+          Object.keys(o).forEach((k) => { if (k !== "totalBalance") walk(o[k], d + 1); });
+        };
+        walk(j && j.balances ? j.balances : j, 0);
+        return q;
+      };
+      const out = { ok: true, at: Date.now(), src: "Arkham", items: {} }, dg = {};
+      await Promise.all(Object.keys(ENT).map(async (k) => {
+        for (const id of [].concat(ENT[k])) {
+          try {
+            const r = await fetch("https://api.arkm.com/balances/entity/" + encodeURIComponent(id), { headers: { "API-Key": KEY, Accept: "application/json" } });
+            const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch (e) {}
+            const q = r.ok && j ? sumCoin(j, COIN[k]) : 0;
+            if (dbg) dg[k + ":" + id] = { status: r.status, qty: q, sample: t.slice(0, 700) };
+            if (q > 0) { out.items[k] = { qty: q, coin: COIN[k].toUpperCase(), entity: id }; break; }
+          } catch (e) { if (dbg) dg[k + ":" + id] = String(e.message || e).slice(0, 120); }
+        }
+      }));
+      // Isbeddelka on-chain: kaydka maalinlaha ah (xc:pfh:<k> → taariikh: tirada)
+      const today = day(), ks = Object.keys(out.items);
+      const hs = await kvp(ks.map((k) => ["HGETALL", "xc:pfh:" + k]));
+      const cmds = [];
+      ks.forEach((k, i) => {
+        const h = hobj(hs[i]), it = out.items[k];
+        const ago = (n) => { for (let m = n; m <= n + 3; m++) { const d = day(Date.now() - m * 864e5); if (h[d]) return h[d]; } return null; };
+        const a1 = ago(1), a7 = ago(7), a30 = ago(30);
+        if (a1 != null) it.d1 = it.qty - a1; if (a7 != null) it.d7 = it.qty - a7; if (a30 != null) it.d30 = it.qty - a30;
+        cmds.push(["HSET", "xc:pfh:" + k, today, String(it.qty)], ["EXPIRE", "xc:pfh:" + k, 400 * 86400]);
+      });
+      if (cmds.length) await kvp(cmds);
+      if (ks.length) await kv(["SET", "xc:pf", JSON.stringify(out), "EX", 7200]);
+      if (dbg) out.debug = dg;
+      if (!ks.length) { out.ok = false; out.error = "Arkham xog ma soo celin (eeg ?debug=1)"; }
+      return send(200, out);
+    }
     if (op === "cex") {
       // Exchange-yada: lacagta soo gashay / baxday (DefiLlama — wallet-yada exchange-ka). Saacad kasta.
       // inflow(maalin) = Σ_coin (tirada_maanta − tirada_shalay) × qiimaha_maanta  → isbeddelka qiimaha lama tiriyo
