@@ -1381,3 +1381,32 @@ main.lq-wide { max-width: 1480px; }
 .lq-v.fu, .lq-v.fd { animation-duration: 1.2s; }
 .media-sum { display: block; margin-top: 4px; color: var(--muted); font-size: .9rem; line-height: 1.5; }
 .media-item .chip { margin: 0 6px 4px 0; display: inline-block; }
+/* Liquidations */
+.lq-lqk { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.lq-lqk span { display: block; font-size: .8rem; color: var(--muted); }
+.lq-lqk > div > b { display: block; font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; margin: 4px 0; }
+.lq-lqk small { color: var(--muted); font-size: .78rem; }
+.lq-lqs { text-align: right; display: flex; flex-direction: column; gap: 6px; font-size: .9rem; }
+.lq-lqs b { font-family: var(--font-display); font-size: 1.1rem; margin-left: 6px; }
+.lq-lqch { width: 100%; height: 120px; display: block; margin-top: 14px; }
+.lq-lqf { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.lq-lqf .lq-mini { flex-wrap: wrap; }
+.lq-lql { max-height: 420px; overflow-y: auto; }
+.lq-lqh { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.lq-lqh > b { font-size: 1.1rem; margin-right: auto; }
+.lq-lqp { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--card); color: var(--text); cursor: pointer; font-size: .8rem; }
+.lq-lqd { display: block; margin-top: 4px; }
+.lq-lqax { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: 4px; }
+.lq-lqleg { display: flex; gap: 14px; flex-wrap: wrap; font-size: .74rem; color: var(--muted); margin-top: 8px; }
+.lq-lqleg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+.lq-lqcur rect { animation: lqpulse 1.2s ease-in-out infinite; }
+@keyframes lqpulse { 50% { opacity: .65; } }
+.lq-lqt { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.lq-lqtb { background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.lq-lqtt { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.lq-lqtt span { color: var(--muted); font-size: .85rem; }
+.lq-lqtt b { font-family: var(--font-display); font-size: 1.55rem; font-weight: 800; }
+.lq-lqtr { display: flex; justify-content: space-between; gap: 8px; font-size: .86rem; padding: 3px 0; }
+.lq-lqtr b { font-family: var(--font-display); }
+.lq-sb.sm2 { height: 5px; margin-top: 6px; }
+.lq-lqbd { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }

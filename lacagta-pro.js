@@ -45,6 +45,8 @@
     `<p class="lq-note">${T("Saamiga 2.0 = 2 long, 1 short. <b>Dadka</b> = akoonnada caadiga ah · <b>Whales</b> = ganacsatada ugu waaweyn. Talo iibsi ama iibin ma aha.", "Ratio 2.0 = 2 longs per short. <b>Retail</b> = regular accounts · <b>Whales</b> = biggest traders. Not a buy or sell signal.")}</p>` +
     H(T("Long/short iyo qiimaha", "Long/short vs price"), tabs("hc", [["BTC", "BTC"], ["ETH", "ETH"]], "BTC") + tabs("hm", [["acc", T("Dadka", "Retail")], ["top", "Whales"]], "acc") + `<span class="lq-dim">${T("30 maalin · 4 saac", "30 days · 4h")}</span>`) +
     `<div class="lq-card" id="lq-hist"><div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div>` +
+    `<div id="sec-liq" class="lq-anchor"></div>` + H("Liquidations", `<span class="lq-dim">Binance · OKX · Bybit</span>`) +
+    `<div class="lq-liq" id="lq-liq"></div>` +
     `<div id="sec-vol" class="lq-anchor"></div>` + H("Volume", tabs("vm", [["fut", "Futures"], ["spot", "Spot"]], "fut") + `<span class="lq-dim">Binance · 24 ${T("saac", "h")} · ${T("crypto oo kaliya", "crypto only")}</span>` + CAM("vol")) +
     `<div class="lq-4" id="lq-vk"></div>` +
     `<div class="lq-card lq-tw2" id="lq-vt"><div class="lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div>` +
@@ -196,6 +198,139 @@
       m.data.forEach((x) => { const p = +x.p; addTrade({ c, ex: "Bybit", p, v: p * +x.v, buy: x.S === "Buy", ts: +x.T }); });
     });
   }
+
+
+  // ================= Liquidations (live): Binance + OKX + Bybit (WebSocket, bilaash) =================
+  const LQ = { ev: [], t0: Date.now(), coin: "ALL", ex: "ALL", min: 0, side: "all", ct: {} };
+  try { const c = JSON.parse(localStorage.getItem("xc-liq") || "null"); if (c && Array.isArray(c.ev)) { LQ.ev = c.ev.filter((e) => Date.now() - e.ts < 30 * 60e3); LQ.t0 = Math.max(c.t0 || Date.now(), Date.now() - 30 * 60e3); } } catch (e) { /* ignore */ }
+  const LQC = ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB"];
+  const lqBox = document.getElementById("lq-liq");
+  // Kaydka 24 saac: daqiiqad kasta {l, s, n, ex:{Binance,OKX,Bybit}} + daqiiqadaha bogga la furay (coverage)
+  const AG = { m: {}, seen: {}, big: null };
+  try { const c = JSON.parse(localStorage.getItem("xc-liq24") || "null"); if (c && c.m) { Object.assign(AG, c); } } catch (e) { /* ignore */ }
+  const minNow = () => Math.floor(Date.now() / 60e3);
+  function agAdd(e) {
+    const k = Math.floor(e.ts / 60e3), b = AG.m[k] || (AG.m[k] = { l: 0, s: 0, n: 0, ex: {} });
+    if (e.long) b.l += e.v; else b.s += e.v; b.n++; b.ex[e.ex] = (b.ex[e.ex] || 0) + e.v;
+    if (!AG.big || e.v > AG.big.v) AG.big = e;
+  }
+  function agSum(mins) {
+    const t = minNow(), o = { l: 0, s: 0, n: 0, ex: {}, cov: 0 };
+    for (let k = t - mins + 1; k <= t; k++) { const b = AG.m[k]; if (AG.seen[k]) o.cov++; if (!b) continue; o.l += b.l; o.s += b.s; o.n += b.n; Object.keys(b.ex).forEach((x) => { o.ex[x] = (o.ex[x] || 0) + b.ex[x]; }); }
+    return o;
+  }
+  const covTxt = (c, mins) => (c >= mins - 1 ? "" : T("xog la ururiyay: ", "collected: ") + (c >= 60 ? Math.floor(c / 60) + T(" saac ", "h ") : "") + (c % 60) + T(" daqiiqo", "m") + T(" (bogga ayaa xirnaa inta kale)", " (page was closed the rest)"));
+  const WIN = [[60, T("1 saac", "1h")], [240, T("4 saac", "4h")], [720, T("12 saac", "12h")], [1440, T("24 saac", "24h")]];
+  lqBox.innerHTML = `<div class="lq-2">
+    <div class="lq-card"><div class="lq-lqh"><b>${T("Liquidations live", "Live liquidations")}</b><span class="lq-live sm"><b class="pulse"></b>LIVE</span><button class="lq-lqp" type="button" id="lqx-pause" title="${T("Jooji / sii wad", "Pause / resume")}">❚❚</button>${CAM("liq")}</div>
+      <div class="lq-lqk"><div><span>${T("Xogta liquidation · 30 daqiiqo", "Liquidation data · 30m")}</span><b id="lqx-tot">$0</b><small id="lqx-n">0</small><small id="lqx-d" class="lq-lqd"></small></div><div class="lq-lqs"><span>Long <b class="up" id="lqx-l">$0</b></span><span>Short <b class="down" id="lqx-s">$0</b></span></div></div>
+      <div class="lq-sb" id="lqx-bar"><i style="width:50%"><b>50%</b></i><i style="width:50%"><b>50%</b></i></div>
+      <svg id="lqx-ch" class="lq-lqch" viewBox="0 0 600 140" preserveAspectRatio="none"></svg>
+      <div class="lq-lqax"><span id="lqx-a0"></span><span id="lqx-a1"></span><span id="lqx-a2"></span></div>
+      <div class="lq-lqleg"><span><i style="background:#2BD67B"></i>Long</span><span><i style="background:#F05A5F"></i>Short</span><span>${T("daqiiqad kasta · ilbiriqsi kasta ayuu cusboonaadaa", "per minute · updates every second")}</span></div>
+      <div class="lq-src" id="lqx-big"></div></div>
+    <div class="lq-card"><div class="lq-lqh"><b>${T("Wadarta liquidations", "Total liquidations")}</b>${CAM("liqt")}</div>
+      <div class="lq-lqt">${WIN.map(([m, l]) => `<div class="lq-lqtb"><div class="lq-lqtt"><span>${l}</span><b id="lqt-${m}">$0</b></div><div class="lq-lqtr"><span>Long</span><b class="up" id="lqt-${m}-l">$0</b></div><div class="lq-lqtr"><span>Short</span><b class="down" id="lqt-${m}-s">$0</b></div><div class="lq-sb sm2" id="lqt-${m}-b"></div><small class="lq-dim" id="lqt-${m}-c"></small></div>`).join("")}</div>
+      <div class="lq-lqbd"><div class="lq-lqtr"><span>${T("24 saac: Long", "24h: Long")} <b class="up" id="lqt-lp">—</b></span><span>Short <b class="down" id="lqt-sp">—</b></span></div><div class="lq-sb" id="lqt-24b"></div>
+        <div class="lq-lqtr"><span>${T("Suuqa ugu badan", "Largest exchange share")}</span><b id="lqt-ex">—</b></div>
+        <div class="lq-lqtr"><span>${T("Dalabka ugu weyn · 24s", "Largest order · 24h")}</span><b id="lqt-big">—</b></div></div></div></div>
+    <div class="lq-card" style="margin-top:16px"><div class="lq-lqf">
+      <div class="lq-mini" data-lq="coin">${[["ALL", T("Dhammaan", "All")]].concat(LQC.map((c) => [c, c])).map(([v, l]) => `<button data-v="${v}"${v === "ALL" ? ' class="on"' : ""}>${l}</button>`).join("")}</div>
+      <div class="lq-mini" data-lq="ex">${[["ALL", T("Dhammaan", "All")], ["Binance", "Binance"], ["OKX", "OKX"], ["Bybit", "Bybit"]].map(([v, l]) => `<button data-v="${v}"${v === "ALL" ? ' class="on"' : ""}>${l}</button>`).join("")}</div>
+      <div class="lq-mini" data-lq="min">${[["0", T("Dhammaan", "All")], ["10000", "≥$10K"], ["100000", "≥$100K"], ["1000000", "≥$1M"]].map(([v, l]) => `<button data-v="${v}"${v === "0" ? ' class="on"' : ""}>${l}</button>`).join("")}</div>
+      <div class="lq-mini" data-lq="side">${[["all", T("Labada dhinac", "All sides")], ["long", "Long"], ["short", "Short"]].map(([v, l]) => `<button data-v="${v}"${v === "all" ? ' class="on"' : ""}>${l}</button>`).join("")}</div></div>
+      <div class="lq-trr lq-trh"><span>Coin · ${T("suuq", "exchange")}</span><span class="r">${T("Qiimaha", "Price")}</span><span class="r">${T("Lacagta", "Amount")}</span><span class="r">${T("Waqti", "Time")}</span></div>
+      <div id="lqx-list" class="lq-lql"></div></div>
+    <p class="lq-note">${T("<b>Liquidation</b> = ganacsade si qasab ah looga xiray booskiisa sababtoo ah lacagtiisii way dhammaatay. Long liquidation badan = qiimuhu si degdeg ah ayuu u dhacay; short badan = si degdeg ah ayuu u kacay. Xogta Binance, OKX iyo Bybit ayaa toos loo ururiyaa inta bogga furan yahay (24 saac ayaa la kaydiyaa browser-kaaga); haddii bogga xirnaa, “xog la ururiyay” ayaa muujinaya inta la helay. Binance wuxuu bixiyaa ugu badnaan hal liquidation ilbiriqsi kasta coin kasta, sidaas darteed wadartu way ka yaraan kartaa suuqa oo dhan.", "<b>Liquidation</b> = a position force-closed because margin ran out. Many long liquidations = price dropped fast; many shorts = price spiked. Binance, OKX and Bybit data is collected live while the page is open (24h kept in your browser); “collected” shows how much was captured if the page was closed. Binance sends at most one liquidation per coin per second, so totals may be below the full market.")}</p>`;
+  lqBox.addEventListener("click", (e) => {
+    if (e.target.closest("#lqx-pause")) { LQ.pause = !LQ.pause; e.target.closest("#lqx-pause").textContent = LQ.pause ? "▶" : "❚❚"; return; }
+    const b = e.target.closest(".lq-mini[data-lq] button"); if (!b) return;
+    const g = b.parentElement.dataset.lq; LQ[g] = g === "min" ? +b.dataset.v : b.dataset.v;
+    b.parentElement.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); renderLiq(true);
+  });
+  let lqDirty = false, lqHist = [];
+  function addLiq(e) { if (!(e.v > 0) || !isFinite(e.v)) return; LQ.ev.unshift(e); agAdd(e); lqDirty = true; }
+  function lqFilt() { return LQ.ev.filter((e) => (LQ.coin === "ALL" || e.c === LQ.coin) && (LQ.ex === "ALL" || e.ex === LQ.ex) && e.v >= LQ.min && (LQ.side === "all" || (LQ.side === "long") === e.long)); }
+  const sbar = (l, t) => { const lp = t ? l / t * 100 : 50; return `<i style="width:${Math.max(3, lp)}%"></i><i style="width:${Math.max(3, 100 - lp)}%"></i>`; };
+  function renderTotals() {
+    const $ = (id) => document.getElementById(id);
+    WIN.forEach(([m]) => { const o = agSum(m), t = o.l + o.s; $("lqt-" + m).textContent = fmt(t); $("lqt-" + m + "-l").textContent = fmt(o.l); $("lqt-" + m + "-s").textContent = fmt(o.s); $("lqt-" + m + "-b").innerHTML = sbar(o.l, t); $("lqt-" + m + "-c").textContent = covTxt(o.cov, m); });
+    const d = agSum(1440), t = d.l + d.s;
+    $("lqt-lp").textContent = t ? (d.l / t * 100).toFixed(1) + "%" : "—"; $("lqt-sp").textContent = t ? (d.s / t * 100).toFixed(1) + "%" : "—";
+    $("lqt-24b").innerHTML = `<i style="width:${t ? Math.max(3, d.l / t * 100) : 50}%"><b>${t ? (d.l / t * 100).toFixed(1) + "%" : ""}</b></i><i style="width:${t ? Math.max(3, d.s / t * 100) : 50}%"><b>${t ? (d.s / t * 100).toFixed(1) + "%" : ""}</b></i>`;
+    const ex = Object.entries(d.ex).sort((a, b) => b[1] - a[1])[0]; $("lqt-ex").textContent = ex && t ? ex[0] + " · " + (ex[1] / t * 100).toFixed(1) + "%" : "—";
+    const bg = AG.big && Date.now() - AG.big.ts < 864e5 ? AG.big : null; $("lqt-big").textContent = bg ? fmt(bg.v) + " · " + bg.c + " · " + bg.ex + " · " + (bg.long ? "Long" : "Short") + " · " + price(bg.p) : "—";
+  }
+  function renderLiq(force) {
+    const now = Date.now(), cut = now - 30 * 60e3, t = minNow(); AG.seen[t] = 1;
+    LQ.ev = LQ.ev.filter((e) => e.ts >= cut).slice(0, 5000);
+    if (LQ.pause && !force) return;
+    renderTotals();
+    const F = lqFilt(), L = F.filter((e) => e.long).reduce((a, e) => a + e.v, 0), Sx = F.filter((e) => !e.long).reduce((a, e) => a + e.v, 0), tot = L + Sx;
+    lqHist.push([now, tot]); lqHist = lqHist.filter((h) => now - h[0] <= 70e3);
+    const $ = (id) => document.getElementById(id);
+    $("lqx-tot").textContent = fmt(tot); $("lqx-n").textContent = F.length.toLocaleString("en-US") + " " + T("dalab", "orders");
+    const ago = lqHist.find((h) => now - h[0] >= 55e3), dl = ago ? tot - ago[1] : null;
+    $("lqx-d").innerHTML = dl == null ? "" : `<span class="${dl >= 0 ? "up" : "down"}">${dl >= 0 ? "↑" : "↓"} ${fmt(Math.abs(dl))}</span> · ${T("marka la barbardhigo 1 daqiiqo kahor", "vs 1 min ago")}`;
+    $("lqx-l").textContent = fmt(L); $("lqx-s").textContent = fmt(Sx);
+    const lp = tot ? L / tot * 100 : 50; $("lqx-bar").innerHTML = `<i style="width:${Math.max(4, lp)}%"><b>${lp.toFixed(1)}%</b></i><i style="width:${Math.max(4, 100 - lp)}%"><b>${(100 - lp).toFixed(1)}%</b></i>`;
+    const B = Array.from({ length: 30 }, () => [0, 0]);
+    F.forEach((e) => { const i = 29 - (t - Math.floor(e.ts / 60e3)); if (i >= 0 && i < 30) B[i][e.long ? 0 : 1] += e.v; });
+    const mx = Math.max(1, ...B.map((b) => b[0] + b[1])), w = 600 / 30;
+    $("lqx-ch").innerHTML = [0.5, 1].map((f) => `<line x1="0" x2="600" y1="${136 - f * 128}" y2="${136 - f * 128}" stroke="var(--line)" stroke-dasharray="3 4"/>`).join("") +
+      B.map((b, i) => { const hl = b[0] / mx * 128, hs = b[1] / mx * 128, cur = i === 29; return `<g${cur ? ' class="lq-lqcur"' : ""}><rect x="${i * w + 2}" y="${136 - hl}" width="${w - 4}" height="${hl}" fill="#2BD67B" rx="2"><title>${hm(new Date((t - 29 + i) * 60e3))} · Long ${fmt(b[0])}</title></rect><rect x="${i * w + 2}" y="${136 - hl - hs}" width="${w - 4}" height="${hs}" fill="#F05A5F" rx="2"><title>${hm(new Date((t - 29 + i) * 60e3))} · Short ${fmt(b[1])}</title></rect></g>`; }).join("") + `<line x1="0" x2="600" y1="136.5" y2="136.5" stroke="var(--line)"/>`;
+    $("lqx-a0").textContent = hm(new Date((t - 29) * 60e3)); $("lqx-a1").textContent = hm(new Date((t - 15) * 60e3)); $("lqx-a2").textContent = hm(new Date(t * 60e3));
+    const big = F.reduce((a, e) => (!a || e.v > a.v ? e : a), null);
+    $("lqx-big").innerHTML = big ? `${T("Kan ugu weyn (30d)", "Largest (30m)")}: <b>${fmt(big.v)}</b> · ${esc(big.c)} · ${big.ex} · ${big.long ? "Long" : "Short"} · ${price(big.p)} · ${hm(new Date(big.ts))}` : T("Waxaa la sugayaa liquidation…", "Waiting for liquidations…");
+    if (!force && !lqDirty) return; lqDirty = false;
+    $("lqx-list").innerHTML = F.slice(0, 60).map((e) => { const d = new Date(e.ts); return `<div class="lq-trr ${e.long ? "b" : "s"}${e.v >= 1e6 ? " big" : ""}"><span><b>${esc(e.c)}</b> · ${e.ex} <em>${e.long ? "Long ↘" : "Short ↗"}</em></span><span class="r">${price(e.p)}</span><span class="r"><b>${fmt(e.v)}</b></span><span class="r">${hm(d)}:${pad(d.getSeconds())}</span></div>`; }).join("") || `<div class="lq-load">${T("Waxaa la sugayaa liquidation…", "Waiting for liquidations…")}</div>`;
+  }
+  setInterval(() => {
+    renderLiq(false);
+    const t = minNow(); Object.keys(AG.m).forEach((k) => { if (+k < t - 1440) delete AG.m[k]; }); Object.keys(AG.seen).forEach((k) => { if (+k < t - 1440) delete AG.seen[k]; });
+    try { localStorage.setItem("xc-liq", JSON.stringify({ t0: LQ.t0, ev: LQ.ev.slice(0, 1500) })); localStorage.setItem("xc-liq24", JSON.stringify(AG)); } catch (e) { /* ignore */ }
+  }, 1000);
+  renderLiq(true);
+  async function startLiq() {
+    // Binance: dhammaan coin-ka (SELL = long la xiray)
+    ws("wss://fstream.binance.com/ws/!forceOrder@arr", () => {}, (m) => {
+      const o = m && m.o; if (!o || !/USDT$/.test(o.s)) return;
+      const p = +o.ap || +o.p, q = +o.z || +o.q;
+      addLiq({ c: o.s.replace(/USDT$/, ""), ex: "Binance", long: o.S === "SELL", p, v: p * q, ts: +o.T || Date.now() });
+    });
+    // OKX: ctVal (qiimaha qandaraaska) ayaa loo baahan yahay
+    try { const j = await viaPx("https://www.okx.com/api/v5/public/instruments?instType=SWAP"); (j.data || []).forEach((x) => { LQ.ct[x.instId] = { v: +x.ctVal, usd: x.ctValCcy === "USD" }; }); } catch (e) { /* ignore */ }
+    ws("wss://ws.okx.com:8443/ws/v5/public", (s) => { s.send(JSON.stringify({ op: "subscribe", args: [{ channel: "liquidation-orders", instType: "SWAP" }] })); setInterval(() => { try { s.send("ping"); } catch (e) { /* ignore */ } }, 25000); }, (m) => {
+      if (!m || !Array.isArray(m.data)) return;
+      m.data.forEach((g) => { const ct = LQ.ct[g.instId]; if (!ct) return; const c = g.instId.split("-")[0];
+        (g.details || []).forEach((d) => { const p = +d.bkPx, sz = +d.sz; addLiq({ c, ex: "OKX", long: d.posSide ? d.posSide === "long" : d.side === "sell", p, v: ct.usd ? sz * ct.v : sz * ct.v * p, ts: +d.ts || Date.now() }); }); });
+    });
+    // Bybit: coin-ka waaweyn (Buy = long la xiray)
+    const BY = ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "ADA", "SUI", "LINK", "AVAX", "HYPE", "LTC", "TRX", "PEPE", "WIF", "ENA", "TON", "DOT", "NEAR", "APT"];
+    ws("wss://stream.bybit.com/v5/public/linear", (s) => {
+      for (let i = 0; i < BY.length; i += 10) s.send(JSON.stringify({ op: "subscribe", args: BY.slice(i, i + 10).map((c) => "allLiquidation." + c + "USDT") }));
+      setInterval(() => { try { s.send(JSON.stringify({ op: "ping" })); } catch (e) { /* ignore */ } }, 20000);
+    }, (m) => {
+      if (!m || !Array.isArray(m.data) || !/allLiquidation/.test(m.topic || "")) return;
+      m.data.forEach((x) => { const p = +x.p; addLiq({ c: String(x.s).replace(/USDT$/, ""), ex: "Bybit", long: x.S === "Buy", p, v: p * +x.v, ts: +x.T || Date.now() }); });
+    });
+  }
+  L.add("liqt", { head: () => T("Wadarta liquidations", "Total liquidations"), at: () => new Date(), src: "Binance, OKX, Bybit", body: () => {
+    let s = tx(56, 72, T("Wadarta liquidations", "Total liquidations"), 32, { d: 1, w: 800 });
+    WIN.forEach(([m, l], i) => { const o = agSum(m), t = o.l + o.s, x = 56 + (i % 2) * 552, y = 100 + Math.floor(i / 2) * 225;
+      s += box(x, y, 536, 205) + tx(x + 28, y + 50, l, 22, { c: K.mut }) + tx(x + 508, y + 58, fmt(t), 44, { d: 1, w: 800, a: "end" }) + tx(x + 28, y + 105, "Long", 20, { c: K.mut }) + tx(x + 508, y + 105, fmt(o.l), 22, { d: 1, w: 800, a: "end", c: G }) + tx(x + 28, y + 145, "Short", 20, { c: K.mut }) + tx(x + 508, y + 145, fmt(o.s), 22, { d: 1, w: 800, a: "end", c: R }) + bar(x + 28, y + 168, 480, 10, t ? o.l / t : 0.5) + (covTxt(o.cov, m) ? tx(x + 28, y + 196, covTxt(o.cov, m), 14, { c: K.dim }) : ""); });
+    return s;
+  } });
+  L.add("liq", { head: () => "Liquidations · 30 " + T("daqiiqo", "min"), at: () => new Date(), src: "Binance, OKX, Bybit", body: () => {
+    const F = lqFilt(), Lg = F.filter((e) => e.long).reduce((a, e) => a + e.v, 0), Sh = F.filter((e) => !e.long).reduce((a, e) => a + e.v, 0), tot = Lg + Sh;
+    let s = tx(56, 72, T("Liquidations · 30-kii daqiiqo ee u dambeeyay", "Liquidations · last 30 minutes"), 32, { d: 1, w: 800 }) + box(56, 100, 1088, 450);
+    s += tx(88, 170, T("Wadarta", "Total"), 22, { c: K.mut }) + tx(88, 240, fmt(tot), 68, { d: 1, w: 800 }) + tx(88, 280, F.length.toLocaleString("en-US") + " " + T("dalab", "orders"), 20, { c: K.mut });
+    s += tx(620, 170, "Long", 22, { c: G }) + tx(620, 230, fmt(Lg), 46, { d: 1, w: 800, c: G }) + tx(900, 170, "Short", 22, { c: R }) + tx(900, 230, fmt(Sh), 46, { d: 1, w: 800, c: R });
+    s += bar(88, 320, 1024, 26, tot ? Lg / tot : 0.5);
+    const big = F.reduce((a, e) => (!a || e.v > a.v ? e : a), null);
+    if (big) s += tx(88, 420, T("Kan ugu weyn: ", "Largest: ") + fmt(big.v) + " · " + big.c + " · " + big.ex + " · " + (big.long ? "Long" : "Short"), 24, { w: 700 });
+    return s;
+  } });
 
   // ================= D) Dadka vs whales: suuq kasta =================
   async function loadLsx() {
@@ -524,7 +659,7 @@
 
   // ---------- Bilow + cusboonaysiin ----------
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderHist, 150); });
-  loadEx(); loadLsc().then(startPrices); loadLsx(); loadHist(); loadVol(); loadCex(); seedTrades().then(startTrades); startSpot();
+  loadEx(); loadLsc().then(startPrices); loadLsx(); loadHist(); loadVol(); loadCex(); seedTrades().then(startTrades); startSpot(); startLiq();
   setInterval(() => { if (S.vm === "spot") loadVolSpot(); }, 5 * 60e3); setInterval(loadCex, 60 * 60e3);
   setInterval(loadEx, 60e3); setInterval(loadLsc, 5 * 60e3); setInterval(loadLsx, 5 * 60e3); setInterval(loadHist, 30 * 60e3); setInterval(loadVol, 5 * 60e3);
   // Spot: suuqa oo dhan ilbiriqsi kasta → liiska volume-ka (spot) + liiska coins (lacagta-coins.js)
