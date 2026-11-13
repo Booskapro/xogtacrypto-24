@@ -1410,3 +1410,4 @@ main.lq-wide { max-width: 1480px; }
 .lq-lqtr b { font-family: var(--font-display); }
 .lq-sb.sm2 { height: 5px; margin-top: 6px; }
 .lq-lqbd { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.lq-lqnew { font-style: normal; font-size: .78rem; color: #2BD67B; font-weight: 700; min-width: 54px; }

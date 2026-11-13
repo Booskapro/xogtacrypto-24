@@ -222,7 +222,7 @@
   const covTxt = (c, mins) => (c >= mins - 1 ? "" : T("xog la ururiyay: ", "collected: ") + (c >= 60 ? Math.floor(c / 60) + T(" saac ", "h ") : "") + (c % 60) + T(" daqiiqo", "m") + T(" (bogga ayaa xirnaa inta kale)", " (page was closed the rest)"));
   const WIN = [[60, T("1 saac", "1h")], [240, T("4 saac", "4h")], [720, T("12 saac", "12h")], [1440, T("24 saac", "24h")]];
   lqBox.innerHTML = `<div class="lq-2">
-    <div class="lq-card"><div class="lq-lqh"><b>${T("Liquidations live", "Live liquidations")}</b><span class="lq-live sm"><b class="pulse"></b>LIVE</span><button class="lq-lqp" type="button" id="lqx-pause" title="${T("Jooji / sii wad", "Pause / resume")}">❚❚</button>${CAM("liq")}</div>
+    <div class="lq-card"><div class="lq-lqh"><b>${T("Liquidations live", "Live liquidations")}</b><span class="lq-live sm"><b class="pulse"></b>LIVE</span><em class="lq-lqnew" id="lqx-new"></em><button class="lq-lqp" type="button" id="lqx-snd" title="${T("Cod: liquidation ≥ $10K", "Sound: liquidation ≥ $10K")}">🔇</button><button class="lq-lqp" type="button" id="lqx-pause" title="${T("Jooji / sii wad", "Pause / resume")}">❚❚</button>${CAM("liq")}</div>
       <div class="lq-lqk"><div><span>${T("Xogta liquidation · 30 daqiiqo", "Liquidation data · 30m")}</span><b id="lqx-tot">$0</b><small id="lqx-n">0</small><small id="lqx-d" class="lq-lqd"></small></div><div class="lq-lqs"><span>Long <b class="up" id="lqx-l">$0</b></span><span>Short <b class="down" id="lqx-s">$0</b></span></div></div>
       <div class="lq-sb" id="lqx-bar"><i style="width:50%"><b>50%</b></i><i style="width:50%"><b>50%</b></i></div>
       <svg id="lqx-ch" class="lq-lqch" viewBox="0 0 600 140" preserveAspectRatio="none"></svg>
@@ -243,13 +243,28 @@
       <div id="lqx-list" class="lq-lql"></div></div>
     <p class="lq-note">${T("<b>Liquidation</b> = ganacsade si qasab ah looga xiray booskiisa sababtoo ah lacagtiisii way dhammaatay. Long liquidation badan = qiimuhu si degdeg ah ayuu u dhacay; short badan = si degdeg ah ayuu u kacay. Xogta Binance, OKX iyo Bybit ayaa toos loo ururiyaa inta bogga furan yahay (24 saac ayaa la kaydiyaa browser-kaaga); haddii bogga xirnaa, “xog la ururiyay” ayaa muujinaya inta la helay. Binance wuxuu bixiyaa ugu badnaan hal liquidation ilbiriqsi kasta coin kasta, sidaas darteed wadartu way ka yaraan kartaa suuqa oo dhan.", "<b>Liquidation</b> = a position force-closed because margin ran out. Many long liquidations = price dropped fast; many shorts = price spiked. Binance, OKX and Bybit data is collected live while the page is open (24h kept in your browser); “collected” shows how much was captured if the page was closed. Binance sends at most one liquidation per coin per second, so totals may be below the full market.")}</p>`;
   lqBox.addEventListener("click", (e) => {
+    if (e.target.closest("#lqx-snd")) { LQ.snd = !LQ.snd; e.target.closest("#lqx-snd").textContent = LQ.snd ? "🔊" : "🔇"; if (LQ.snd) beep(true); return; }
     if (e.target.closest("#lqx-pause")) { LQ.pause = !LQ.pause; e.target.closest("#lqx-pause").textContent = LQ.pause ? "▶" : "❚❚"; return; }
     const b = e.target.closest(".lq-mini[data-lq] button"); if (!b) return;
     const g = b.parentElement.dataset.lq; LQ[g] = g === "min" ? +b.dataset.v : b.dataset.v;
     b.parentElement.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); renderLiq(true);
   });
   let lqDirty = false, lqHist = [];
-  function addLiq(e) { if (!(e.v > 0) || !isFinite(e.v)) return; LQ.ev.unshift(e); agAdd(e); lqDirty = true; }
+  let AC = null, lastBeep = 0, newN = 0, newAt = 0;
+  function beep(test, e) {
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (!test && Date.now() - lastBeep < 250) return; lastBeep = Date.now();
+      const o = AC.createOscillator(), g = AC.createGain(), big = e && e.v >= 1e6;
+      o.frequency.value = test ? 660 : e.long ? (big ? 330 : 440) : (big ? 990 : 880); g.gain.value = 0.06;
+      o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + (big ? 0.35 : 0.12));
+    } catch (err) { /* ignore */ }
+  }
+  function addLiq(e) {
+    if (!(e.v > 0) || !isFinite(e.v)) return; LQ.ev.unshift(e); agAdd(e); lqDirty = true;
+    if (Date.now() - e.ts < 15e3) { newN++; newAt = Date.now(); }
+    if (LQ.snd && e.v >= 1e4 && !LQ.pause) beep(false, e);
+  }
   function lqFilt() { return LQ.ev.filter((e) => (LQ.coin === "ALL" || e.c === LQ.coin) && (LQ.ex === "ALL" || e.ex === LQ.ex) && e.v >= LQ.min && (LQ.side === "all" || (LQ.side === "long") === e.long)); }
   const sbar = (l, t) => { const lp = t ? l / t * 100 : 50; return `<i style="width:${Math.max(3, lp)}%"></i><i style="width:${Math.max(3, 100 - lp)}%"></i>`; };
   function renderTotals() {
@@ -265,6 +280,7 @@
     const now = Date.now(), cut = now - 30 * 60e3, t = minNow(); AG.seen[t] = 1;
     LQ.ev = LQ.ev.filter((e) => e.ts >= cut).slice(0, 5000);
     if (LQ.pause && !force) return;
+    const nw = document.getElementById("lqx-new"); if (nw) { if (Date.now() - newAt > 4000) newN = 0; nw.textContent = newN ? "+" + newN + T(" cusub", " new") : ""; }
     renderTotals();
     const F = lqFilt(), L = F.filter((e) => e.long).reduce((a, e) => a + e.v, 0), Sx = F.filter((e) => !e.long).reduce((a, e) => a + e.v, 0), tot = L + Sx;
     lqHist.push([now, tot]); lqHist = lqHist.filter((h) => now - h[0] <= 70e3);
