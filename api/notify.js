@@ -34,27 +34,27 @@ const claim = async (k) => (await kv(["SET", "xc:sent:" + k, Date.now(), "NX", "
 
 // ---------- Telegram ----------
 async function send(text, previewUrl) {
-  const token = env("TELEGRAM_BOT_TOKEN"), chat = env("TELEGRAM_CHAT_ID");
-  const r = await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(Object.assign({ chat_id: chat, text, parse_mode: "HTML" },
-      previewUrl ? { link_preview_options: { url: previewUrl, prefer_large_media: true } } : { link_preview_options: { is_disabled: true } }))
-  });
-  const j = await r.json();
-  if (!j.ok) throw new Error("Telegram: " + j.description);
+  return tg("sendMessage", Object.assign({ text },
+    previewUrl ? { link_preview_options: { url: previewUrl, prefer_large_media: true } } : { link_preview_options: { is_disabled: true } }));
 }
 
+// TELEGRAM_CHAT_ID: hal ama dhowr (kala qaybi comma): tusaale  @Xogtacrypto24_7,-1001234567890
+const CHATS = () => env("TELEGRAM_CHAT_ID").split(",").map((x) => x.trim()).filter(Boolean);
 async function tg(method, body) {
-  const r = await fetch("https://api.telegram.org/bot" + env("TELEGRAM_BOT_TOKEN") + "/" + method, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ chat_id: env("TELEGRAM_CHAT_ID"), parse_mode: "HTML" }, body))
-  });
-  const j = await r.json();
-  if (!j.ok) throw new Error("Telegram: " + j.description);
-  return j;
+  let ok = 0, err = "";
+  for (const chat_id of CHATS()) {
+    const r = await fetch("https://api.telegram.org/bot" + env("TELEGRAM_BOT_TOKEN") + "/" + method, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ parse_mode: "HTML" }, body, { chat_id }))
+    });
+    const j = await r.json();
+    if (j.ok) ok++; else err += chat_id + ": " + j.description + " ";
+  }
+  if (!ok) throw new Error("Telegram: " + err);
+  return { ok, err };
 }
 // Sawir + qoraal + badhamo. Haddii sawirku fashilmo -> sawirka bogga (og-image), kadibna qoraal oo kaliya.
 async function sendPost(caption, img, buttons) {
-  const reply_markup = { inline_keyboard: [buttons] };
+  const reply_markup = buttons && buttons.length ? { inline_keyboard: [buttons] } : undefined;
   for (const photo of img === false ? [] : [img, SITE + "/og-image.png"].filter(Boolean)) {
     try { return await tg("sendPhoto", { photo, caption: caption.slice(0, 1024), reply_markup }); } catch (e) { /* sawirka xiga */ }
   }
@@ -416,10 +416,9 @@ async function msgNews(n) {
 
 // ================= Liquidations waaweyn (OKX — API bilaash ah oo server-ka ka shaqeeya) =================
 const LIQ_MIN = +(process.env.LIQ_MIN_USD || 1000000);     // amar kasta oo ka weyn -> war
-const LIQ_WAVE = +(process.env.LIQ_WAVE_USD || 10000000);  // wadarta daqiiqad gudaheed -> war
 const LIQ_GAP_MIN = 5;
 const LIQ_COINS = ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "SUI", "HYPE", "ADA", "LINK", "AVAX", "LTC"];
-const usd = (v) => v >= 1e9 ? "$" + (v / 1e9).toFixed(2) + "B" : v >= 1e6 ? "$" + (v / 1e6).toFixed(2) + "M" : "$" + Math.round(v / 1e3) + "K";
+const usd = (v) => v >= 1e9 ? "$" + (v / 1e9).toFixed(2) + "B" : v >= 1e6 ? "$" + (v / 1e6).toFixed(2) + "M" : v >= 1e3 ? "$" + Math.round(v / 1e3) + "K" : "$" + Math.round(v);
 const px = (p) => "$" + (p >= 100 ? Math.round(p).toLocaleString("en-US") : p >= 1 ? p.toFixed(2) : p.toPrecision(4));
 async function okxCt() {
   try { const c = await kv(["GET", "xc:okxct"]); if (c) return JSON.parse(c); } catch (e) {}
@@ -444,30 +443,77 @@ async function liqRows(lastTs) {
   }));
   return { rows, maxTs };
 }
+// Xog daqiiqad-daqiiqad ah (KV, 24 saac) -> wadarta 15 daq / 30 daq / 1 saac / 24 saac
+const WINS = [
+  { k: "15m", min: 15, name: "15 daqiiqo", lim: +(process.env.LIQ_15M_USD || 8e6), bar: "1m", n: 15 },
+  { k: "30m", min: 30, name: "30 daqiiqo", lim: +(process.env.LIQ_30M_USD || 12e6), bar: "1m", n: 30 },
+  { k: "1h", min: 60, name: "60 daqiiqo", lim: +(process.env.LIQ_1H_USD || 15e6), bar: "1m", n: 60 },
+  { k: "24h", min: 1440, name: "24 saac", lim: +(process.env.LIQ_24H_USD || 1e8), bar: "15m", n: 96 }
+];
+function addBuckets(hist, rows) {
+  const by = {}; hist.forEach((b) => { by[b.m] = b; });
+  rows.forEach((r) => {
+    const m = Math.floor(r.ts / 60e3) * 60e3, b = by[m] || (by[m] = { m, v: 0, l: 0, t: null });
+    b.v += r.v; if (r.long) b.l += r.v;
+    if (!b.t || r.v > b.t.v) b.t = { c: r.c, long: r.long, v: Math.round(r.v), p: r.p };
+  });
+  return Object.values(by).filter((b) => Date.now() - b.m < 1441 * 60e3).sort((x, y) => x.m - y.m)
+    .map((b) => ({ m: b.m, v: Math.round(b.v), l: Math.round(b.l), t: b.t }));
+}
+function winSum(hist, w) {
+  const bs = hist.filter((b) => Date.now() - b.m < w.min * 60e3);
+  const v = bs.reduce((s, b) => s + b.v, 0), l = bs.reduce((s, b) => s + b.l, 0);
+  const top = bs.reduce((m, b) => (b.t && (!m || b.t.v > m.v) ? b.t : m), null);
+  return { w, v, l, top, bs };
+}
+// Sawir casaan ah (sida BREAKING): qiimaha BTC + tiirarka liquidations -> QuickChart PNG
+async function liqChart(s) {
+  const w = s.w; let c = [];
+  try { const j = await (await fetch("https://www.okx.com/api/v5/market/candles?instId=BTC-USDT-SWAP&bar=" + w.bar + "&limit=" + w.n)).json(); c = (j.data || []).slice().reverse(); } catch (e) {}
+  if (c.length < 5) return null;
+  const step = w.bar === "15m" ? 15 * 60e3 : 60e3, t0 = +c[0][0], bars = c.map(() => 0);
+  s.bs.forEach((b) => { const i = Math.floor((b.m - t0) / step); if (i >= 0 && i < bars.length) bars[i] += b.v; });
+  const mx = Math.max.apply(null, bars) || 1;
+  const cfg = { type: "bar", data: { labels: c.map(() => ""), datasets: [
+    { type: "line", data: c.map((x) => +x[4]), borderColor: "#ff2a2a", borderWidth: 6, pointRadius: 0, fill: false, lineTension: 0.1, yAxisID: "p" },
+    { type: "bar", data: bars.map((v) => Math.round(v)), backgroundColor: "rgba(255,42,42,0.30)", yAxisID: "v" }] },
+    options: { legend: { display: false }, layout: { padding: 28 },
+      title: { display: true, text: "LIQUIDATIONS · " + w.name.toUpperCase() + " · " + usd(s.v), fontColor: "#ff6b6b", fontSize: 26 },
+      scales: { xAxes: [{ display: false, gridLines: { display: false } }],
+        yAxes: [{ id: "p", gridLines: { color: "rgba(255,42,42,0.12)" }, ticks: { display: false } }, { id: "v", display: false, ticks: { min: 0, max: mx * 3 } }] } } };
+  return "https://quickchart.io/chart?w=800&h=450&bkg=%23120404&c=" + encodeURIComponent(JSON.stringify(cfg));
+}
+function liqText(s, test) {
+  return (test ? "🧪 <b>TUSAALE</b> (tijaabo)\n\n" : "") + "🚨 <b>DEGDEG:</b> <b>" + usd(s.v) + "</b> oo liquidations crypto ah ayaa la tirtiray <b>" + s.w.name + "</b> gudahood.\n\n" +
+    "🔴 Long la xiray: <b>" + usd(s.l) + "</b>\n🟢 Short la xiray: <b>" + usd(s.v - s.l) + "</b>\n" +
+    (s.top ? "💥 Amarka ugu weyn: <b>" + s.top.c + " " + (s.top.long ? "LONG" : "SHORT") + " " + usd(s.top.v) + "</b> @ " + px(s.top.p) + "\n" : "") +
+    "\n<i>" + (s.l >= s.v / 2 ? "Long-yada ayaa la xiray → qiimaha ayaa hoos u dhacay." : "Short-yada ayaa la xiray → qiimaha ayaa kor u kacay.") + " Isha: OKX</i>";
+}
 async function pollLiq(out) {
   const lastTs = Number(await get("liq:ts")) || 0;
   const { rows, maxTs } = await liqRows(lastTs);
   if (maxTs > lastTs) await set("liq:ts", maxTs);
+  let hist = []; try { hist = JSON.parse((await get("liq:hist2")) || "[]"); } catch (e) {}
+  hist = addBuckets(hist, lastTs ? rows : []);
+  await set("liq:hist2", JSON.stringify(hist));
   if (!lastTs) { out.skipped.push("liq (bilow)"); return; }
-  // Kuwa waaweyn waa la kaydiyaa ilaa la diro (10 daqiiqo)
-  let pend = []; try { pend = JSON.parse((await get("liq:pend")) || "[]"); } catch (e) {}
-  pend = pend.concat(rows.filter((r) => r.v >= LIQ_MIN)).filter((r) => Date.now() - r.ts < 10 * 60e3);
-  const wave = rows.reduce((s, r) => s + r.v, 0), wl = rows.filter((r) => r.long).reduce((s, r) => s + r.v, 0);
-  const big = pend.reduce((m, r) => Math.max(m, r.v), 0);
-  const last = Number(await get("liq:last")) || 0;
-  const ready = Date.now() - last >= LIQ_GAP_MIN * 60e3 || big >= LIQ_MIN * 4;
-  out.liq = { orders: rows.length, total: Math.round(wave), pending: pend.length };
-  if (!(pend.length || wave >= LIQ_WAVE) || !ready) { await set("liq:pend", JSON.stringify(pend)); return; }
-  const top = pend.sort((a, b) => b.v - a.v).slice(0, 6);
-  const text = "💥 <b>LIQUIDATIONS WAAWEYN</b>" + (big >= LIQ_MIN * 4 ? " ⚡" : "") + "\n\n" +
-    top.map((r) => (r.long ? "🔴 " : "🟢 ") + "<b>" + r.c + " " + (r.long ? "LONG" : "SHORT") + "</b> la xiray · <b>" + usd(r.v) + "</b> @ " + px(r.p)).join("\n") +
-    (wave >= 1e5 ? (top.length ? "\n\n" : "") + "📊 Daqiiqaddii u dambeysay: <b>" + usd(wave) + "</b> · 🔴 Long " + usd(wl) + " · 🟢 Short " + usd(wave - wl) : "") + "\n\n" +
-    "<i>🔴 Long la xiray = qiimaha ayaa hoos u dhacay · 🟢 Short la xiray = kor u kacay · Isha: OKX</i>";
+  const sums = WINS.map((w) => winSum(hist, w));
+  out.liq = {}; sums.forEach((x) => { out.liq[x.w.k] = Math.round(x.v); });
+  if (Date.now() - (Number(await get("liq:last")) || 0) < LIQ_GAP_MIN * 60e3) return;
+  // Muddo kasta: mar kale kaliya marka muddadaas laba jeer ay dhaafto, ama wadartu labanlaabanto
+  const cand = [];
+  for (const x of sums) {
+    if (x.v < x.w.lim) continue;
+    const lt = Number(await get("liq:last:" + x.w.k)) || 0, lv = Number(await get("liq:lastv:" + x.w.k)) || 0;
+    if (Date.now() - lt >= Math.max(30, x.w.min * 2) * 60e3 || x.v >= lv * 2) cand.push(x);
+  }
+  if (!cand.length) return;
+  const s = cand.sort((a, b) => b.v / b.w.lim - a.v / a.w.lim)[0];
   try {
-    await sendPost(text, false, [{ text: "💥 Liquidations live", url: SITE + "/lacagta.html#sec-liq" }]);
-    await set("liq:last", Date.now()); await set("liq:pend", "[]");
-    out.sent.push("liq: " + usd(big || wave));
-  } catch (e) { await set("liq:pend", JSON.stringify(pend)); out.errors.push("liq: " + e.message); }
+    await sendPost(liqText(s), (await liqChart(s)) || false, []);
+    await set("liq:last", Date.now()); await set("liq:last:" + s.w.k, Date.now()); await set("liq:lastv:" + s.w.k, s.v);
+    out.sent.push("liq " + s.w.k + ": " + usd(s.v));
+  } catch (e) { out.errors.push("liq: " + e.message); }
 }
 
 module.exports = async function handler(req, res) {
@@ -484,14 +530,16 @@ module.exports = async function handler(req, res) {
       if ((await kv(["SET", "xc:test", Date.now(), "NX", "EX", 300])) !== "OK") return res.status(200).json({ test, error: "sug 5 daqiiqo" });
       const T = "🧪 <b>TUSAALE</b> (tijaabo)\n\n";
       if (test === "liq") {
+        // Muddada: ?w=15m | 30m | 1h | 24h (default 1h). 24h waxay u baahan tahay xogta la ururiyay.
+        const w = WINS.find((x) => x.k === String(req.query.w || "1h")) || WINS[2];
+        let hist = []; try { hist = JSON.parse((await get("liq:hist2")) || "[]"); } catch (e) {}
         const { rows } = await liqRows(0);
-        const top = rows.sort((a, b) => b.v - a.v).slice(0, 5);
-        if (!top.length) return res.status(200).json({ test, error: "OKX xog ma soo celin" });
-        const text = T + "💥 <b>LIQUIDATIONS WAAWEYN</b>\n\n" +
-          top.map((r) => (r.long ? "🔴 " : "🟢 ") + "<b>" + r.c + " " + (r.long ? "LONG" : "SHORT") + "</b> la xiray · <b>" + usd(r.v) + "</b> @ " + px(r.p) + " · " + new Date(r.ts).toISOString().slice(11, 16) + " UTC").join("\n") +
-          "\n\n<i>🔴 Long la xiray = qiimaha ayaa hoos u dhacay · 🟢 Short la xiray = kor u kacay · Isha: OKX</i>";
-        await sendPost(text, false, [{ text: "💥 Liquidations live", url: SITE + "/lacagta.html#sec-liq" }]);
-        return res.status(200).json({ test, sent: top.length });
+        hist = addBuckets(hist.filter((b) => b.m < Date.now() - 60 * 60e3), rows); // saacadda u dambeysa: OKX toos
+        const s = winSum(hist, w);
+        if (!s.v) return res.status(200).json({ test, error: "xog ma jirto" });
+        const img = await liqChart(s);
+        await sendPost(liqText(s, true), img || false, []);
+        return res.status(200).json({ test, w: w.k, total: Math.round(s.v), img: !!img });
       }
       const all = await loadNews(); let tries = 0;
       for (const n of all) {
