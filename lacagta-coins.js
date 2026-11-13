@@ -6,7 +6,7 @@
 (function () {
   "use strict";
   const side = document.getElementById("lq-side"), sub = document.getElementById("lq-sub");
-  if (!side || !sub) return;
+  if (!sub) return;
   const EN = (function () { try { return localStorage.getItem("xc-lang") === "en"; } catch (e) { return false; } })();
   const T = (so, en) => (EN ? en : so);
   const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -17,7 +17,7 @@
   const big = (v) => { if (v == null) return "—"; const a = Math.abs(v); return "$" + (a >= 1e12 ? (a / 1e12).toFixed(2) + "T" : a >= 1e9 ? (a / 1e9).toFixed(2) + "B" : a >= 1e6 ? (a / 1e6).toFixed(1) + "M" : Math.round(a / 1e3) + "K"); };
 
   // ---------- 1) Menu-ga bogga ----------
-  const ITEMS = [["sec-flow", T("Guud", "Overview")], ["sec-ls", "Long / Short"], ["sec-tr", T("Ganacsiyada waaweyn", "Large trades")], ["sec-liq", "Liquidations"], ["sec-vol", "Volume"], ["sec-cex", T("Exchange-yada", "Exchanges")], ["sec-heat", "Heatmap"], ["lq-faq", T("Su'aalo", "FAQ")]];
+  const ITEMS = [["sec-flow", T("Guud", "Overview")], ["sec-cf", T("Coin kasta", "By coin")], ["sec-ls", "Long / Short"], ["sec-tr", T("Ganacsiyada waaweyn", "Large trades")], ["sec-liq", "Liquidations"], ["sec-vol", "Volume"], ["sec-flowheat", "Heatmap"], ["lq-faq", T("Su'aalo", "FAQ")]];
   sub.innerHTML = `<div class="lq-subin">${ITEMS.map(([id, l]) => `<a href="#${id}" data-id="${id}">${esc(l)}</a>`).join("")}</div>`;
   const hdr = document.querySelector(".site-header");
   const fixTop = () => { const h = hdr ? hdr.offsetHeight : 64; sub.style.top = h + "px"; document.documentElement.style.setProperty("--lq-top", (h + sub.offsetHeight + 12) + "px"); };
@@ -42,7 +42,8 @@
     });
   }, { passive: true });
 
-  // ---------- 2) Liiska coins ----------
+  // ---------- 2) Liiska coins (waa laga saaray bogga; haddii aside dib loo celiyo ayuu shaqaynayaa) ----------
+  if (!side) return;
   side.innerHTML = `<div class="lq-sideh"><b>Coins</b><span class="lq-live sm"><b class="pulse"></b>Live · <em id="lq-cn">—</em></span><button class="lq-sidex" type="button" aria-label="${T("Xir", "Close")}">×</button></div>
     <input class="lq-srch" type="search" placeholder="${T("Raadi coin… (tusaale: PEPE)", "Search coin… (e.g. PEPE)")}" autocomplete="off">
     <div class="lq-mini lq-sorts" data-g="cs"><button data-v="rank" class="on">${T("Dhammaan", "All")}</button><button data-v="up">⬆ ${T("Kor", "Up")}</button><button data-v="down">⬇ ${T("Hoos", "Down")}</button><button data-v="vol">Volume</button></div>

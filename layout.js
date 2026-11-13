@@ -10,8 +10,8 @@
     { href: "kalandarka.html",  key: "kalandarka", label: "Kalandarka",     en: "Calendar" },
     { href: "charts.html",      key: "charts",     label: "Charts",         en: "Charts" },
     { href: "lacagta.html",     key: "lacagta",    label: "Lacagta",        en: "Money Flow", nu: 1, sub: [
-      ["#sec-flow", "Lacagta soo gashay / baxday", "Money in / out"], ["#sec-ls", "Long / Short", "Long / Short"], ["#sec-tr", "Ganacsiyada waaweyn", "Large trades"], ["#sec-liq", "Liquidations (live)", "Liquidations (live)"],
-      ["#sec-vol", "Volume (futures / spot)", "Volume (futures / spot)"], ["#sec-cex", "Exchange-yada: soo galay / baxay", "Exchange inflows / outflows"], ["#sec-heat", "Heatmap", "Heatmap"], ["#lq-faq", "Su'aalo", "FAQ"]] },
+      ["#sec-flow", "Lacagta soo gashay / baxday", "Money in / out"], ["#sec-cf", "Coin kasta: lacagta 24 saac", "Money flow by coin"], ["#sec-ls", "Long / Short", "Long / Short"], ["#sec-tr", "Ganacsiyada waaweyn", "Large trades"],
+      ["#sec-liq", "Liquidations (live)", "Liquidations (live)"], ["#sec-vol", "Volume (futures / spot)", "Volume (futures / spot)"], ["#sec-flowheat", "Heatmap", "Heatmap"], ["#lq-faq", "Su'aalo", "FAQ"]] },
     { href: "taariikhda.html",  key: "taariikhda", label: "Taariikhda FED", en: "Fed History" },
     { href: "fahanka-fed.html", key: "fahanka",    label: "Fahanka FED",    en: "Learn the Fed" },
     { href: "ku-saabsan.html",  key: "ku-saabsan", label: "Ku saabsan",     en: "About" }
@@ -362,6 +362,8 @@
   document.addEventListener("DOMContentLoaded", function () {
     const hdr = document.querySelector("[data-header]");
     if (hdr && hdr.dataset.header === "admin") return;
+    const GP = ["charts", "kalandarka", "lacagta"]; // bogagga qufulka leh: qufulka ayaa horay u weydiinaya
+    if (hdr && window.SITE && window.SITE.gate && window.SITE.gate.on && GP.indexOf(hdr.dataset.header) !== -1) return;
     if (g("xc-xf") === "1" && g("xc-tg") === "1") return;
     if (Date.now() - (+g("xc-join-x") || 0) < 864e5) return; // maalintii hal mar
     const S = window.SITE || {}, soc = S.social || {};

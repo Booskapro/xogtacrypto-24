@@ -1411,3 +1411,13 @@ main.lq-wide { max-width: 1480px; }
 .lq-sb.sm2 { height: 5px; margin-top: 6px; }
 .lq-lqbd { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
 .lq-lqnew { font-style: normal; font-size: .78rem; color: #2BD67B; font-weight: 700; min-width: 54px; }
+.lq-layout.lq-noside { grid-template-columns: minmax(0, 1fr); }
+main.lq-wide { max-width: 1240px; }
+.lq-cfh { font-weight: 800; font-size: .95rem; margin-bottom: 8px; }
+.lq-cfr { display: grid; grid-template-columns: 22px 64px 1fr 86px 64px; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: .88rem; }
+.lq-cfr strong { text-align: right; font-family: var(--font-display); }
+.lq-cfr small { text-align: right; font-size: .76rem; }
+.lq-cfb { height: 8px; background: var(--card-2); border-radius: 4px; overflow: hidden; }
+.lq-cfb i { display: block; height: 100%; border-radius: 4px; }
+.lsv-ctl[hidden], .lsv-p[hidden] { display: none; }
+.lsv-ctl { display: inline-flex; gap: 6px; }
