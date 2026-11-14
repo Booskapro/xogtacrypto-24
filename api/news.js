@@ -182,6 +182,8 @@ module.exports = async function handler(req, res) {
     }
     // Tweet-yada X (notify.js ayaa KV ku kaydiya marka X_BEARER_TOKEN jiro)
     let xs = []; try { xs = JSON.parse((await kv(["GET", "xc:xfeed"])) || "[]"); } catch (e) {}
+    // Portfolio-yada: iibka/iibinta (notify.js ayaa kaydiya)
+    let pfn = []; try { pfn = ((await kv(["LRANGE", "xc:pfnews", 0, 9])) || []).map((x) => JSON.parse(x)).filter((x) => Date.now() - Date.parse(x.date) < 7 * 864e5); } catch (e) {}
     const items = xs.concat(await fetchNews()).sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, MAX);
     // Af-Soomaali: cinwaan + sharaxaad + muhiimad (isla kaydka bot-ka: xc:tr4)
     let budget = MAX_NEW_TR;
@@ -210,7 +212,7 @@ module.exports = async function handler(req, res) {
       }
     } catch (e) { /* ignore */ }
     res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
-    res.status(200).json({ updated: new Date().toISOString(), items: rel.concat(items.map((n) => ({ ...n, date: new Date(n.date).toISOString() }))) });
+    res.status(200).json({ updated: new Date().toISOString(), items: rel.concat(pfn, items.map((n) => ({ ...n, date: new Date(n.date).toISOString() }))) });
   } catch (e) {
     res.setHeader("Cache-Control", "s-maxage=60");
     res.status(200).json({ updated: new Date().toISOString(), items: [], error: String(e.message || e) });

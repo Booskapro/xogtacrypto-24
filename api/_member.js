@@ -93,55 +93,43 @@ module.exports = async function handler(req, res) {
       } catch (e) { return send(502, { error: "upstream" }); }
     }
     if (op === "pf") {
-      // Portfolio-yada: haraaga ON-CHAIN (Arkham API) — saacad kasta, kayd KV. Furaha: ARKHAM_API_KEY (Vercel)
-      const KEY = env("ARKHAM_API_KEY"), dbg = !!(req.query && req.query.debug);
-      res.setHeader("Cache-Control", dbg ? "no-store" : "public, s-maxage=300, stale-while-revalidate=900");
-      if (!KEY) return send(200, { ok: false, error: "ARKHAM_API_KEY Vercel kuma jiro" });
-      if (!dbg) { try { const h = JSON.parse((await kv(["GET", "xc:pf"])) || "null"); if (h && Date.now() - h.at < 3600e3) return send(200, h); } catch (e) {} }
-      // Magacyada entity-ga Arkham (haddii mid khaldan yahay: Vercel ARKHAM_ENTITIES = {"strategy":["..."]})
-      const ENT = { satoshi: ["satoshi-nakamoto"], strategy: ["microstrategy", "strategy"], ibit: ["blackrock"], bitmine: ["bitmine", "bitmine-immersion-technologies", "bitmine-immersion"], usgov: ["usg", "us-government", "united-states-government"] };
-      try { Object.assign(ENT, JSON.parse(env("ARKHAM_ENTITIES") || "{}")); } catch (e) {}
-      const COIN = { satoshi: "btc", strategy: "btc", ibit: "btc", bitmine: "eth", usgov: "btc" };
-      const IDS = { btc: ["bitcoin"], eth: ["ethereum", "weth", "staked-ether", "lido-staked-ether", "wrapped-steth", "rocket-pool-eth", "coinbase-wrapped-staked-eth", "staked-eth"] };
-      const sumCoin = (j, c) => {
-        let q = 0; const seen = new Set();
-        const walk = (o, d) => {
-          if (!o || typeof o !== "object" || d > 6) return;
-          if (Array.isArray(o)) return o.forEach((x) => walk(x, d + 1));
-          const pid = String(o.pricingID || o.pricingId || o.id || "").toLowerCase(), sym = String(o.symbol || "").toLowerCase();
-          if (typeof o.balance === "number" && (IDS[c].includes(pid) || (!pid && sym === c))) { const key = pid + sym + o.balance + (o.chain || ""); if (!seen.has(key)) { seen.add(key); q += o.balance; } return; }
-          Object.keys(o).forEach((k) => { if (k !== "totalBalance") walk(o[k], d + 1); });
-        };
-        walk(j && j.balances ? j.balances : j, 0);
-        return q;
+      // Portfolio-yada: CoinGecko Treasuries (bilaash, Demo key ikhtiyaari: COINGECKO_API_KEY).
+      // Xogtu waxay ka timaadaa warbixinnada rasmiga ah; marka ay wax iibsadaan tiradu way isbeddeshaa. Kayd: 1 saac.
+      const dbg = !!(req.query && req.query.debug);
+      res.setHeader("Cache-Control", dbg ? "no-store" : "public, s-maxage=600, stale-while-revalidate=1800");
+      if (!dbg) { try { const h = JSON.parse((await kv(["GET", "xc:pf2"])) || "null"); if (h && Date.now() - h.at < 3600e3) return send(200, h); } catch (e) {} }
+      const KEY = env("COINGECKO_API_KEY"), H = { headers: Object.assign({ Accept: "application/json", "User-Agent": "Mozilla/5.0 (XogtaCrypto)" }, KEY ? { "x-cg-demo-api-key": KEY } : {}) };
+      const P = ["companies/public_treasury/bitcoin", "companies/public_treasury/ethereum", "governments/public_treasury/bitcoin"];
+      const R = await Promise.all(P.map((p) => fetch("https://api.coingecko.com/api/v3/" + p, H).then(async (r) => ({ s: r.status, j: await r.json().catch(() => null) })).catch((e) => ({ s: 0, e: String(e.message || e) }))));
+      const L = (x) => (x && x.j && (x.j.companies || x.j.governments || x.j.entities)) || [];
+      const pick = (arr, re) => arr.find((c) => re.test((c.symbol || "") + " | " + (c.name || "")));
+      const F = {
+        strategy: [L(R[0]), /^MSTR\b|\| Strategy|MicroStrategy/i, "BTC"],
+        ibit: [L(R[0]), /IBIT|iShares Bitcoin/i, "BTC"],
+        bitmine: [L(R[1]), /^BMNR\b|Bitmine|BitMine/i, "ETH"],
+        usgov: [L(R[2]), /United States|\bUSA?\b/i, "BTC"]
       };
-      const out = { ok: true, at: Date.now(), src: "Arkham", items: {} }, dg = {};
-      await Promise.all(Object.keys(ENT).map(async (k) => {
-        for (const id of [].concat(ENT[k])) {
-          try {
-            const r = await fetch("https://api.arkm.com/balances/entity/" + encodeURIComponent(id), { headers: { "API-Key": KEY, Accept: "application/json" } });
-            const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch (e) {}
-            const q = r.ok && j ? sumCoin(j, COIN[k]) : 0;
-            if (dbg) dg[k + ":" + id] = { status: r.status, qty: q, sample: t.slice(0, 700) };
-            if (q > 0) { out.items[k] = { qty: q, coin: COIN[k].toUpperCase(), entity: id }; break; }
-          } catch (e) { if (dbg) dg[k + ":" + id] = String(e.message || e).slice(0, 120); }
-        }
-      }));
-      // Isbeddelka on-chain: kaydka maalinlaha ah (xc:pfh:<k> → taariikh: tirada)
+      const out = { ok: true, at: Date.now(), src: "CoinGecko Treasuries", items: {} };
+      Object.keys(F).forEach((k) => {
+        const c = pick(F[k][0], F[k][1]); if (!c || !(+c.total_holdings > 0)) return;
+        const q = +c.total_holdings, ent = +c.total_entry_value_usd || 0, cur = +c.total_current_value_usd || 0;
+        out.items[k] = { qty: q, coin: F[k][2], avg: ent > 0 ? ent / q : null, px: cur > 0 ? cur / q : null, name: c.name };
+      });
+      // Isbeddelka: kaydka maalinlaha ah (xc:pfh:<k>)
       const today = day(), ks = Object.keys(out.items);
       const hs = await kvp(ks.map((k) => ["HGETALL", "xc:pfh:" + k]));
       const cmds = [];
       ks.forEach((k, i) => {
         const h = hobj(hs[i]), it = out.items[k];
         const ago = (n) => { for (let m = n; m <= n + 3; m++) { const d = day(Date.now() - m * 864e5); if (h[d]) return h[d]; } return null; };
-        const a1 = ago(1), a7 = ago(7), a30 = ago(30);
-        if (a1 != null) it.d1 = it.qty - a1; if (a7 != null) it.d7 = it.qty - a7; if (a30 != null) it.d30 = it.qty - a30;
+        const a7 = ago(7), a30 = ago(30);
+        if (a7 != null) it.d7 = it.qty - a7; if (a30 != null) it.d30 = it.qty - a30;
         cmds.push(["HSET", "xc:pfh:" + k, today, String(it.qty)], ["EXPIRE", "xc:pfh:" + k, 400 * 86400]);
       });
       if (cmds.length) await kvp(cmds);
-      if (ks.length) await kv(["SET", "xc:pf", JSON.stringify(out), "EX", 7200]);
-      if (dbg) out.debug = dg;
-      if (!ks.length) { out.ok = false; out.error = "Arkham xog ma soo celin (eeg ?debug=1)"; }
+      if (ks.length) await kv(["SET", "xc:pf2", JSON.stringify(out), "EX", 7200]);
+      if (dbg) out.debug = R.map((x, i) => ({ path: P[i], status: x.s, err: x.e, count: L(x).length, sample: L(x).slice(0, 8).map((c) => (c.symbol || "") + " | " + c.name + " | " + c.total_holdings) }));
+      if (!ks.length) { out.ok = false; out.error = "CoinGecko xog ma soo celin (eeg ?debug=1)"; }
       return send(200, out);
     }
     if (op === "cex") {

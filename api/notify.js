@@ -516,6 +516,40 @@ async function pollLiq(out) {
   } catch (e) { out.errors.push("liq: " + e.message); }
 }
 
+// ================= Portfolio-yada: marka ay BTC/ETH iibsadaan ama iibiyaan -> war (Telegram + web) =================
+const PF_NAME = { strategy: "Strategy (Michael Saylor)", bitmine: "Bitmine (Tom Lee)", usgov: "Dowladda Mareykanka", ibit: "BlackRock IBIT" };
+const PF_MIN = { BTC: 1, ETH: 10 };
+async function pollPf(out, base) {
+  const last = Number(await get("pf:chk")) || 0;
+  if (Date.now() - last < 15 * 60e3) return; // 15 daqiiqo mar
+  await set("pf:chk", Date.now());
+  let j = null; try { j = await (await fetch(base + "/api/member?op=pf")).json(); } catch (e) { return; }
+  if (!j || !j.ok || !j.items) return;
+  for (const k of Object.keys(j.items)) {
+    const it = j.items[k], prev = Number(await get("pfq:" + k));
+    await set("pfq:" + k, it.qty);
+    if (!prev) { out.skipped.push("pf " + k + " (bilow)"); continue; }
+    const d = it.qty - prev;
+    if (Math.abs(d) < (PF_MIN[it.coin] || 1)) continue;
+    if (!(await claim("pf:" + k + ":" + Math.round(it.qty)))) continue;
+    const buy = d > 0, nm = PF_NAME[k] || it.name, icon = it.coin === "BTC" ? "🟠" : "🔷", q = (x) => Math.round(Math.abs(x)).toLocaleString("en-US");
+    const title = nm + (buy ? " ayaa iibsatay " : " ayaa iibisay ") + q(d) + " " + it.coin;
+    const text = icon + " <b>" + (buy ? "IIB CUSUB" : "IIBIN") + " · " + esc(nm.toUpperCase()) + "</b>\n\n" +
+      "<b>" + esc(title) + "</b>" + (it.px ? " (≈" + usd(Math.abs(d) * it.px) + ")" : "") + "\n\n" +
+      "💼 Hadda waxay haysaa: <b>" + q(it.qty) + " " + it.coin + "</b>" + (it.px ? " (" + usd(it.qty * it.px) + ")" : "") + "\n" +
+      (it.avg ? "📊 Celceliska iibka: <b>" + px(it.avg) + "</b>" + (it.px ? " · " + (it.px >= it.avg ? "🟢 faa'iido " : "🔴 khasaare ") + usd(Math.abs(it.qty * (it.px - it.avg))) : "") + "\n" : "") +
+      "\n<i>Isha: warbixinta rasmiga ah (CoinGecko Treasuries)</i>";
+    const page = SITE + "/portfolio#pf-" + k;
+    try {
+      await sendPost(text, undefined, [{ text: "💼 Portfolio live", url: page }]);
+      const item = { id: "pf" + k + Math.round(it.qty), title, title_so: title, sum_so: "Hadda waxay haysaa " + q(it.qty) + " " + it.coin + (it.avg ? ", celceliska iibka " + px(it.avg) : "") + ".",
+        link: page, source: "Xogta Crypto · Portfolio", cat: "btc", imp: 8, date: new Date().toISOString(), official: false };
+      await kv(["LPUSH", "xc:pfnews", JSON.stringify(item)]); await kv(["LTRIM", "xc:pfnews", 0, 19]);
+      out.sent.push("pf: " + title);
+    } catch (e) { await kv(["DEL", "xc:sent:pf:" + k + ":" + Math.round(it.qty)]); out.errors.push("pf: " + e.message); }
+  }
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   const out = { sent: [], skipped: [], errors: [] };
@@ -634,6 +668,8 @@ module.exports = async function handler(req, res) {
       } else out.skipped.push("news (sug)");
     }
 
+    // Portfolio-yada (iib / iibin)
+    try { await pollPf(out, base); } catch (e) { out.errors.push("pf: " + String(e.message || e)); }
     // Liquidations waaweyn
     try { await pollLiq(out); } catch (e) { out.errors.push("liq: " + String(e.message || e)); }
 
@@ -644,4 +680,4 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(out);
   }
 };
-module.exports._internal = { pickImg, parseTg, pollLiq, msgFomc, msgCpi, msgNfp, msgOdds, parseRss, msgNews, trOk, realLink, fetchBls, msgCpiBls, msgNfpBls, blsWindow, parseAi };
+module.exports._internal = { pollPf, pickImg, parseTg, pollLiq, msgFomc, msgCpi, msgNfp, msgOdds, parseRss, msgNews, trOk, realLink, fetchBls, msgCpiBls, msgNfpBls, blsWindow, parseAi };
