@@ -14,11 +14,11 @@
     { k: "satoshi", name: "Satoshi Nakamoto", who: T("Abuuraha Bitcoin", "Bitcoin's creator"), ic: "₿", col: "#F7931A", coin: "BTC", qty: 1096000,
       note: T("Waa la qoday (mined) 2009–2010, kharash iib ma jiro. Tiradu waa qiyaas.", "Mined in 2009–2010, no purchase cost. The amount is an estimate."), src: "Arkham", asOf: "2026-06-01", est: 1 },
     { k: "strategy", name: "Strategy (MSTR)", who: "Michael Saylor", ic: "S", col: "#FF7A00", coin: "BTC", qty: 850364,
-      note: T("Strategy wallet-yadeeda ma shaacin. On-chain waxaa muuqda inta Arkham garatay oo kaliya.", "Strategy does not publish its wallets. On-chain shows only what Arkham has identified."), src: "SEC 8-K", asOf: "2026-11-08" },
+      note: T("On-chain: inta Arkham garatay oo kaliya. BTC-da Fidelity Custody (183K+) kuma jirto. Warbixinta rasmiga ah: 850,364 BTC.", "On-chain: only what Arkham has identified. BTC at Fidelity Custody (183K+) is not included. Official filing: 850,364 BTC."), src: "SEC 8-K", asOf: "2026-11-08" },
     { k: "ibit", name: "BlackRock IBIT", who: T("ETF-ga Bitcoin ee ugu weyn", "Largest Bitcoin ETF"), ic: "B", col: "#E8EDF3", coin: "BTC", qty: 806037,
       note: T("ETF: Bitcoin-ka waxaa iska leh maalgashadayaasha ETF-ga.", "Bitcoin held for the ETF's investors."), src: "BitcoinTreasuries", asOf: "2026-10-07" },
     { k: "bitmine", name: "Bitmine (BMNR)", who: "Tom Lee", ic: "Ξ", col: "#7B8CFF", coin: "ETH", qty: 6070092,
-      note: T("ETH-da staked-ka ah qayb ka mid ah waxaa laga yaabaa inaysan on-chain ku muuqan.", "Part of the staked ETH may not show on-chain."), src: "Bitmine", asOf: "2026-11-08" },
+      note: T("On-chain: ETH-da wallet-yada oo kaliya. ~5.2M ETH oo staking ku jira kuma jiraan. Warbixinta rasmiga ah: 6.07M ETH.", "On-chain: wallet ETH only. ~5.2M staked ETH is not included. Official report: 6.07M ETH."), src: "Bitmine", asOf: "2026-11-08" },
     { k: "usgov", name: T("Dowladda Mareykanka", "US Government"), who: T("Bitcoin la qabtay", "Seized bitcoin"), ic: "US", col: "#5B8DEF", coin: "BTC", qty: 328372,
       note: T("Lacag dembiyo laga qabtay, lama iibsan.", "Seized in criminal cases, not bought."), src: "BitcoinTreasuries", asOf: "2026-10-16", est: 1 }
   ];
