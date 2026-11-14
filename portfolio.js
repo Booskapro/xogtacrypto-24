@@ -12,23 +12,23 @@
   // ---------- Xogta (warbixinnada rasmiga ah; marka ay cusboonaadaan halkan ayaa la beddelaa) ----------
   const PF = [
     { k: "satoshi", name: "Satoshi Nakamoto", who: T("Abuuraha Bitcoin", "Bitcoin's creator"), ic: "₿", col: "#F7931A", coin: "BTC", qty: 1096000,
-      note: T("Waa la qoday (mined) 2009–2010, kharash iib ma jiro. Tiradu waa qiyaas.", "Mined in 2009–2010, no purchase cost. The amount is an estimate."), src: "Arkham", asOf: "2026-06-01", est: 1 },
+      note: T("Waa la qoday (mined) 2009–2010. Coin-kan weligood ma dhaqaaqin, sidaas darteed tiradu way go'an tahay.", "Mined in 2009–2010. These coins have never moved, so the amount is fixed."), src: "Arkham", asOf: "2026-11-14", chain: 1 },
     { k: "strategy", name: "Strategy (MSTR)", who: "Michael Saylor", ic: "S", col: "#FF7A00", coin: "BTC", qty: 850364,
-      note: T("On-chain: inta Arkham garatay oo kaliya. BTC-da Fidelity Custody (183K+) kuma jirto. Warbixinta rasmiga ah: 850,364 BTC.", "On-chain: only what Arkham has identified. BTC at Fidelity Custody (183K+) is not included. Official filing: 850,364 BTC."), src: "SEC 8-K", asOf: "2026-11-08" },
+      avg: 75456, src: "SEC 8-K", asOf: "2026-11-08" },
     { k: "ibit", name: "BlackRock IBIT", who: T("ETF-ga Bitcoin ee ugu weyn", "Largest Bitcoin ETF"), ic: "B", col: "#E8EDF3", coin: "BTC", qty: 806037,
       note: T("ETF: Bitcoin-ka waxaa iska leh maalgashadayaasha ETF-ga.", "Bitcoin held for the ETF's investors."), src: "BitcoinTreasuries", asOf: "2026-10-07" },
     { k: "bitmine", name: "Bitmine (BMNR)", who: "Tom Lee", ic: "Ξ", col: "#7B8CFF", coin: "ETH", qty: 6070092,
-      note: T("On-chain: ETH-da wallet-yada oo kaliya. ~5.2M ETH oo staking ku jira kuma jiraan. Warbixinta rasmiga ah: 6.07M ETH.", "On-chain: wallet ETH only. ~5.2M staked ETH is not included. Official report: 6.07M ETH."), src: "Bitmine", asOf: "2026-11-08" },
+      avg: 3380, src: "Bitmine · SEC 10-K", asOf: "2026-11-08" },
     { k: "usgov", name: T("Dowladda Mareykanka", "US Government"), who: T("Bitcoin la qabtay", "Seized bitcoin"), ic: "US", col: "#5B8DEF", coin: "BTC", qty: 328372,
       note: T("Lacag dembiyo laga qabtay, lama iibsan.", "Seized in criminal cases, not bought."), src: "BitcoinTreasuries", asOf: "2026-10-16", est: 1 }
   ];
   const PX = { BTC: { p: 0, o: 0 }, ETH: { p: 0, o: 0 } };
-  // ON-CHAIN (Arkham, /api/member?op=pf): marka uu jiro, tirada kor ku qoran waa la beddelaa
+  // Xogta tooska ah (/api/member?op=pf · CoinGecko Treasuries): marka ay wax iibsadaan tiradu way isbeddeshaa
   let OC = null;
   async function onchain() {
     try {
       const j = await (await fetch("/api/member?op=pf")).json();
-      if (j && j.ok && j.items) { OC = j; PF.forEach((x) => { const it = j.items[x.k]; if (it && it.qty > 0) { x.qty = it.qty; x.oc = it; } }); }
+      if (j && j.ok && j.items) { OC = j; PF.forEach((x) => { const it = j.items[x.k]; if (it && it.qty > 0) { x.qty = it.qty; x.oc = it; if (it.avg) x.avg = it.avg; } }); }
     } catch (e) { /* ignore */ }
     paintSrc(); render();
   }
@@ -41,7 +41,8 @@
   const pct = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "%";
   function calc(x) {
     const q = PX[x.coin], val = x.qty * q.p, d24 = x.qty * (q.p - q.o), d24p = q.o ? (q.p / q.o - 1) * 100 : 0;
-    return { val, d24, d24p, p: q.p };
+    const pl = x.avg ? val - x.qty * x.avg : null, plp = x.avg ? (q.p / x.avg - 1) * 100 : null;
+    return { val, d24, d24p, pl, plp, p: q.p };
   }
 
   // ---------- Qaabka ----------
@@ -81,6 +82,7 @@
           <div><span>${T("Isbeddel 7 maalin", "7-day change")}</span><b class="pf-c7">—</b></div>
           <div><span>${T("Qiimaha", "Price")} ${x.coin}</span><b class="pf-p">—</b></div>
         </div>
+        <div class="pf-plw"${x.avg ? "" : " hidden"}><div class="pf-pl"><span>${T("Faa'iido / khasaare guud", "Total profit / loss")} · <em class="pf-avg"></em></span><b class="pf-plv">—</b></div><div class="pf-bar"><i></i></div></div>
         <p class="pf-note">${esc(x.note || "")}</p>
         <p class="pf-src"></p>
       </article>`).join("")}
@@ -88,10 +90,11 @@
 
   function hm(t) { const d = new Date(t); return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
   function srcText(x) {
-    return x.oc ? "⛓ On-chain · Arkham · " + T("la cusbooneysiiyay ", "updated ") + hm(OC.at)
-      : "⚠ " + T("On-chain wali lama xirin · ku meel gaar: ", "Not on-chain yet · temporary: ") + x.src + " · " + dstr(x.asOf);
+    if (x.chain) return "⛓ On-chain · " + T("coin-ka lama dhaqaajin tan 2010", "coins unmoved since 2010") + " · Arkham";
+    return x.oc ? "📄 " + T("Warbixin rasmi ah · CoinGecko Treasuries · la cusbooneysiiyay ", "Official filings · CoinGecko Treasuries · updated ") + hm(OC.at)
+      : "📄 " + T("Warbixin rasmi ah: ", "Official filing: ") + x.src + " · " + dstr(x.asOf);
   }
-  function paintSrc() { PF.forEach((x) => { const el = document.querySelector("#pf-" + x.k + " .pf-src"); if (el) { el.textContent = srcText(x); el.classList.toggle("oc", !!x.oc); } }); }
+  function paintSrc() { PF.forEach((x) => { const el = document.querySelector("#pf-" + x.k + " .pf-src"); if (el) { el.textContent = srcText(x); el.classList.toggle("oc", !!(x.oc || x.chain)); } }); }
   paintSrc();
 
   // ---------- Cusbooneysiin (ilbiriqsi kasta) ----------
@@ -113,6 +116,13 @@
       d.textContent = money(c.d24, true) + " (" + pct(c.d24p) + ") · 24h"; d.className = "pf-d " + (c.d24 >= 0 ? "up" : "dn");
       el.querySelector(".pf-p").textContent = price(c.p);
       el.querySelector(".pf-q").textContent = qfmt(r.x.qty) + " " + r.x.coin;
+      const plw = el.querySelector(".pf-plw");
+      if (r.x.avg) {
+        plw.hidden = false;
+        el.querySelector(".pf-avg").textContent = T("celcelis ", "avg ") + price(r.x.avg);
+        const pl = el.querySelector(".pf-plv"); pl.textContent = money(c.pl, true) + " (" + pct(c.plp) + ")"; pl.className = "pf-plv " + (c.pl >= 0 ? "up" : "dn");
+        const b = el.querySelector(".pf-bar i"); b.style.width = Math.min(100, Math.abs(c.plp) * 2) + "%"; b.className = c.pl >= 0 ? "up" : "dn";
+      }
       const c7 = el.querySelector(".pf-c7"), d7 = r.x.oc && r.x.oc.d7;
       c7.textContent = d7 != null ? chg(d7, r.x.coin) : "—"; c7.className = "pf-c7 " + (d7 > 0 ? "up" : d7 < 0 ? "dn" : "");
     });
@@ -171,8 +181,12 @@
     const d7 = x.oc && x.oc.d7;
     const cells = [[T("Haysta", "Holds"), qfmt(x.qty) + " " + x.coin], [T("Isbeddel 7 maalin", "7-day change"), d7 != null ? chg(d7, x.coin) : "—"], [T("Qiimaha ", "Price ") + x.coin, price(c.p)]];
     cells.forEach((cl, i) => { const bx = 56 + i * 370; s += box(bx, 352, 348, 112) + tx(bx + 28, 394, cl[0], 20, { c: K.mut }) + tx(bx + 28, 440, cl[1], 34, { d: 1, w: 800 }); });
-    s += box(56, 486, 1088, 102, x.oc ? "rgba(43,214,123,.08)" : K.card, x.oc ? "rgba(43,214,123,.35)" : null) + tx(88, 546, x.oc ? T("⛓ Xogta on-chain · Arkham", "⛓ On-chain data · Arkham") : (x.note || ""), 24, { c: x.oc ? G : K.mut, w: x.oc ? 700 : 400 });
-    return { s, src: (x.oc ? "On-chain (Arkham)" : x.src + " · " + dstr(x.asOf)) + " · Binance" };
+    if (x.avg) {
+      const up = c.pl >= 0;
+      s += box(56, 486, 1088, 102, up ? "rgba(43,214,123,.12)" : "rgba(240,90,95,.12)", up ? "rgba(43,214,123,.45)" : "rgba(240,90,95,.45)");
+      s += tx(88, 532, T("Faa'iido / khasaare guud", "Total profit / loss"), 26, { w: 700, c: K.mut }) + tx(88, 566, T("celceliska iibka ", "avg. buy price ") + price(x.avg), 20, { c: K.mut }) + tx(1112, 554, money(c.pl, true) + " (" + pct(c.plp) + ")", 50, { d: 1, w: 800, a: "end", c: up ? G : R });
+    } else s += box(56, 486, 1088, 102) + tx(88, 546, x.note || "", 24, { c: K.mut });
+    return { s, src: (x.chain ? "On-chain (Arkham)" : x.oc ? "CoinGecko Treasuries" : x.src + " · " + dstr(x.asOf)) + " · Binance" };
   }
   function bodyAll() {
     const rows = PF.map((x) => ({ x, c: calc(x) })).sort((a, b) => b.c.val - a.c.val);
@@ -184,7 +198,7 @@
       s += tx(770, y + 52, money(c.val), 34, { d: 1, w: 800, a: "end" });
       s += tx(1112, y + 40, money(c.d24, true), 26, { d: 1, w: 800, a: "end", c: c.d24 >= 0 ? G : R }) + tx(1112, y + 66, "24h " + pct(c.d24p), 18, { a: "end", c: K.mut });
     });
-    return { s, src: (OC ? "On-chain (Arkham)" : "SEC · Arkham · BitcoinTreasuries") + " · Binance" };
+    return { s, src: "On-chain · SEC · CoinGecko Treasuries · Binance" };
   }
   async function shotSVG(k) {
     const [fc, logo] = await Promise.all([fonts(), LOGO || dataURI("logo.svg").then((u) => (LOGO = u)).catch(() => "")]);
@@ -211,7 +225,7 @@
     if (a === "menu") { const m = w.querySelector(".xcc-menu"), o = m.hidden; closeAll(); m.hidden = !o; b.classList.toggle("on", o); return; }
     closeAll(); if (!PX.BTC.p) return;
     const x = PF.find((p) => p.k === k), url = location.origin + "/portfolio" + (x ? "#pf-" + k : "");
-    const text = (x ? x.name + " · " + money(calc(x).val) + " · 24h " + money(calc(x).d24, true) : T("5-ta portfolio crypto ee ugu waaweyn · live", "The 5 biggest crypto portfolios · live")) + "\n\n" + url + (window.SITE && window.SITE.x_handle ? "\n" + window.SITE.x_handle : "");
+    const text = (x ? x.name + " · " + money(calc(x).val) + (x.avg ? " · " + T("faa'iido/khasaare ", "P/L ") + money(calc(x).pl, true) : " · 24h " + money(calc(x).d24, true)) : T("5-ta portfolio crypto ee ugu waaweyn · live", "The 5 biggest crypto portfolios · live")) + "\n\n" + url + (window.SITE && window.SITE.x_handle ? "\n" + window.SITE.x_handle : "");
     const name = `xogta-crypto-portfolio-${k}-${new Date().toISOString().slice(0, 10)}.png`;
     try {
       if (a === "link") { await navigator.clipboard.writeText(url); toast(T("Link-ga waa la koobiyeeyay", "Link copied")); return; }

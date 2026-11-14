@@ -1464,3 +1464,5 @@ main.lq-wide { max-width: 1240px; }
 @media (max-width: 560px) { .pf-list { grid-template-columns: 1fr; } .pf-v { font-size: 1.8rem; } .pf-ta { margin-left: 0; } }
 .pf-src.oc { color: #2BD67B; opacity: 1; font-weight: 600; }
 .pf-note:empty { display: none; }
+.pf-plw[hidden] { display: none; } .pf-avg { font-style: normal; }
+.pf-plv { white-space: nowrap; } .pf-pl span { min-width: 0; }
