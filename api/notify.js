@@ -39,7 +39,8 @@ async function send(text, previewUrl) {
 }
 
 // TELEGRAM_CHAT_ID: hal ama dhowr (kala qaybi comma): tusaale  @Xogtacrypto24_7,-1001234567890
-const CHATS = () => env("TELEGRAM_CHAT_ID").split(",").map((x) => x.trim()).filter(Boolean);
+// + TELEGRAM_CHANNEL_ID (channel-ka wararka, tusaale @XogtaCryptoNews) — kala qaybi comma
+const CHATS = () => (env("TELEGRAM_CHAT_ID") + "," + env("TELEGRAM_CHANNEL_ID")).split(",").map((x) => x.trim()).filter((x, i, a) => x && a.indexOf(x) === i);
 async function tg(method, body) {
   let ok = 0, err = "";
   for (const chat_id of CHATS()) {
