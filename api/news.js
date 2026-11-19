@@ -1,5 +1,6 @@
 /* Wararka FED — /api/news  (link toos ah + cinwaan af-Soomaali) */
-const MAX = 60, MAX_NEW_TR = 15;
+const NX = require("./notify.js")._internal; // AI-ga af-Soomaaliga (isla kan bot-ka)
+const MAX = 60, MAX_NEW_TR = 2; // AI turjumaad cusub codsi kasta (Gemini bilaash ah)
 function env(...n) { for (const k of n) if (process.env[k]) return process.env[k]; return ""; }
 async function kv(cmd) {
   const url = env("KV_REST_API_URL", "UPSTASH_REDIS_REST_URL"), token = env("KV_REST_API_TOKEN", "UPSTASH_REDIS_REST_TOKEN");
@@ -156,18 +157,13 @@ async function claudeSomali(text) {
   } catch (e) { return null; }
 }
 // Natiijo: { t: cinwaan Soomaali, s: sharaxaad } ama null. Khalad -> 10 daqiiqo kadib mar kale.
+// Bogga wararka: Google Translate (bilaash) -> kayd gooni ah (xc:trg). Haddii bot-ku AI ku qoray (xc:tr5) kaas ayaa la doorbidaa.
 async function translateNews(title, desc, kvf) {
-  const key = "xc:tr4:" + hash(title);
+  const key = "xc:trg:" + hash(title);
   try { const c = await kvf(["GET", key]); if (c) return c === "-" ? null : JSON.parse(c); } catch (e) {}
-  const src = "Headline: " + title + (desc ? "\nSummary: " + desc.slice(0, 600) : "");
-  // Bogga wararka: Google Translate (bilaash, xad la'aan) -> Gemini waxaa loo dhaafaa bot-ka
   let o = null;
-  if (o && !trOk(title, o.t)) { AI_ERR.check = "turjumaaddu ma gudbin hubinta: " + String(o.t).slice(0, 80); o = null; }
-  if (!o) { const g = await gtSomali(title); if (g && trOk(title, g.t)) o = g; else if (g) AI_ERR.gtcheck = TR_WHY + " | " + String(g.t).slice(0, 80); }
-  try {
-    await kvf(o ? ["SET", key, JSON.stringify(o), "EX", 60 * 60 * 24 * 14] : ["SET", key, "-", "EX", 600]);
-    if (o) await kvf(["SET", "xc:tr3:" + hash(title), o.t, "EX", 60 * 60 * 24 * 14]); // bogga wararka (news.js)
-  } catch (e) {}
+  const g = await gtSomali(title); if (g && trOk(title, g.t)) o = g; else if (g) AI_ERR.gtcheck = TR_WHY + " | " + String(g.t).slice(0, 80);
+  try { await kvf(o ? ["SET", key, JSON.stringify(o), "EX", 60 * 60 * 24 * 14] : ["SET", key, "-", "EX", 600]); } catch (e) {}
   return o;
 }
 
@@ -189,9 +185,11 @@ module.exports = async function handler(req, res) {
     let budget = MAX_NEW_TR;
     await Promise.all(items.map(async (n) => {
       let o = null;
-      const c = await kv(["GET", "xc:tr4:" + hash(n.title)]);
-      if (c && c !== "-") { try { o = JSON.parse(c); } catch (e) {} }
-      else if (!c && budget-- > 0) o = await translateNews(n.title, n.desc, kv);
+      const h = hash(n.title), r = await Promise.all([kv(["GET", "xc:tr5:" + h]), kv(["GET", "xc:trg:" + h])]);
+      const ai = r[0], gt = r[1];
+      if (ai && ai !== "-") { try { o = JSON.parse(ai); } catch (e) {} }
+      // Af-Soomaali sax ah: AI (isla kan bot-ka) — kaliya wararka muhiimka ah; Google Translate looma isticmaalo
+      if (!o && !ai && budget-- > 0 && NX.HOT.test(n.title)) o = await NX.translateNews(n.title, n.desc, kv);
       n.id = hash(n.link);
       if (o) { n.title_so = o.t; n.sum_so = o.s || ""; n.imp = o.i || 5; if (o.c) n.cat = o.c; }
       delete n.desc;

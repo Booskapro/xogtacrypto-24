@@ -288,7 +288,18 @@ function trOk(src, so) {
   for (const n of (src.match(/\d+(?:\.\d+)?/g) || [])) if (sn.indexOf(n) === -1 && so.indexOf(n) === -1 && sn.indexOf(n.replace(".", ",")) === -1) { TR_WHY = "tiro " + n; return false; }
   return true;
 }
-const AI_RULES = "You are a Somali financial journalist. Translate the news into clear, natural Somali for crypto and market traders. Return ONLY JSON: {\"t\":\"<Somali headline>\",\"s\":\"<1-2 short Somali sentences: what happened and why it matters for the Fed, the dollar, stocks or crypto>\",\"i\":<importance 1-10 for global markets: 9-10 = Fed decision, CPI/jobs surprise, war or major attack, crash/surge, huge hack; 7-8 = important Fed speech, big company/AI/crypto news that moves markets; 1-6 = routine, opinion, small company or analysis>,\"c\":\"<one of: fed, macro, btc, ai, stocks, privacy, world>\"}. Rules: keep names, tickers, numbers and % exactly as in the source; write 'FED' for the Federal Reserve; use common Somali terms (dulsaar = interest rate, sicir-barar = inflation, suuqa saamiyada = stock market, dahab = gold, shidaal = oil, shaqo la'aan = unemployment). Do not invent facts that are not in the source. Never mention Somali companies, people or places unless they are in the source.";
+const AI_RULES = [
+  "You are an experienced Somali news editor (BBC Somali / VOA Somali style) writing for crypto and market traders.",
+  "Do NOT translate word by word. Read the English news, understand it, then WRITE it fresh in natural, simple Somali that an ordinary Somali reader understands immediately.",
+  "Return ONLY JSON: {\"t\":\"<Somali headline, max ~14 words>\",\"s\":\"<1-2 short Somali sentences: what happened and why it matters for markets>\",\"i\":<importance 1-10>,\"c\":\"<fed|macro|btc|ai|stocks|privacy|world>\"}.",
+  "Importance: 9-10 = Fed decision, CPI/jobs surprise, war or major attack, market crash/surge, huge hack; 7-8 = important Fed speech, big company/AI/crypto news that moves markets; 1-6 = routine, opinion, small company, analysis.",
+  "Style rules: short sentences; active voice (\"X ayaa ...\"); no English word order; no literal idioms. Explain finance idioms by meaning: risk appetite = xiisaha maalgashadayaasha / dadka diyaarka u ah khatarta (NEVER 'rabitaanka cuntada'); outflows = lacag ka baxday; inflows = lacag soo gashay; sell-off = iibin xoog leh; rally = kor u kac xoog leh; bearish = hoos u dhac la filayo; bullish = kor u kac la filayo; hackers = haakarro / tuugo internet; exploit = jabsi; listing / IPO = suuqa saamiyada ku soo biiray (IPO); stake = saami.",
+  "Keep in English: company and person names, tickers, ETF, IPO, stablecoin, Bitcoin, Ethereum, crypto, AI, Nasdaq, SEC. Keep every number, $ amount and % exactly. Write 'FED' for the Federal Reserve.",
+  "Use common Somali terms: dulsaar = interest rate, sicir-barar = inflation, suuqa saamiyada = stock market, dahab = gold, shidaal = oil, shaqo la'aan = unemployment, maalgashadayaal = investors, lacag = money/funds.",
+  "Examples. BAD: 'Bixinta Bitcoin ETF waxay muujinaysaa rabitaanka cuntada ee crypto sii yaraanaya'. GOOD: 'Lacag ayaa ka baxaysa Bitcoin ETF-yada: maalgashadayaashu waxay ka cararayaan khatarta crypto'.",
+  "BAD: 'Hackers-ka Kuuriyada Woqooyi waxay adeegsadeen nidaamka Sky's stablecoin, iyagoo balaayiin galiyay halis'. GOOD: 'Haakarro Kuuriyada Waqooyi ah ayaa jabsaday nidaamka stablecoin-ka Sky, balaayiin doollar ayaa khatar ku jira'.",
+  "Do not invent facts that are not in the source. Never mention Somali companies, people or places unless they are in the source."
+].join("\n");
 function parseAi(raw) {
   if (!raw) return null;
   const m = String(raw).match(/\{[\s\S]*\}/);
@@ -306,15 +317,15 @@ async function gtSomali(text) {
     return { t: so, s: "", i: /\b(rate (hike|cut)|war|attack|crash|plunge|surge|emergency|record|default|hack(ed|ers?)?|exploit|stole|tariffs?|recession|bankrupt|ETF|SEC|ban|all-time high|billion|Fed (raises|cuts|holds)|Powell|CPI|inflation|jobs report)\b/i.test(text) ? 8 : 6, c: "" };
   } catch (e) { AI_ERR.gt = String(e.message || e).slice(0, 100); return null; }
 }
-async function geminiSomali(text) {
+async function geminiSomali(text, sys) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) { AI_ERR.gemini = "GEMINI_API_KEY Vercel kuma jiro"; return null; }
   for (const model of [process.env.GEMINI_MODEL, "gemini-3.8-flash", "gemini-flash-latest"].filter(Boolean)) {
     try {
       const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
         method: "POST", headers: { "x-goog-api-key": key, "content-type": "application/json" },
-        body: JSON.stringify({ systemInstruction: { parts: [{ text: AI_RULES }] }, contents: [{ role: "user", parts: [{ text }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 400, responseMimeType: "application/json" } })
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: sys || AI_RULES }] }, contents: [{ role: "user", parts: [{ text }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 500, responseMimeType: "application/json" } })
       });
       const j = await r.json();
       if (!r.ok || j.error) { AI_ERR.gemini = model + ": " + r.status + " " + ((j.error && (j.error.status || "") + " " + (j.error.message || "")) || "").slice(0, 160); continue; }
@@ -326,39 +337,73 @@ async function geminiSomali(text) {
   }
   return null;
 }
-async function claudeSomali(text) {
+async function claudeSomali(text, sys) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return null;
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST", headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-haiku-5-5", max_tokens: 400, system: AI_RULES, messages: [{ role: "user", content: text }] })
+      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-haiku-5-5", max_tokens: 500, system: sys || AI_RULES, messages: [{ role: "user", content: text }] })
     });
     const j = await r.json();
     return parseAi(j && j.content && j.content[0] && j.content[0].text);
   } catch (e) { return null; }
 }
-// Natiijo: { t: cinwaan Soomaali, s: sharaxaad } ama null. Khalad -> 10 daqiiqo kadib mar kale.
+// Natiijo: { t, s, i, c, ai:1 } ama null. Bot-ku wuxuu isticmaalaa AI oo kaliya (Google Translate af-Soomaali xun ayuu qoraa).
+// Kayd: xc:tr5 (AI). Khalad -> 10 daqiiqo kadib mar kale. Xad maalinle ah si Gemini bilaashka ahi u filnaado.
+const AI_DAILY_MAX = +(process.env.AI_DAILY_MAX || 500);
 async function translateNews(title, desc, kvf) {
-  const key = "xc:tr4:" + hash(title);
+  const key = "xc:tr5:" + hash(title);
   try { const c = await kvf(["GET", key]); if (c) return c === "-" ? null : JSON.parse(c); } catch (e) {}
+  const dk = "xc:ai:" + new Date().toISOString().slice(0, 10);
+  let used = 0; try { used = +(await kvf(["GET", dk])) || 0; } catch (e) {}
+  if (used >= AI_DAILY_MAX) { AI_ERR.cap = "xadka maalinlaha AI (" + AI_DAILY_MAX + ") waa dhammaaday"; return null; }
+  try { await kvf(["INCR", dk]); await kvf(["EXPIRE", dk, 172800]); } catch (e) {}
   const src = "Headline: " + title + (desc ? "\nSummary: " + desc.slice(0, 600) : "");
   let o = null, off = null;
   try { off = await kvf(["GET", "xc:gem:off"]); } catch (e) {}
-  if (!off) {
+  if (process.env.AI_PROVIDER === "claude") o = await claudeSomali(src); // ikhtiyaari: Claude marka hore
+  if (!o && !off) {
     o = await geminiSomali(src);
     if (!o && /429|RESOURCE_EXHAUSTED/.test(AI_ERR.gemini || "")) { try { await kvf(["SET", "xc:gem:off", "1", "EX", 1800]); } catch (e) {} }
-  } else AI_ERR.gemini = "xadka Gemini waa dhammaaday -> Google Translate (30 daqiiqo)";
-  if (!o || !trOk(title, o.t)) o = await claudeSomali(src);
-  if (o && !trOk(title, o.t)) { AI_ERR.check = "turjumaaddu ma gudbin hubinta: " + String(o.t).slice(0, 80); o = null; }
-  if (!o) { const g = await gtSomali(title); if (g && trOk(title, g.t)) o = g; else if (g) AI_ERR.gtcheck = TR_WHY + " | " + String(g.t).slice(0, 80); }
+  } else if (!o && off) AI_ERR.gemini = "xadka Gemini waa dhammaaday (30 daqiiqo sug)";
+  if (!o || !trOk(title, o.t)) o = (await claudeSomali(src)) || o;
+  if (o && !trOk(title, o.t)) { AI_ERR.check = TR_WHY + " | " + String(o.t).slice(0, 80); o = null; }
+  if (o) o.ai = 1;
   try {
     await kvf(o ? ["SET", key, JSON.stringify(o), "EX", 60 * 60 * 24 * 14] : ["SET", key, "-", "EX", 600]);
-    if (o) await kvf(["SET", "xc:tr3:" + hash(title), o.t, "EX", 60 * 60 * 24 * 14]); // bogga wararka (news.js)
+    if (o) await kvf(["SET", "xc:tr3:" + hash(title), o.t, "EX", 60 * 60 * 24 * 14]);
   } catch (e) {}
   return o;
 }
-
+// Tallaabada 2aad: tifaftire Soomaali ah ayaa hubiya qoraalka ka hor inta aan Telegram la dirin
+const AI_REVIEW = [
+  "You are a senior Somali copy editor at a news agency (BBC Somali / VOA Somali standard).",
+  "You get the English source and a Somali draft as JSON {t,s,i,c}. Check it line by line and correct it:",
+  "1) facts: everything must match the source; remove anything not in the source; numbers, $ and % exactly as in the source;",
+  "2) meaning: no literal word-by-word translation, no wrong idioms (e.g. 'risk appetite' is NOT 'rabitaanka cuntada'); the reader must understand it at once;",
+  "3) Somali grammar, spelling and natural word order; short clear sentences; headline max ~14 words;",
+  "4) keep names, tickers and terms like ETF, IPO, stablecoin, Bitcoin, AI, Nasdaq, SEC in English; 'FED' for the Federal Reserve.",
+  "If the draft is already correct, return it unchanged. Return ONLY the final JSON with the same keys {\"t\",\"s\",\"i\",\"c\"}."
+].join("\n");
+async function reviewSomali(title, desc, o, kvf) {
+  const dk = "xc:ai:" + new Date().toISOString().slice(0, 10);
+  let used = 0; try { used = +(await kvf(["GET", dk])) || 0; } catch (e) {}
+  if (used >= AI_DAILY_MAX) return null;
+  try { await kvf(["INCR", dk]); } catch (e) {}
+  const src = "ENGLISH SOURCE:\nHeadline: " + title + (desc ? "\nSummary: " + desc.slice(0, 600) : "") + "\n\nSOMALI DRAFT:\n" + JSON.stringify({ t: o.t, s: o.s, i: o.i, c: o.c });
+  let r = null;
+  if (process.env.AI_PROVIDER === "claude") r = await claudeSomali(src, AI_REVIEW);
+  let off = null; try { off = await kvf(["GET", "xc:gem:off"]); } catch (e) {}
+  if (!r && !off) r = await geminiSomali(src, AI_REVIEW);
+  if (!r) r = await claudeSomali(src, AI_REVIEW);
+  if (!r || !trOk(title, r.t)) { AI_ERR.review = "hubinta labaad ma suurtoobin" + (r ? ": " + TR_WHY : ""); return null; }
+  const out = Object.assign({}, o, { t: r.t, s: r.s || o.s, ai: 1, rv: 1 });
+  try { await kvf(["SET", "xc:tr5:" + hash(title), JSON.stringify(out), "EX", 60 * 60 * 24 * 14]); await kvf(["SET", "xc:tr3:" + hash(title), out.t, "EX", 60 * 60 * 24 * 14]); } catch (e) {}
+  return out;
+}
+// Shaandheyn bilaash ah (AI la'aan): warka aan lahayn erayo muhiim ah AI looma diro -> Gemini ma dhammaado
+const HOT = /\b(rate (hike|cut)|rates?|war|attack|strike|missile|crash|plunge|tumble|soar|surge|record|all-time high|emergency|default|hack(ed|ers?)?|exploit|stole|stolen|breach|tariffs?|sanction|recession|bankrupt|lawsuit|ETF|SEC|CFTC|ban|billion|trillion|Fed|FOMC|Powell|Warsh|CPI|inflation|jobs report|payrolls|unemployment|GDP|Treasury|Trump|Bitcoin|BTC|Ethereum|ETH|Strategy|Saylor|BlackRock|Nvidia|OpenAI|Anthropic|Apple|Microsoft|Tesla|Google|Meta|IPO|stablecoin|liquidat\w*)\b|JUST IN|BREAKING/i;
 
 // ================= X (Twitter) — akoonnada la doortay =================
 // Wuxuu shaqeeyaa kaliya marka X_BEARER_TOKEN uu Vercel ku jiro (X API, developer.x.com).
@@ -397,9 +442,11 @@ async function loadNews() {
 const LINE = "━━━━━━━━━━━━━━";
 const URGENT = /\b(rate (hike|cut)|hikes?|cuts?|surge|plunge|crash|war|attack|emergency|record|unexpected|more than expected|less than expected|hotter|cooler|tariffs?|default)\b/i;
 async function msgNews(n) {
-  const so = await translateNews(n.title, n.desc, kv);
-  if (!so) return null; // Ingiriis lama diro -> mar kale ayaa la isku dayi doonaa
+  if (!n.official && !HOT.test(n.title + " " + (n.desc || "").slice(0, 200))) return "skip";
+  let so = await translateNews(n.title, n.desc, kv);
+  if (!so) return null; // Ingiriis / af-Soomaali xun lama diro -> mar kale ayaa la isku dayi doonaa
   if (!n.official && so.i < NEWS_MIN_IMP) return "skip";
+  if (!so.rv) so = (await reviewSomali(n.title, n.desc, so, kv)) || so; // tifaftir ka hor Telegram
   const CAT = { fed: "🏛 FED", macro: "📊 DHAQAALAHA", btc: "₿ CRYPTO", ai: "🤖 AI", stocks: "📈 SAHAMKA", privacy: "🔐 PRIVACY", world: "🌍 ADDUUNKA" };
   const tag = CAT[so.c] || CAT[n.cat] || "📰 WARKA";
   const head = n.official ? "🏛 <b>FEDERAL RESERVE · RASMI</b>" : (so.i >= 9 || URGENT.test(n.title) ? "⚡ <b>WAR DEGDEG AH · " : "<b>") + tag + "</b>";
@@ -680,4 +727,4 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(out);
   }
 };
-module.exports._internal = { pollPf, pickImg, parseTg, pollLiq, msgFomc, msgCpi, msgNfp, msgOdds, parseRss, msgNews, trOk, realLink, fetchBls, msgCpiBls, msgNfpBls, blsWindow, parseAi };
+module.exports._internal = { translateNews, reviewSomali, HOT, pollPf, pickImg, parseTg, pollLiq, msgFomc, msgCpi, msgNfp, msgOdds, parseRss, msgNews, trOk, realLink, fetchBls, msgCpiBls, msgNfpBls, blsWindow, parseAi };
