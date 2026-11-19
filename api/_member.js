@@ -92,6 +92,65 @@ module.exports = async function handler(req, res) {
         res.statusCode = r.status; return res.end(txt);
       } catch (e) { return send(502, { error: "upstream" }); }
     }
+    if (op === "liq") {
+      // Liquidations 24 saac (server): Coinalyze API (bilaash, furaha: COINALYZE_API_KEY) — Binance, Bybit, OKX, Hyperliquid
+      // Daqiiqad kasta (1min) -> qofkii bogga soo gala wuxuu helayaa xogta maanta ilaa hadda. Kayd KV 2.5 daqiiqo.
+      const KEY = env("COINALYZE_API_KEY"), dbg = !!(req.query && req.query.debug);
+      res.setHeader("Cache-Control", dbg ? "no-store" : "public, s-maxage=60, stale-while-revalidate=120");
+      if (!KEY) return send(200, { ok: false, error: "COINALYZE_API_KEY Vercel kuma jiro" });
+      let c = null; try { c = JSON.parse((await kv(["GET", "xc:liqs"])) || "null"); } catch (e) {}
+      if (c && Date.now() - c.at < 150e3 && !dbg) return send(200, c);
+      if (!dbg && (await kv(["SET", "xc:liqs:lock", 1, "NX", "EX", 50])) !== "OK") return send(200, c || { ok: false, error: "sug" });
+      const H = { headers: { api_key: KEY, Accept: "application/json" } }, B = "https://api.coinalyze.net/v1/";
+      const getJ = (u) => fetch(B + u, H).then(async (r) => ({ s: r.status, j: await r.json().catch(() => null) })).catch((e) => ({ s: 0, e: String(e.message || e) }));
+      const dg = {};
+      let mk = null; try { mk = JSON.parse((await kv(["GET", "xc:cz:mk"])) || "null"); } catch (e) {}
+      if (!mk || dbg) {
+        const [ex, fm] = await Promise.all([getJ("exchanges"), getJ("future-markets")]);
+        dg.exchanges = { status: ex.s, err: ex.e, sample: Array.isArray(ex.j) ? ex.j.slice(0, 30).map((x) => x.code + "=" + x.name) : ex.j };
+        dg.markets = { status: fm.s, err: fm.e, count: Array.isArray(fm.j) ? fm.j.length : 0, sample: Array.isArray(fm.j) ? fm.j.slice(0, 3) : fm.j };
+        const exName = {}; (Array.isArray(ex.j) ? ex.j : []).forEach((e) => { exName[e.code] = e.name; });
+        const COINS = ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "HYPE", "SUI", "ZEC", "ADA"];
+        const pk = {};
+        (Array.isArray(fm.j) ? fm.j : []).forEach((m) => {
+          if (!m.is_perpetual) return;
+          const en = String(exName[m.exchange] || m.exchange || ""), exs = (en.match(/Binance|Bybit|OKX|OKEx|Hyperliquid/i) || [])[0];
+          if (!exs) return;
+          const b = String(m.base_asset || "").toUpperCase(); if (!COINS.includes(b)) return;
+          const q = String(m.quote_asset || "").toUpperCase(); if (!/^(USDT|USD|USDC)$/.test(q)) return;
+          const exn = /okx|okex/i.test(exs) ? "OKX" : exs[0].toUpperCase() + exs.slice(1).toLowerCase();
+          const pr = q === "USDT" ? 0 : q === "USDC" ? 1 : 2, k = exn + ":" + b;
+          if (!pk[k] || pr < pk[k].pr) pk[k] = { s: m.symbol, ex: exn === "Hyperliquid" ? "Hyperliquid" : exn, c: b, pr };
+        });
+        mk = Object.values(pk).sort((a, b) => COINS.indexOf(a.c) - COINS.indexOf(b.c)).slice(0, 40);
+        dg.picked = mk.map((x) => x.s);
+        if (mk.length) await kv(["SET", "xc:cz:mk", JSON.stringify(mk), "EX", 86400]);
+      }
+      if (!mk || !mk.length) return send(200, Object.assign({ ok: false, error: "suuq lama helin" }, dbg ? { debug: dg } : {}));
+      const to = Math.floor(Date.now() / 1000), from = to - 1440 * 60;
+      const chunks = [mk.slice(0, 20), mk.slice(20, 40)].filter((x) => x.length);
+      const R = await Promise.all(chunks.map((ch) => getJ("liquidation-history?symbols=" + ch.map((x) => x.s).join(",") + "&interval=1min&from=" + from + "&to=" + to + "&convert_to_usd=true")));
+      dg.history = R.map((r) => ({ status: r.s, err: r.e, rows: Array.isArray(r.j) ? r.j.length : 0, sample: Array.isArray(r.j) && r.j[0] ? { symbol: r.j[0].symbol, h: (r.j[0].history || []).slice(-2) } : r.j }));
+      const by = {}; mk.forEach((x) => { by[x.s] = x; });
+      const M = {}, exT = {}, coinT = {};
+      R.forEach((r) => (Array.isArray(r.j) ? r.j : []).forEach((row) => {
+        const info = by[row.symbol]; if (!info) return;
+        (row.history || []).forEach((h) => {
+          let t = +h.t; if (t > 1e12) t = Math.floor(t / 1000);
+          const k = Math.floor(t / 60), l = +h.l || 0, sh = +h.s || 0; if (!l && !sh) return;
+          const b = M[k] || (M[k] = [0, 0]); b[0] += l; b[1] += sh;
+          exT[info.ex] = (exT[info.ex] || 0) + l + sh;
+          const ct = coinT[info.c] || (coinT[info.c] = [0, 0]); ct[0] += l; ct[1] += sh;
+        });
+      }));
+      const ks = Object.keys(M).map(Number).sort((a, b) => a - b);
+      const out = { ok: ks.length > 0, at: Date.now(), upTo: Math.floor(to / 60) - 1, n: mk.length, ex: Array.from(new Set(mk.map((x) => x.ex))),
+        m: ks.map((k) => [k, Math.round(M[k][0]), Math.round(M[k][1])]), exT, coinT, src: "Coinalyze" };
+      if (out.ok) await kv(["SET", "xc:liqs", JSON.stringify(out), "EX", 3600]);
+      else out.error = "Coinalyze xog ma soo celin (eeg ?debug=1)";
+      if (dbg) { out.debug = dg; delete out.m; }
+      return send(200, out.ok || !c ? out : c);
+    }
     if (op === "pf") {
       // Portfolio-yada: CoinGecko Treasuries (bilaash, Demo key ikhtiyaari: COINGECKO_API_KEY).
       // Xogtu waxay ka timaadaa warbixinnada rasmiga ah; marka ay wax iibsadaan tiradu way isbeddeshaa. Kayd: 1 saac.
