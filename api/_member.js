@@ -99,18 +99,18 @@ module.exports = async function handler(req, res) {
       res.setHeader("Cache-Control", dbg ? "no-store" : "public, s-maxage=60, stale-while-revalidate=120");
       if (!KEY) return send(200, { ok: false, error: "COINALYZE_API_KEY Vercel kuma jiro" });
       let c = null; try { c = JSON.parse((await kv(["GET", "xc:liqs"])) || "null"); } catch (e) {}
-      if (c && Date.now() - c.at < 150e3 && !dbg) return send(200, c);
+      if (c && Date.now() - c.at < 75e3 && !dbg) return send(200, c);
       if (!dbg && (await kv(["SET", "xc:liqs:lock", 1, "NX", "EX", 50])) !== "OK") return send(200, c || { ok: false, error: "sug" });
       const H = { headers: { api_key: KEY, Accept: "application/json" } }, B = "https://api.coinalyze.net/v1/";
       const getJ = (u) => fetch(B + u, H).then(async (r) => ({ s: r.status, j: await r.json().catch(() => null) })).catch((e) => ({ s: 0, e: String(e.message || e) }));
       const dg = {};
       let mk = null; try { mk = JSON.parse((await kv(["GET", "xc:cz:mk"])) || "null"); } catch (e) {}
-      if (!mk || dbg) {
+      if (!mk || (dbg && req.query.markets)) {
         const [ex, fm] = await Promise.all([getJ("exchanges"), getJ("future-markets")]);
         dg.exchanges = { status: ex.s, err: ex.e, sample: Array.isArray(ex.j) ? ex.j.slice(0, 30).map((x) => x.code + "=" + x.name) : ex.j };
         dg.markets = { status: fm.s, err: fm.e, count: Array.isArray(fm.j) ? fm.j.length : 0, sample: Array.isArray(fm.j) ? fm.j.slice(0, 3) : fm.j };
         const exName = {}; (Array.isArray(ex.j) ? ex.j : []).forEach((e) => { exName[e.code] = e.name; });
-        const COINS = ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "HYPE", "SUI", "ZEC", "ADA"];
+        const COINS = ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "HYPE", "SUI", "ZEC", "ADA", "LINK", "AVAX", "LTC", "ENA", "PEPE"];
         const pk = {};
         (Array.isArray(fm.j) ? fm.j : []).forEach((m) => {
           if (!m.is_perpetual) return;
@@ -122,32 +122,57 @@ module.exports = async function handler(req, res) {
           const pr = q === "USDT" ? 0 : q === "USDC" ? 1 : 2, k = exn + ":" + b;
           if (!pk[k] || pr < pk[k].pr) pk[k] = { s: m.symbol, ex: exn === "Hyperliquid" ? "Hyperliquid" : exn, c: b, pr };
         });
-        mk = Object.values(pk).sort((a, b) => COINS.indexOf(a.c) - COINS.indexOf(b.c)).slice(0, 40);
+        mk = Object.values(pk).sort((a, b) => COINS.indexOf(a.c) - COINS.indexOf(b.c)).slice(0, 60);
         dg.picked = mk.map((x) => x.s);
         if (mk.length) await kv(["SET", "xc:cz:mk", JSON.stringify(mk), "EX", 86400]);
       }
       if (!mk || !mk.length) return send(200, Object.assign({ ok: false, error: "suuq lama helin" }, dbg ? { debug: dg } : {}));
+      // Xadka Coinalyze: 40 codsi daqiiqaddii (symbol kasta = 1). Sidaas darteed hal mar waxaa la cusbooneysiiyaa
+      // hal qayb (20 symbol) oo kaliya — tan ugu duugsan — kadibna labada qaybood waa la isku daraa.
       const to = Math.floor(Date.now() / 1000), from = to - 1440 * 60;
-      const chunks = [mk.slice(0, 20), mk.slice(20, 40)].filter((x) => x.length);
-      const R = await Promise.all(chunks.map((ch) => getJ("liquidation-history?symbols=" + ch.map((x) => x.s).join(",") + "&interval=1min&from=" + from + "&to=" + to + "&convert_to_usd=true")));
-      dg.history = R.map((r) => ({ status: r.s, err: r.e, rows: Array.isArray(r.j) ? r.j.length : 0, sample: Array.isArray(r.j) && r.j[0] ? { symbol: r.j[0].symbol, h: (r.j[0].history || []).slice(-2) } : r.j }));
-      const by = {}; mk.forEach((x) => { by[x.s] = x; });
-      const M = {}, exT = {}, coinT = {};
-      R.forEach((r) => (Array.isArray(r.j) ? r.j : []).forEach((row) => {
-        const info = by[row.symbol]; if (!info) return;
-        (row.history || []).forEach((h) => {
-          let t = +h.t; if (t > 1e12) t = Math.floor(t / 1000);
-          const k = Math.floor(t / 60), l = +h.l || 0, sh = +h.s || 0; if (!l && !sh) return;
-          const b = M[k] || (M[k] = [0, 0]); b[0] += l; b[1] += sh;
-          exT[info.ex] = (exT[info.ex] || 0) + l + sh;
-          const ct = coinT[info.c] || (coinT[info.c] = [0, 0]); ct[0] += l; ct[1] += sh;
+      const chunks = [mk.slice(0, 20), mk.slice(20, 40), mk.slice(40, 60)].filter((x) => x.length);
+      const CK = await Promise.all(chunks.map((_, i) => kv(["GET", "xc:liqc:" + i]).then((v) => { try { return JSON.parse(v || "null"); } catch (e) { return null; } })));
+      let ci = CK.findIndex((x) => !x || !x.W); if (ci < 0) ci = CK.reduce((m, x, i) => (x.at < CK[m].at ? i : m), 0);
+      const r = await getJ("liquidation-history?symbols=" + chunks[ci].map((x) => x.s).join(",") + "&interval=1min&from=" + from + "&to=" + to + "&convert_to_usd=true");
+      dg.history = { chunk: ci, status: r.s, err: r.e, rows: Array.isArray(r.j) ? r.j.length : 0, sample: Array.isArray(r.j) && r.j[0] ? { symbol: r.j[0].symbol, h: (r.j[0].history || []).slice(-2) } : r.j };
+      if (Array.isArray(r.j) && r.j.length) {
+        const by = {}; mk.forEach((x) => { by[x.s] = x; });
+        const M = {}, exT = {}, coinT = {}, W = {}, nowm = Math.floor(Date.now() / 60e3);
+        const WS = [["1h", 60], ["4h", 240], ["12h", 720], ["24h", 1440]];
+        WS.forEach(([w]) => { W[w] = { c: {}, e: {} }; });
+        const addTo = (o, k, l, sh) => { const x = o[k] || (o[k] = [0, 0]); x[0] += l; x[1] += sh; };
+        r.j.forEach((row) => {
+          const info = by[row.symbol]; if (!info) return;
+          (row.history || []).forEach((h) => {
+            let t = +h.t; if (t > 1e12) t = Math.floor(t / 1000);
+            const k = Math.floor(t / 60), l = +h.l || 0, sh = +h.s || 0; if (!l && !sh) return;
+            const b = M[k] || (M[k] = [0, 0]); b[0] += l; b[1] += sh;
+            exT[info.ex] = (exT[info.ex] || 0) + l + sh;
+            addTo(coinT, info.c, l, sh);
+            WS.forEach(([w, mins]) => { if (nowm - k < mins) { addTo(W[w].c, info.c, l, sh); addTo(W[w].e, info.ex, l, sh); } });
+          });
         });
-      }));
+        CK[ci] = { at: Date.now(), M, exT, coinT, W, n: r.j.length };
+        await kv(["SET", "xc:liqc:" + ci, JSON.stringify(CK[ci]), "EX", 3 * 3600]);
+      }
+      // Isku dar qaybaha (kaliya kuwa < 15 daqiiqo jir ah)
+      const M = {}, exT = {}, coinT = {}, W = {}; let nOk = 0;
+      CK.forEach((x) => {
+        if (!x || Date.now() - x.at > 15 * 60e3) return; nOk += x.n || 0;
+        Object.keys(x.M).forEach((k) => { const b = M[k] || (M[k] = [0, 0]); b[0] += x.M[k][0]; b[1] += x.M[k][1]; });
+        Object.keys(x.exT).forEach((e) => { exT[e] = (exT[e] || 0) + x.exT[e]; });
+        Object.keys(x.coinT).forEach((e) => { const ct = coinT[e] || (coinT[e] = [0, 0]); ct[0] += x.coinT[e][0]; ct[1] += x.coinT[e][1]; });
+        Object.keys(x.W || {}).forEach((w) => { const d = W[w] || (W[w] = { c: {}, e: {} }); ["c", "e"].forEach((g) => Object.keys(x.W[w][g]).forEach((k) => { const v = d[g][k] || (d[g][k] = [0, 0]); v[0] += x.W[w][g][k][0]; v[1] += x.W[w][g][k][1]; })); });
+      });
+      Object.keys(W).forEach((w) => ["c", "e"].forEach((g) => Object.keys(W[w][g]).forEach((k) => { W[w][g][k] = W[w][g][k].map(Math.round); })));
+      // Daqiiqadaha ugu dambeeya: qaybta duugga ah waxaa laga yaabaa inaysan lahayn -> upTo = qaybta ugu duugsan
+      const oldest = Math.min.apply(null, CK.filter(Boolean).map((x) => x.at));
       const ks = Object.keys(M).map(Number).sort((a, b) => a - b);
-      const out = { ok: ks.length > 0, at: Date.now(), upTo: Math.floor(to / 60) - 1, n: mk.length, ex: Array.from(new Set(mk.map((x) => x.ex))),
-        m: ks.map((k) => [k, Math.round(M[k][0]), Math.round(M[k][1])]), exT, coinT, src: "Coinalyze" };
+      const full = CK.length && CK.every((x) => x && x.W && Date.now() - x.at <= 15 * 60e3);
+      const out = { ok: ks.length > 0 && full, at: Date.now(), upTo: Math.floor(oldest / 60e3) - 1, n: nOk, ex: Array.from(new Set(mk.map((x) => x.ex))),
+        m: ks.map((k) => [k, Math.round(M[k][0]), Math.round(M[k][1])]), exT, coinT, W, src: "Coinalyze" };
       if (out.ok) await kv(["SET", "xc:liqs", JSON.stringify(out), "EX", 3600]);
-      else out.error = "Coinalyze xog ma soo celin (eeg ?debug=1)";
+      else out.error = full ? "Coinalyze xog ma soo celin (eeg ?debug=1)" : "xogta waa la ururinayaa (qayb " + (ci + 1) + "/" + CK.length + ")";
       if (dbg) { out.debug = dg; delete out.m; }
       return send(200, out.ok || !c ? out : c);
     }
