@@ -1466,3 +1466,23 @@ main.lq-wide { max-width: 1240px; }
 .pf-note:empty { display: none; }
 .pf-plw[hidden] { display: none; } .pf-avg { font-style: normal; }
 .pf-plv { white-space: nowrap; } .pf-pl span { min-width: 0; }
+
+/* ---------- Liquidations: CoinGlass qaab (heatmap, suuq, coin, taariikh) ---------- */
+.lq-2b { grid-template-columns: 1.35fr 1fr; align-items: start; }
+.lqh-map { position: relative; width: 100%; min-height: 220px; border-radius: 10px; overflow: hidden; margin-top: 10px; background: var(--card-2, rgba(255,255,255,.03)); }
+.lqh-c { position: absolute; box-sizing: border-box; border: 1px solid rgba(0,0,0,.35); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff; overflow: hidden; line-height: 1.15; padding: 2px; transition: filter .15s; }
+.lqh-c:hover { filter: brightness(1.15); }
+.lqh-c b { font-weight: 800; letter-spacing: -.01em; } .lqh-c span { font-weight: 800; } .lqh-c em { font-style: normal; font-size: 11px; opacity: .85; margin-top: 4px; }
+.lqh-leg { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; font-size: .78rem; color: var(--muted); }
+.lqh-leg i { width: 110px; height: 5px; border-radius: 3px; background: linear-gradient(90deg, #1FA37A, #E5484D); }
+.lq-lqh .lq-mini { margin-left: auto; } .lq-lqh .lq-mini + .lq-mini { margin-left: 6px; }
+.lqe-tb, .lqc-tb { margin-top: 10px; overflow-x: auto; }
+.lqe-r { display: grid; grid-template-columns: 1.2fr 1.1fr 1fr 1fr .8fr 1fr; gap: 8px; padding: 11px 6px; border-bottom: 1px solid var(--line); font-size: .86rem; align-items: center; min-width: 560px; }
+.lqe-r .r { text-align: right; } .lqe-hd { color: var(--muted); font-size: .76rem; padding-top: 4px; } .lqe-r.all { font-weight: 700; }
+.lqe-b { display: block; height: 3px; border-radius: 2px; background: #F05A5F; margin: 5px 0 0 auto; width: 70px; overflow: hidden; } .lqe-b i { display: block; height: 100%; background: #2BD67B; }
+.lqc-r { display: grid; grid-template-columns: 30px 70px repeat(8, minmax(74px, 1fr)); gap: 3px; padding: 4px 0; font-size: .82rem; align-items: center; min-width: 720px; }
+.lqc-hd { color: var(--muted); font-size: .72rem; } .lqc-r .r { text-align: right; } .lqc-v { padding: 7px 8px; border-radius: 4px; font-variant-numeric: tabular-nums; }
+.lqhs-ch { width: 100%; height: 260px; display: block; margin-top: 10px; }
+.lq-lqsep { height: 1px; background: var(--line); margin: 14px 0; }
+@media (max-width: 900px) { .lq-2b { grid-template-columns: 1fr; } }
+.lq-2b .lq-lql { max-height: 560px; overflow-y: auto; }

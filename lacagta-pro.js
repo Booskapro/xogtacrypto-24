@@ -34,7 +34,7 @@
 
   // ---------- Qaabka ----------
   host.innerHTML =
-    `<div id="sec-liq" class="lq-anchor"></div>` + H("Liquidations", `<span class="lq-dim">Binance · OKX · Bybit</span>`) +
+    `<div id="sec-liq" class="lq-anchor"></div>` + H("Liquidations", `<span class="lq-dim">Binance · Bybit · OKX · Hyperliquid</span>`) +
     `<div class="lq-liq" id="lq-liq"></div>` +
     `<div id="sec-cf" class="lq-anchor"></div>` + H(T("Coin kasta: lacagta soo gashay iyo baxday", "Each coin: money in and out"), tabs("cfw", [["1", T("1 saac", "1h")], ["4", T("4 saac", "4h")], ["24", T("24 saac", "24h")]], "24") + CAM("cf")) +
     `<div class="lq-2" id="lq-cf"><div class="lq-card lq-load">${T("Xogta ayaa soo socota…", "Loading…")}</div></div>` +
@@ -214,7 +214,7 @@
   async function loadSrv() {
     try {
       const j = await (await fetch("/api/member?op=liq")).json();
-      if (j && j.ok && Array.isArray(j.m)) { SRV.m = {}; j.m.forEach((r) => { SRV.m[r[0]] = { l: r[1], s: r[2] }; }); SRV.upTo = j.upTo; SRV.exT = j.exT || {}; SRV.ex = j.ex || []; SRV.ok = true; lqDirty = true; }
+      if (j && j.ok && Array.isArray(j.m)) { SRV.m = {}; j.m.forEach((r) => { SRV.m[r[0]] = { l: r[1], s: r[2] }; }); SRV.upTo = j.upTo; SRV.exT = j.exT || {}; SRV.ex = j.ex || []; SRV.W = j.W || null; SRV.ok = true; lqDirty = true; }
     } catch (e) { /* ignore: browser-ka ayaa sii ururinaya */ }
   }
   function agSum(mins) {
@@ -228,26 +228,42 @@
   }
   const covTxt = (c, mins) => (c >= mins - 1 ? "" : T("xog la ururiyay: ", "collected: ") + (c >= 60 ? Math.floor(c / 60) + T(" saac ", "h ") : "") + (c % 60) + T(" daqiiqo", "m") + T(" (bogga ayaa xirnaa inta kale)", " (page was closed the rest)"));
   const WIN = [[60, T("1 saac", "1h")], [240, T("4 saac", "4h")], [720, T("12 saac", "12h")], [1440, T("24 saac", "24h")]];
-  lqBox.innerHTML = `<div class="lq-2">
+  lqBox.innerHTML = `<div class="lq-2 lq-2b">
+    <div class="lq-card"><div class="lq-lqh"><b>${T("Liquidation Heatmap", "Liquidation heatmap")}</b><span class="lq-mini" data-lqh="w">${["1h","4h","12h","24h"].map((w) => `<button data-v="${w}"${w === "24h" ? ' class="on"' : ""}>${w.replace("h", T(" saac", "h")).replace(" saach","h")}</button>`).join("")}</span><span class="lq-mini" data-lqh="g"><button data-v="c" class="on">Coin</button><button data-v="e">${T("Suuq", "Exchange")}</button></span>${CAM("liqh")}</div>
+      <div class="lqh-map" id="lqh-map"><div class="lq-load">${T("Xogta waa la soo rarayaa…", "Loading…")}</div></div>
+      <div class="lqh-leg"><span>${T("Long ayaa badan", "Long dominant")}</span><i></i><span>${T("Short ayaa badan", "Short dominant")}</span></div></div>
+    <div class="lq-card"><div class="lq-lqh"><b>${T("Wadarta liquidations", "Total liquidations")}</b>${CAM("liqt")}</div>
+      <div class="lq-lqt">${WIN.map(([m, l]) => `<div class="lq-lqtb"><div class="lq-lqtt"><span>${l}</span><b id="lqt-${m}">$0</b></div><div class="lq-lqtr"><span>Long</span><b class="up" id="lqt-${m}-l">$0</b></div><div class="lq-lqtr"><span>Short</span><b class="down" id="lqt-${m}-s">$0</b></div><div class="lq-sb sm2" id="lqt-${m}-b"></div><small class="lq-dim" id="lqt-${m}-c"></small></div>`).join("")}</div>
+      <div class="lq-lqbd"><div class="lq-lqtr"><span>${T("24 saac: Long", "24h: Long")} <b class="up" id="lqt-lp">—</b></span><span>Short <b class="down" id="lqt-sp">—</b></span></div><div class="lq-sb" id="lqt-24b"></div>
+        <div class="lq-lqtr"><span>${T("Suuqa ugu badan", "Largest exchange share")}</span><b id="lqt-ex">—</b></div>
+        <div class="lq-lqtr"><span>${T("Dalabka ugu weyn · 24s", "Largest order · 24h")}</span><b id="lqt-big">—</b></div></div></div>
+  </div>
+  <div class="lq-2 lq-2b" style="margin-top:16px">
+    <div class="lq-card"><div class="lq-lqh"><b>${T("Liquidations suuq kasta", "Exchange liquidations")}</b><span class="lq-mini" data-lqe="w">${["1h","4h","12h","24h"].map((w) => `<button data-v="${w}"${w === "4h" ? ' class="on"' : ""}>${w.replace("h", T(" saac", "h")).replace(" saach","h")}</button>`).join("")}</span></div>
+      <div class="lqe-tb"><div class="lqe-r lqe-hd"><span>${T("Suuqa", "Exchange")}</span><span class="r">Liquidations</span><span class="r">Long</span><span class="r">Short</span><span class="r">${T("Saami", "Share")}</span><span class="r">Long / Short</span></div><div id="lqe-rows"></div></div>
+      <p class="lq-dim" style="margin:10px 0 0">${T("Isha: Coinalyze (Binance, Bybit, OKX, Hyperliquid · 15 coin oo waaweyn)", "Source: Coinalyze (Binance, Bybit, OKX, Hyperliquid · 15 major coins)")}</p></div>
     <div class="lq-card"><div class="lq-lqh"><b>${T("Liquidations live", "Live liquidations")}</b><span class="lq-live sm"><b class="pulse"></b>LIVE</span><em class="lq-lqnew" id="lqx-new"></em><button class="lq-lqp" type="button" id="lqx-snd" title="${T("Cod: liquidation ≥ $10K", "Sound: liquidation ≥ $10K")}">🔇</button><button class="lq-lqp" type="button" id="lqx-pause" title="${T("Jooji / sii wad", "Pause / resume")}">❚❚</button>${CAM("liq")}</div>
       <div class="lq-lqk"><div><span>${T("Xogta liquidation · 30 daqiiqo", "Liquidation data · 30m")}</span><b id="lqx-tot">$0</b><small id="lqx-n">0</small><small id="lqx-d" class="lq-lqd"></small></div><div class="lq-lqs"><span>Long <b class="up" id="lqx-l">$0</b></span><span>Short <b class="down" id="lqx-s">$0</b></span></div></div>
       <div class="lq-sb" id="lqx-bar"><i style="width:50%"><b>50%</b></i><i style="width:50%"><b>50%</b></i></div>
       <svg id="lqx-ch" class="lq-lqch" viewBox="0 0 600 140" preserveAspectRatio="none"></svg>
       <div class="lq-lqax"><span id="lqx-a0"></span><span id="lqx-a1"></span><span id="lqx-a2"></span></div>
       <div class="lq-lqleg"><span><i style="background:#2BD67B"></i>Long</span><span><i style="background:#F05A5F"></i>Short</span><span>${T("daqiiqad kasta · ilbiriqsi kasta ayuu cusboonaadaa", "per minute · updates every second")}</span></div>
-      <div class="lq-src" id="lqx-big"></div></div>
-    <div class="lq-card"><div class="lq-lqh"><b>${T("Wadarta liquidations", "Total liquidations")}</b>${CAM("liqt")}</div>
-      <div class="lq-lqt">${WIN.map(([m, l]) => `<div class="lq-lqtb"><div class="lq-lqtt"><span>${l}</span><b id="lqt-${m}">$0</b></div><div class="lq-lqtr"><span>Long</span><b class="up" id="lqt-${m}-l">$0</b></div><div class="lq-lqtr"><span>Short</span><b class="down" id="lqt-${m}-s">$0</b></div><div class="lq-sb sm2" id="lqt-${m}-b"></div><small class="lq-dim" id="lqt-${m}-c"></small></div>`).join("")}</div>
-      <div class="lq-lqbd"><div class="lq-lqtr"><span>${T("24 saac: Long", "24h: Long")} <b class="up" id="lqt-lp">—</b></span><span>Short <b class="down" id="lqt-sp">—</b></span></div><div class="lq-sb" id="lqt-24b"></div>
-        <div class="lq-lqtr"><span>${T("Suuqa ugu badan", "Largest exchange share")}</span><b id="lqt-ex">—</b></div>
-        <div class="lq-lqtr"><span>${T("Dalabka ugu weyn · 24s", "Largest order · 24h")}</span><b id="lqt-big">—</b></div></div></div></div>
-    <div class="lq-card" style="margin-top:16px"><div class="lq-lqf">
+      <div class="lq-src" id="lqx-big"></div>
+      <div class="lq-lqsep"></div>
+<div class="lq-lqf">
       <div class="lq-mini" data-lq="coin">${[["ALL", T("Dhammaan", "All")]].concat(LQC.map((c) => [c, c])).map(([v, l]) => `<button data-v="${v}"${v === "ALL" ? ' class="on"' : ""}>${l}</button>`).join("")}</div>
       <div class="lq-mini" data-lq="ex">${[["ALL", T("Dhammaan", "All")], ["Binance", "Binance"], ["OKX", "OKX"], ["Bybit", "Bybit"]].map(([v, l]) => `<button data-v="${v}"${v === "ALL" ? ' class="on"' : ""}>${l}</button>`).join("")}</div>
       <div class="lq-mini" data-lq="min">${[["0", T("Dhammaan", "All")], ["10000", "≥$10K"], ["100000", "≥$100K"], ["1000000", "≥$1M"]].map(([v, l]) => `<button data-v="${v}"${v === "0" ? ' class="on"' : ""}>${l}</button>`).join("")}</div>
       <div class="lq-mini" data-lq="side">${[["all", T("Labada dhinac", "All sides")], ["long", "Long"], ["short", "Short"]].map(([v, l]) => `<button data-v="${v}"${v === "all" ? ' class="on"' : ""}>${l}</button>`).join("")}</div></div>
       <div class="lq-trr lq-trh"><span>Coin · ${T("suuq", "exchange")}</span><span class="r">${T("Qiimaha", "Price")}</span><span class="r">${T("Lacagta", "Amount")}</span><span class="r">${T("Waqti", "Time")}</span></div>
       <div id="lqx-list" class="lq-lql"></div></div>
+  </div>
+  <div class="lq-card" style="margin-top:16px"><div class="lq-lqh"><b>${T("Taariikhda liquidations · 24 saac", "Liquidation history · 24h")}</b><span class="lq-dim">${T("15 daqiiqo tiir kasta", "15 min per bar")}</span>${CAM("liqhist")}</div>
+    <svg id="lqhs-ch" class="lqhs-ch" viewBox="0 0 1000 260" preserveAspectRatio="none"></svg>
+    <div class="lq-lqax" id="lqhs-ax"></div>
+    <div class="lq-lqleg"><span><i style="background:#2BD67B"></i>Long liquidations</span><span><i style="background:#F05A5F"></i>Short liquidations</span><span id="lqhs-tip"></span></div></div>
+  <div class="lq-card" style="margin-top:16px"><div class="lq-lqh"><b>${T("Liquidations coin kasta", "Liquidations by coin")}</b>${CAM("liqc")}</div>
+    <div class="lqc-tb"><div class="lqc-r lqc-hd"><span>#</span><span>Coin</span>${["1h","4h","12h","24h"].map((w) => `<span class="r">${w} Long</span><span class="r">${w} Short</span>`).join("")}</div><div id="lqc-rows"></div></div></div>
     <p class="lq-note">${T("<b>Liquidation</b> = ganacsade si qasab ah looga xiray booskiisa sababtoo ah lacagtiisii way dhammaatay. Long liquidation badan = qiimuhu si degdeg ah ayuu u dhacay; short badan = si degdeg ah ayuu u kacay. Wadarta 1–24 saac waxay ka timaadaa server-ka (Coinalyze: Binance, Bybit, OKX, Hyperliquid · coin-ka waaweyn), sidaas darteed qofkii soo gala wuxuu arkaa xogta maanta ilaa hadda. Liiska live-ka ah waa Binance, OKX iyo Bybit (WebSocket). Wadartu way ka yaraan kartaa suuqa oo dhan, waayo coin-ka yaryar iyo suuqyada kale kuma jiraan.", "<b>Liquidation</b> = a position force-closed because margin ran out. Many long liquidations = price dropped fast; many shorts = price spiked. The 1–24h totals come from our server (Coinalyze: Binance, Bybit, OKX, Hyperliquid · major coins), so every visitor sees today's data so far. The live list is Binance, OKX and Bybit (WebSocket). Totals may be below the full market because small coins and other exchanges are not included.")}</p>`;
   lqBox.addEventListener("click", (e) => {
     if (e.target.closest("#lqx-snd")) { LQ.snd = !LQ.snd; e.target.closest("#lqx-snd").textContent = LQ.snd ? "🔊" : "🔇"; if (LQ.snd) beep(true); return; }
@@ -319,8 +335,76 @@
     const t = minNow(); Object.keys(AG.m).forEach((k) => { if (+k < t - 1440) delete AG.m[k]; }); Object.keys(AG.seen).forEach((k) => { if (+k < t - 1440) delete AG.seen[k]; });
     try { localStorage.setItem("xc-liq", JSON.stringify({ t0: LQ.t0, ev: LQ.ev.slice(0, 1500) })); localStorage.setItem("xc-liq24", JSON.stringify(AG)); } catch (e) { /* ignore */ }
   }, 1000);
-  renderLiq(true);
-  loadSrv().then(() => renderLiq(true)); setInterval(loadSrv, 150e3);
+  // ================= Heatmap · suuq kasta · coin kasta · taariikh (xogta server-ka) =================
+  const LH = { w: "24h", g: "c" }, LE = { w: "4h" };
+  function treemap(items, x, y, w, h) {
+    const out = [], total = items.reduce((a, b) => a + b.v, 0); if (!total) return out;
+    let rest = items.map((i) => Object.assign({}, i, { a: i.v * w * h / total }));
+    while (rest.length) {
+      const sh = Math.min(w, h); let row = [rest[0]], i = 1;
+      const worst = (r) => { const s2 = r.reduce((a, b) => a + b.a, 0), mx = Math.max.apply(null, r.map((z) => z.a)), mn = Math.min.apply(null, r.map((z) => z.a)); return Math.max(sh * sh * mx / (s2 * s2), s2 * s2 / (sh * sh * mn)); };
+      while (i < rest.length && worst(row.concat(rest[i])) <= worst(row)) { row.push(rest[i]); i++; }
+      const tot = row.reduce((a, b) => a + b.a, 0), th = tot / sh; let off = 0;
+      row.forEach((r) => { const len = r.a / th; out.push(Object.assign(r, w >= h ? { x, y: y + off, w: th, h: len } : { x: x + off, y, w: len, h: th })); off += len; });
+      if (w >= h) { x += th; w -= th; } else { y += th; h -= th; }
+      rest = rest.slice(i);
+    }
+    return out;
+  }
+  const heatItems = () => { const d = SRV.W && SRV.W[LH.w] && SRV.W[LH.w][LH.g] || {}; return Object.keys(d).map((k) => ({ k, l: d[k][0], s: d[k][1], v: d[k][0] + d[k][1] })).filter((x) => x.v > 0).sort((a, b) => b.v - a.v); };
+  function renderLqHeat() {
+    const box = document.getElementById("lqh-map"); if (!box) return;
+    if (!SRV.ok || !SRV.W) { box.innerHTML = `<div class="lq-load">${T("Xogta server-ka waa la sugayaa…", "Waiting for server data…")}</div>`; return; }
+    const W0 = box.clientWidth || 600, H0 = Math.round(W0 * 0.62); box.style.height = H0 + "px";
+    const R = treemap(heatItems(), 0, 0, W0, H0);
+    box.innerHTML = R.map((r) => {
+      const lp = r.l / r.v, long = lp >= 0.5, dom = Math.abs(lp - 0.5) * 2, bg = long ? `rgba(31,163,122,${0.55 + dom * 0.45})` : `rgba(229,72,77,${0.55 + dom * 0.45})`;
+      const big = r.w > 120 && r.h > 80, mid = r.w > 34 && r.h > 22, fs = Math.max(11, Math.min(44, Math.sqrt(r.w * r.h) / 6));
+      return `<div class="lqh-c" style="left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;background:${bg}" title="${esc(r.k)} · ${fmt(r.v)} · Long ${(lp * 100).toFixed(1)}%">` +
+        (mid ? `<b style="font-size:${fs}px">${esc(r.k)}</b>` : "") + (big || (mid && r.h > 52) ? `<span style="font-size:${Math.max(10, fs * 0.72)}px">${fmt(r.v)}</span>` : "") + (big ? `<em>Long ${(lp * 100).toFixed(1)}%</em>` : "") + `</div>`;
+    }).join("") || `<div class="lq-load">${T("Wali liquidation ma jiro", "No liquidations yet")}</div>`;
+  }
+  function renderExch() {
+    const box = document.getElementById("lqe-rows"); if (!box) return;
+    const d = SRV.ok && SRV.W && SRV.W[LE.w] ? SRV.W[LE.w].e : null;
+    if (!d) { box.innerHTML = `<div class="lq-load">${T("Xogta server-ka waa la sugayaa…", "Waiting for server data…")}</div>`; return; }
+    const rows = Object.keys(d).map((k) => ({ k, l: d[k][0], s: d[k][1], v: d[k][0] + d[k][1] })).sort((a, b) => b.v - a.v);
+    const all = rows.reduce((a, r) => ({ k: T("Dhammaan", "All"), l: a.l + r.l, s: a.s + r.s, v: a.v + r.v }), { l: 0, s: 0, v: 0 });
+    box.innerHTML = [all].concat(rows).map((r, i) => { const lp = r.v ? r.l / r.v * 100 : 50, dl = lp >= 50;
+      return `<div class="lqe-r${i ? "" : " all"}"><span><b>${esc(r.k)}</b></span><span class="r"><b>${fmt(r.v)}</b><i class="lqe-b"><i style="width:${lp}%"></i></i></span><span class="r up">${fmt(r.l)}</span><span class="r down">${fmt(r.s)}</span><span class="r">${all.v ? (r.v / all.v * 100).toFixed(1) : "0.0"}%</span><span class="r ${dl ? "up" : "down"}">${(dl ? lp : 100 - lp).toFixed(1)}% ${dl ? "Long" : "Short"}</span></div>`; }).join("");
+  }
+  function renderCoins() {
+    const box = document.getElementById("lqc-rows"); if (!box) return;
+    if (!SRV.ok || !SRV.W) { box.innerHTML = `<div class="lq-load">${T("Xogta server-ka waa la sugayaa…", "Waiting for server data…")}</div>`; return; }
+    const W4 = ["1h", "4h", "12h", "24h"], d24 = SRV.W["24h"].c;
+    const coins = Object.keys(d24).sort((a, b) => (d24[b][0] + d24[b][1]) - (d24[a][0] + d24[a][1]));
+    const mx = {}; W4.forEach((w) => { mx[w] = Math.max(1, ...coins.map((c) => Math.max(...((SRV.W[w].c[c]) || [0, 0])))); });
+    box.innerHTML = coins.map((c, i) => `<div class="lqc-r"><span class="lq-dim">${i + 1}</span><span><b>${esc(c)}</b></span>` + W4.map((w) => { const v = SRV.W[w].c[c] || [0, 0];
+      return `<span class="r lqc-v" style="background:rgba(43,214,123,${(v[0] / mx[w] * 0.55).toFixed(2)})">${fmt(v[0])}</span><span class="r lqc-v" style="background:rgba(240,90,95,${(v[1] / mx[w] * 0.55).toFixed(2)})">${fmt(v[1])}</span>`; }).join("") + `</div>`).join("");
+  }
+  function histBins() {
+    const t = minNow(), n = 96, B = Array.from({ length: n }, (_, i) => ({ t: (t - (n - i) * 15 + 1), l: 0, s: 0 }));
+    for (let k = t - n * 15 + 1; k <= t; k++) { const i = Math.floor((k - (t - n * 15 + 1)) / 15), b = SRV.ok && k <= SRV.upTo ? SRV.m[k] : AG.m[k]; if (b && B[i]) { B[i].l += b.l; B[i].s += b.s; } }
+    return B;
+  }
+  function renderLqHist() {
+    const svg = document.getElementById("lqhs-ch"); if (!svg) return;
+    const B = histBins(), mx = Math.max(1, ...B.map((b) => Math.max(b.l, b.s))), w = 1000 / B.length;
+    svg.innerHTML = [0.25, 0.5, 0.75, 1].map((f) => `<line x1="0" x2="1000" y1="${250 - f * 240}" y2="${250 - f * 240}" stroke="var(--line)" stroke-dasharray="3 5"/>`).join("") +
+      B.map((b, i) => { const hl = b.l / mx * 240, hs = b.s / mx * 240, x = i * w;
+        return `<g><rect x="${x + 1}" y="${250 - hl}" width="${w / 2 - 1}" height="${hl}" fill="#2BD67B"/><rect x="${x + w / 2}" y="${250 - hs}" width="${w / 2 - 1}" height="${hs}" fill="#F05A5F"/><rect x="${x}" y="0" width="${w}" height="250" fill="transparent"><title>${hm(new Date(b.t * 60e3))} · Long ${fmt(b.l)} · Short ${fmt(b.s)}</title></rect></g>`; }).join("") +
+      `<line x1="0" x2="1000" y1="250.5" y2="250.5" stroke="var(--line)"/><text x="4" y="14" font-size="12" fill="var(--muted)">${fmt(mx)}</text>`;
+    document.getElementById("lqhs-ax").innerHTML = [0, 24, 48, 72, 95].map((i) => `<span>${hm(new Date(B[i].t * 60e3))}</span>`).join("");
+  }
+  function renderSrv() { renderLqHeat(); renderExch(); renderCoins(); renderLqHist(); }
+  lqBox.addEventListener("click", (e) => {
+    const b = e.target.closest(".lq-mini[data-lqh] button, .lq-mini[data-lqe] button"); if (!b) return;
+    const p = b.parentElement; if (p.dataset.lqh) LH[p.dataset.lqh] = b.dataset.v; else LE[p.dataset.lqe] = b.dataset.v;
+    p.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); renderSrv();
+  });
+  let rsz; window.addEventListener("resize", () => { clearTimeout(rsz); rsz = setTimeout(renderLqHeat, 150); });
+  renderLiq(true); renderSrv();
+  loadSrv().then(() => { renderLiq(true); renderSrv(); }); setInterval(() => loadSrv().then(renderSrv), 75e3);
   async function startLiq() {
     // Binance: dhammaan coin-ka (SELL = long la xiray)
     ws("wss://fstream.binance.com/ws/!forceOrder@arr", () => {}, (m) => {
@@ -349,6 +433,27 @@
     let s = tx(56, 72, T("Wadarta liquidations", "Total liquidations"), 32, { d: 1, w: 800 });
     WIN.forEach(([m, l], i) => { const o = agSum(m), t = o.l + o.s, x = 56 + (i % 2) * 552, y = 100 + Math.floor(i / 2) * 225;
       s += box(x, y, 536, 205) + tx(x + 28, y + 50, l, 22, { c: K.mut }) + tx(x + 508, y + 58, fmt(t), 44, { d: 1, w: 800, a: "end" }) + tx(x + 28, y + 105, "Long", 20, { c: K.mut }) + tx(x + 508, y + 105, fmt(o.l), 22, { d: 1, w: 800, a: "end", c: G }) + tx(x + 28, y + 145, "Short", 20, { c: K.mut }) + tx(x + 508, y + 145, fmt(o.s), 22, { d: 1, w: 800, a: "end", c: R }) + bar(x + 28, y + 168, 480, 10, t ? o.l / t : 0.5) + (covTxt(o.cov, m) ? tx(x + 28, y + 196, covTxt(o.cov, m), 14, { c: K.dim }) : ""); });
+    return s;
+  } });
+  L.add("liqh", { head: () => "Liquidation heatmap · " + LH.w, at: () => new Date(), src: "Coinalyze (Binance, Bybit, OKX, Hyperliquid)", body: () => {
+    let s = tx(56, 72, T("Liquidation heatmap · ", "Liquidation heatmap · ") + LH.w, 32, { d: 1, w: 800 });
+    treemap(heatItems(), 56, 100, 1088, 470).forEach((r) => { const lp = r.l / r.v, long = lp >= 0.5;
+      s += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${long ? "#1FA37A" : "#E5484D"}" stroke="#0B1220" stroke-width="2"/>`;
+      if (r.w > 70 && r.h > 40) { const fs = Math.max(14, Math.min(54, Math.sqrt(r.w * r.h) / 6)); s += tx(r.x + r.w / 2, r.y + r.h / 2 - (r.h > 90 ? fs * 0.2 : -fs * 0.3), r.k, fs, { d: 1, w: 800, a: "middle" }); if (r.h > 90) s += tx(r.x + r.w / 2, r.y + r.h / 2 + fs * 0.85, fmt(r.v), fs * 0.62, { w: 700, a: "middle" }); } });
+    return s;
+  } });
+  L.add("liqhist", { head: () => T("Taariikhda liquidations · 24 saac", "Liquidation history · 24h"), at: () => new Date(), src: "Coinalyze", body: () => {
+    let s = tx(56, 72, T("Taariikhda liquidations · 24 saac", "Liquidation history · 24h"), 32, { d: 1, w: 800 });
+    const B = histBins(), mx = Math.max(1, ...B.map((b) => Math.max(b.l, b.s))), w = 1088 / B.length;
+    B.forEach((b, i) => { const hl = b.l / mx * 420, hs = b.s / mx * 420, x = 56 + i * w; s += `<rect x="${x}" y="${560 - hl}" width="${w / 2 - 1}" height="${hl}" fill="${G}"/><rect x="${x + w / 2}" y="${560 - hs}" width="${w / 2 - 1}" height="${hs}" fill="${R}"/>`; });
+    s += tx(56, 590, hm(new Date(B[0].t * 60e3)), 16, { c: K.mut }) + tx(1144, 590, hm(new Date(B[95].t * 60e3)), 16, { c: K.mut, a: "end" }) + tx(1144, 120, T("ugu badnaan ", "max ") + fmt(mx), 16, { c: K.mut, a: "end" });
+    return s;
+  } });
+  L.add("liqc", { head: () => T("Liquidations coin kasta · 24 saac", "Liquidations by coin · 24h"), at: () => new Date(), src: "Coinalyze", body: () => {
+    let s = tx(56, 72, T("Liquidations coin kasta · 24 saac", "Liquidations by coin · 24h"), 32, { d: 1, w: 800 });
+    const d = SRV.W ? SRV.W["24h"].c : {}, cs = Object.keys(d).sort((a, b) => (d[b][0] + d[b][1]) - (d[a][0] + d[a][1])).slice(0, 10), mx = Math.max(1, ...cs.map((c) => d[c][0] + d[c][1]));
+    cs.forEach((c, i) => { const y = 110 + i * 46, l = d[c][0], sh = d[c][1], wl = l / mx * 760, ws = sh / mx * 760;
+      s += tx(56, y + 26, (i + 1) + ". " + c, 22, { w: 700 }) + `<rect x="220" y="${y + 6}" width="${wl}" height="28" fill="${G}" rx="4"/><rect x="${220 + wl}" y="${y + 6}" width="${ws}" height="28" fill="${R}" rx="4"/>` + tx(1144, y + 28, fmt(l + sh), 22, { d: 1, w: 800, a: "end" }); });
     return s;
   } });
   L.add("liq", { head: () => "Liquidations · 30 " + T("daqiiqo", "min"), at: () => new Date(), src: "Binance, OKX, Bybit", body: () => {
