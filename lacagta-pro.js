@@ -209,9 +209,21 @@
     if (e.long) b.l += e.v; else b.s += e.v; b.n++; b.ex[e.ex] = (b.ex[e.ex] || 0) + e.v;
     if (!AG.big || e.v > AG.big.v) AG.big = e;
   }
+  // Xogta server-ka (24 saac, dhammaan suuqyada waaweyn): /api/member?op=liq — qofka soo gala wuxuu helayaa maanta ilaa hadda
+  const SRV = { ok: false, m: {}, upTo: 0, exT: {}, ex: [] };
+  async function loadSrv() {
+    try {
+      const j = await (await fetch("/api/member?op=liq")).json();
+      if (j && j.ok && Array.isArray(j.m)) { SRV.m = {}; j.m.forEach((r) => { SRV.m[r[0]] = { l: r[1], s: r[2] }; }); SRV.upTo = j.upTo; SRV.exT = j.exT || {}; SRV.ex = j.ex || []; SRV.ok = true; lqDirty = true; }
+    } catch (e) { /* ignore: browser-ka ayaa sii ururinaya */ }
+  }
   function agSum(mins) {
     const t = minNow(), o = { l: 0, s: 0, n: 0, ex: {}, cov: 0 };
-    for (let k = t - mins + 1; k <= t; k++) { const b = AG.m[k]; if (AG.seen[k]) o.cov++; if (!b) continue; o.l += b.l; o.s += b.s; o.n += b.n; Object.keys(b.ex).forEach((x) => { o.ex[x] = (o.ex[x] || 0) + b.ex[x]; }); }
+    for (let k = t - mins + 1; k <= t; k++) {
+      if (SRV.ok && k <= SRV.upTo) { o.cov++; const b = SRV.m[k]; if (b) { o.l += b.l; o.s += b.s; } continue; }
+      const b = AG.m[k]; if (AG.seen[k]) o.cov++; if (!b) continue; o.l += b.l; o.s += b.s; o.n += b.n; Object.keys(b.ex).forEach((x) => { o.ex[x] = (o.ex[x] || 0) + b.ex[x]; });
+    }
+    if (SRV.ok && mins >= 1440) Object.keys(SRV.exT).forEach((x) => { o.ex[x] = (o.ex[x] || 0) + SRV.exT[x]; });
     return o;
   }
   const covTxt = (c, mins) => (c >= mins - 1 ? "" : T("xog la ururiyay: ", "collected: ") + (c >= 60 ? Math.floor(c / 60) + T(" saac ", "h ") : "") + (c % 60) + T(" daqiiqo", "m") + T(" (bogga ayaa xirnaa inta kale)", " (page was closed the rest)"));
@@ -236,7 +248,7 @@
       <div class="lq-mini" data-lq="side">${[["all", T("Labada dhinac", "All sides")], ["long", "Long"], ["short", "Short"]].map(([v, l]) => `<button data-v="${v}"${v === "all" ? ' class="on"' : ""}>${l}</button>`).join("")}</div></div>
       <div class="lq-trr lq-trh"><span>Coin · ${T("suuq", "exchange")}</span><span class="r">${T("Qiimaha", "Price")}</span><span class="r">${T("Lacagta", "Amount")}</span><span class="r">${T("Waqti", "Time")}</span></div>
       <div id="lqx-list" class="lq-lql"></div></div>
-    <p class="lq-note">${T("<b>Liquidation</b> = ganacsade si qasab ah looga xiray booskiisa sababtoo ah lacagtiisii way dhammaatay. Long liquidation badan = qiimuhu si degdeg ah ayuu u dhacay; short badan = si degdeg ah ayuu u kacay. Xogta Binance, OKX iyo Bybit ayaa toos loo ururiyaa inta bogga furan yahay (24 saac ayaa la kaydiyaa browser-kaaga); haddii bogga xirnaa, “xog la ururiyay” ayaa muujinaya inta la helay. Binance wuxuu bixiyaa ugu badnaan hal liquidation ilbiriqsi kasta coin kasta, sidaas darteed wadartu way ka yaraan kartaa suuqa oo dhan.", "<b>Liquidation</b> = a position force-closed because margin ran out. Many long liquidations = price dropped fast; many shorts = price spiked. Binance, OKX and Bybit data is collected live while the page is open (24h kept in your browser); “collected” shows how much was captured if the page was closed. Binance sends at most one liquidation per coin per second, so totals may be below the full market.")}</p>`;
+    <p class="lq-note">${T("<b>Liquidation</b> = ganacsade si qasab ah looga xiray booskiisa sababtoo ah lacagtiisii way dhammaatay. Long liquidation badan = qiimuhu si degdeg ah ayuu u dhacay; short badan = si degdeg ah ayuu u kacay. Wadarta 1–24 saac waxay ka timaadaa server-ka (Coinalyze: Binance, Bybit, OKX, Hyperliquid · coin-ka waaweyn), sidaas darteed qofkii soo gala wuxuu arkaa xogta maanta ilaa hadda. Liiska live-ka ah waa Binance, OKX iyo Bybit (WebSocket). Wadartu way ka yaraan kartaa suuqa oo dhan, waayo coin-ka yaryar iyo suuqyada kale kuma jiraan.", "<b>Liquidation</b> = a position force-closed because margin ran out. Many long liquidations = price dropped fast; many shorts = price spiked. The 1–24h totals come from our server (Coinalyze: Binance, Bybit, OKX, Hyperliquid · major coins), so every visitor sees today's data so far. The live list is Binance, OKX and Bybit (WebSocket). Totals may be below the full market because small coins and other exchanges are not included.")}</p>`;
   lqBox.addEventListener("click", (e) => {
     if (e.target.closest("#lqx-snd")) { LQ.snd = !LQ.snd; e.target.closest("#lqx-snd").textContent = LQ.snd ? "🔊" : "🔇"; if (LQ.snd) beep(true); return; }
     if (e.target.closest("#lqx-pause")) { LQ.pause = !LQ.pause; e.target.closest("#lqx-pause").textContent = LQ.pause ? "▶" : "❚❚"; return; }
@@ -277,16 +289,22 @@
     if (LQ.pause && !force) return; if (!document.getElementById("lqx-tot")) return;
     const nw = document.getElementById("lqx-new"); if (nw) { if (Date.now() - newAt > 4000) newN = 0; nw.textContent = newN ? "+" + newN + T(" cusub", " new") : ""; }
     renderTotals();
-    const F = lqFilt(), L = F.filter((e) => e.long).reduce((a, e) => a + e.v, 0), Sx = F.filter((e) => !e.long).reduce((a, e) => a + e.v, 0), tot = L + Sx;
+    const F = lqFilt(), all = SRV.ok && LQ.coin === "ALL" && LQ.ex === "ALL" && LQ.min === 0 && LQ.side === "all";
+    // Daqiiqadaha server-ku daboolay (dhammaan suuqyada) + kuwa ka dambeeya (live WebSocket)
+    const F2 = all ? F.filter((e) => Math.floor(e.ts / 60e3) > SRV.upTo) : F;
+    let L = F2.filter((e) => e.long).reduce((a, e) => a + e.v, 0), Sx = F2.filter((e) => !e.long).reduce((a, e) => a + e.v, 0);
+    if (all) for (let k = t - 29; k <= Math.min(t, SRV.upTo); k++) { const b = SRV.m[k]; if (b) { L += b.l; Sx += b.s; } }
+    const tot = L + Sx;
     lqHist.push([now, tot]); lqHist = lqHist.filter((h) => now - h[0] <= 70e3);
     const $ = (id) => document.getElementById(id);
-    $("lqx-tot").textContent = fmt(tot); $("lqx-n").textContent = F.length.toLocaleString("en-US") + " " + T("dalab", "orders");
+    $("lqx-tot").textContent = fmt(tot); $("lqx-n").textContent = F.length.toLocaleString("en-US") + " " + T("dalab (live)", "orders (live)") + (all ? " · " + T("wadarta: ", "total: ") + SRV.ex.join(", ") : "");
     const ago = lqHist.find((h) => now - h[0] >= 55e3), dl = ago ? tot - ago[1] : null;
     $("lqx-d").innerHTML = dl == null ? "" : `<span class="${dl >= 0 ? "up" : "down"}">${dl >= 0 ? "↑" : "↓"} ${fmt(Math.abs(dl))}</span> · ${T("marka la barbardhigo 1 daqiiqo kahor", "vs 1 min ago")}`;
     $("lqx-l").textContent = fmt(L); $("lqx-s").textContent = fmt(Sx);
     const lp = tot ? L / tot * 100 : 50; $("lqx-bar").innerHTML = `<i style="width:${Math.max(4, lp)}%"><b>${lp.toFixed(1)}%</b></i><i style="width:${Math.max(4, 100 - lp)}%"><b>${(100 - lp).toFixed(1)}%</b></i>`;
     const B = Array.from({ length: 30 }, () => [0, 0]);
-    F.forEach((e) => { const i = 29 - (t - Math.floor(e.ts / 60e3)); if (i >= 0 && i < 30) B[i][e.long ? 0 : 1] += e.v; });
+    F2.forEach((e) => { const i = 29 - (t - Math.floor(e.ts / 60e3)); if (i >= 0 && i < 30) B[i][e.long ? 0 : 1] += e.v; });
+    if (all) for (let i = 0; i < 30; i++) { const k = t - 29 + i, b = k <= SRV.upTo && SRV.m[k]; if (b) { B[i][0] += b.l; B[i][1] += b.s; } }
     const mx = Math.max(1, ...B.map((b) => b[0] + b[1])), w = 600 / 30;
     $("lqx-ch").innerHTML = [0.5, 1].map((f) => `<line x1="0" x2="600" y1="${136 - f * 128}" y2="${136 - f * 128}" stroke="var(--line)" stroke-dasharray="3 4"/>`).join("") +
       B.map((b, i) => { const hl = b[0] / mx * 128, hs = b[1] / mx * 128, cur = i === 29; return `<g${cur ? ' class="lq-lqcur"' : ""}><rect x="${i * w + 2}" y="${136 - hl}" width="${w - 4}" height="${hl}" fill="#2BD67B" rx="2"><title>${hm(new Date((t - 29 + i) * 60e3))} · Long ${fmt(b[0])}</title></rect><rect x="${i * w + 2}" y="${136 - hl - hs}" width="${w - 4}" height="${hs}" fill="#F05A5F" rx="2"><title>${hm(new Date((t - 29 + i) * 60e3))} · Short ${fmt(b[1])}</title></rect></g>`; }).join("") + `<line x1="0" x2="600" y1="136.5" y2="136.5" stroke="var(--line)"/>`;
@@ -302,6 +320,7 @@
     try { localStorage.setItem("xc-liq", JSON.stringify({ t0: LQ.t0, ev: LQ.ev.slice(0, 1500) })); localStorage.setItem("xc-liq24", JSON.stringify(AG)); } catch (e) { /* ignore */ }
   }, 1000);
   renderLiq(true);
+  loadSrv().then(() => renderLiq(true)); setInterval(loadSrv, 150e3);
   async function startLiq() {
     // Binance: dhammaan coin-ka (SELL = long la xiray)
     ws("wss://fstream.binance.com/ws/!forceOrder@arr", () => {}, (m) => {
@@ -326,7 +345,7 @@
       m.data.forEach((x) => { const p = +x.p; addLiq({ c: String(x.s).replace(/USDT$/, ""), ex: "Bybit", long: x.S === "Buy", p, v: p * +x.v, ts: +x.T || Date.now() }); });
     });
   }
-  L.add("liqt", { head: () => T("Wadarta liquidations", "Total liquidations"), at: () => new Date(), src: "Binance, OKX, Bybit", body: () => {
+  L.add("liqt", { head: () => T("Wadarta liquidations", "Total liquidations"), at: () => new Date(), src: "Coinalyze (Binance, Bybit, OKX, Hyperliquid)", body: () => {
     let s = tx(56, 72, T("Wadarta liquidations", "Total liquidations"), 32, { d: 1, w: 800 });
     WIN.forEach(([m, l], i) => { const o = agSum(m), t = o.l + o.s, x = 56 + (i % 2) * 552, y = 100 + Math.floor(i / 2) * 225;
       s += box(x, y, 536, 205) + tx(x + 28, y + 50, l, 22, { c: K.mut }) + tx(x + 508, y + 58, fmt(t), 44, { d: 1, w: 800, a: "end" }) + tx(x + 28, y + 105, "Long", 20, { c: K.mut }) + tx(x + 508, y + 105, fmt(o.l), 22, { d: 1, w: 800, a: "end", c: G }) + tx(x + 28, y + 145, "Short", 20, { c: K.mut }) + tx(x + 508, y + 145, fmt(o.s), 22, { d: 1, w: 800, a: "end", c: R }) + bar(x + 28, y + 168, 480, 10, t ? o.l / t : 0.5) + (covTxt(o.cov, m) ? tx(x + 28, y + 196, covTxt(o.cov, m), 14, { c: K.dim }) : ""); });
