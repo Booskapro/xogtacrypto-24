@@ -317,10 +317,17 @@ async function gtSomali(text) {
     return { t: so, s: "", i: /\b(rate (hike|cut)|war|attack|crash|plunge|surge|emergency|record|default|hack(ed|ers?)?|exploit|stole|tariffs?|recession|bankrupt|ETF|SEC|ban|all-time high|billion|Fed (raises|cuts|holds)|Powell|CPI|inflation|jobs report)\b/i.test(text) ? 8 : 6, c: "" };
   } catch (e) { AI_ERR.gt = String(e.message || e).slice(0, 100); return null; }
 }
-async function geminiSomali(text, sys) {
+// Model kasta xad gooni ah ayuu leeyahay (Free tier): Flash-Lite ~500/maalin, Flash ~20/maalin.
+// Qoraalka -> Flash-Lite (badan); tifaftirka -> Flash (tayo sare). Model 429 ah 30 daqiiqo waa la dhaafaa.
+const GM_WRITE = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-lite-latest", "gemini-3.8-flash"];
+const GM_REVIEW = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
+async function geminiSomali(text, sys, models) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) { AI_ERR.gemini = "GEMINI_API_KEY Vercel kuma jiro"; return null; }
-  for (const model of [process.env.GEMINI_MODEL, "gemini-3.8-flash", "gemini-flash-latest"].filter(Boolean)) {
+  const list = [process.env.GEMINI_MODEL].concat(models || GM_WRITE).filter(Boolean).filter((m, i, a) => a.indexOf(m) === i);
+  const errs = [];
+  for (const model of list) {
+    try { if (await kv(["GET", "xc:gem:off:" + model])) { errs.push(model + ": xad"); continue; } } catch (e) {}
     try {
       const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
         method: "POST", headers: { "x-goog-api-key": key, "content-type": "application/json" },
@@ -328,13 +335,20 @@ async function geminiSomali(text, sys) {
           generationConfig: { temperature: 0.2, maxOutputTokens: 500, responseMimeType: "application/json" } })
       });
       const j = await r.json();
-      if (!r.ok || j.error) { AI_ERR.gemini = model + ": " + r.status + " " + ((j.error && (j.error.status || "") + " " + (j.error.message || "")) || "").slice(0, 160); continue; }
+      if (!r.ok || j.error) {
+        const m = r.status + " " + ((j.error && (j.error.status || "")) || "");
+        errs.push(model + ": " + m);
+        if (r.status === 429) { try { await kv(["SET", "xc:gem:off:" + model, 1, "EX", 1800]); } catch (e) {} }
+        if (r.status === 404) { try { await kv(["SET", "xc:gem:off:" + model, 1, "EX", 86400]); } catch (e) {} }
+        continue;
+      }
       const parts = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
       const o = parseAi(parts && parts.map((x) => x.text || "").join(""));
-      if (o) return o;
-      AI_ERR.gemini = model + ": jawaab madhan (" + ((j.candidates && j.candidates[0] && j.candidates[0].finishReason) || "?") + ")";
-    } catch (e) { AI_ERR.gemini = model + ": " + String(e.message || e).slice(0, 120); }
+      if (o) { o.model = model; return o; }
+      errs.push(model + ": jawaab madhan");
+    } catch (e) { errs.push(model + ": " + String(e.message || e).slice(0, 60)); }
   }
+  AI_ERR.gemini = errs.join(" | ").slice(0, 300);
   return null;
 }
 async function claudeSomali(text, sys) {
@@ -360,13 +374,9 @@ async function translateNews(title, desc, kvf) {
   if (used >= AI_DAILY_MAX) { AI_ERR.cap = "xadka maalinlaha AI (" + AI_DAILY_MAX + ") waa dhammaaday"; return null; }
   try { await kvf(["INCR", dk]); await kvf(["EXPIRE", dk, 172800]); } catch (e) {}
   const src = "Headline: " + title + (desc ? "\nSummary: " + desc.slice(0, 600) : "");
-  let o = null, off = null;
-  try { off = await kvf(["GET", "xc:gem:off"]); } catch (e) {}
+  let o = null;
   if (process.env.AI_PROVIDER === "claude") o = await claudeSomali(src); // ikhtiyaari: Claude marka hore
-  if (!o && !off) {
-    o = await geminiSomali(src);
-    if (!o && /429|RESOURCE_EXHAUSTED/.test(AI_ERR.gemini || "")) { try { await kvf(["SET", "xc:gem:off", "1", "EX", 1800]); } catch (e) {} }
-  } else if (!o && off) AI_ERR.gemini = "xadka Gemini waa dhammaaday (30 daqiiqo sug)";
+  if (!o) o = await geminiSomali(src, AI_RULES, GM_WRITE);
   if (!o || !trOk(title, o.t)) o = (await claudeSomali(src)) || o;
   if (o && !trOk(title, o.t)) { AI_ERR.check = TR_WHY + " | " + String(o.t).slice(0, 80); o = null; }
   if (o) o.ai = 1;
@@ -394,8 +404,7 @@ async function reviewSomali(title, desc, o, kvf) {
   const src = "ENGLISH SOURCE:\nHeadline: " + title + (desc ? "\nSummary: " + desc.slice(0, 600) : "") + "\n\nSOMALI DRAFT:\n" + JSON.stringify({ t: o.t, s: o.s, i: o.i, c: o.c });
   let r = null;
   if (process.env.AI_PROVIDER === "claude") r = await claudeSomali(src, AI_REVIEW);
-  let off = null; try { off = await kvf(["GET", "xc:gem:off"]); } catch (e) {}
-  if (!r && !off) r = await geminiSomali(src, AI_REVIEW);
+  if (!r) r = await geminiSomali(src, AI_REVIEW, GM_REVIEW);
   if (!r) r = await claudeSomali(src, AI_REVIEW);
   if (!r || !trOk(title, r.t)) { AI_ERR.review = "hubinta labaad ma suurtoobin" + (r ? ": " + TR_WHY : ""); return null; }
   const out = Object.assign({}, o, { t: r.t, s: r.s || o.s, ai: 1, rv: 1 });
