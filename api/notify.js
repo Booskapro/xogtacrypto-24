@@ -366,9 +366,10 @@ async function claudeSomali(text, sys) {
 // Natiijo: { t, s, i, c, ai:1 } ama null. Bot-ku wuxuu isticmaalaa AI oo kaliya (Google Translate af-Soomaali xun ayuu qoraa).
 // Kayd: xc:tr5 (AI). Khalad -> 10 daqiiqo kadib mar kale. Xad maalinle ah si Gemini bilaashka ahi u filnaado.
 const AI_DAILY_MAX = +(process.env.AI_DAILY_MAX || 500);
+const FORCE_TR = { on: false }; // tijaabo: iska dhaaf kaydka khaladka
 async function translateNews(title, desc, kvf) {
   const key = "xc:tr5:" + hash(title);
-  try { const c = await kvf(["GET", key]); if (c) return c === "-" ? null : JSON.parse(c); } catch (e) {}
+  try { const c = await kvf(["GET", key]); if (c && !(c === "-" && FORCE_TR.on)) return c === "-" ? null : JSON.parse(c); } catch (e) {}
   const dk = "xc:ai:" + new Date().toISOString().slice(0, 10);
   let used = 0; try { used = +(await kvf(["GET", dk])) || 0; } catch (e) {}
   if (used >= AI_DAILY_MAX) { AI_ERR.cap = "xadka maalinlaha AI (" + AI_DAILY_MAX + ") waa dhammaaday"; return null; }
@@ -381,7 +382,7 @@ async function translateNews(title, desc, kvf) {
   if (o && !trOk(title, o.t)) { AI_ERR.check = TR_WHY + " | " + String(o.t).slice(0, 80); o = null; }
   if (o) o.ai = 1;
   try {
-    await kvf(o ? ["SET", key, JSON.stringify(o), "EX", 60 * 60 * 24 * 14] : ["SET", key, "-", "EX", 600]);
+    await kvf(o ? ["SET", key, JSON.stringify(o), "EX", 60 * 60 * 24 * 14] : ["SET", key, "-", "EX", 180]);
     if (o) await kvf(["SET", "xc:tr3:" + hash(title), o.t, "EX", 60 * 60 * 24 * 14]);
   } catch (e) {}
   return o;
@@ -631,7 +632,7 @@ module.exports = async function handler(req, res) {
         await sendPost(liqText(s, true), img || false, []);
         return res.status(200).json({ test, w: w.k, total: Math.round(s.v), img: !!img });
       }
-      const all = await loadNews(); let tries = 0;
+      const all = (await loadNews()).filter((n) => HOT.test(n.title)); let tries = 0; FORCE_TR.on = true;
       for (const n of all) {
         const m = await msgNews(Object.assign({}, n, { official: true })).catch(() => null);
         if (m && m !== "skip") {
@@ -639,7 +640,7 @@ module.exports = async function handler(req, res) {
           await sendPost(T + m.text, m.img, m.buttons);
           return res.status(200).json({ test, sent: n.title, img: m.img || "og-image" });
         }
-        if (++tries >= 6) break;
+        if (++tries >= 3) break;
       }
       return res.status(200).json({ test, error: "turjumaad lama helin", ai: AI_ERR });
     }
